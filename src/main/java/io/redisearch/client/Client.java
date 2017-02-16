@@ -43,7 +43,9 @@ public class Client {
                 args.add("NOSCOREIDX");
             }
         }
-    };
+    }
+
+    ;
 
     private final String indexName;
     private JedisPool pool;
@@ -89,9 +91,9 @@ public class Client {
         List<Object> resp = conn.getClient().sendCommand(Commands.Command.SEARCH, args.toArray(new String[args.size()])).getObjectMultiBulkReply();
 
         if (resp.size() > 1) {
-            List<Document> ret = new ArrayList<>(resp.size()-1);
-            for (int i = 1; i < resp.size(); i+=2) {
-                ret.add(Document.load(new String((byte[])resp.get(i)), (List)resp.get(i+1)));
+            List<Document> ret = new ArrayList<>(resp.size() - 1);
+            for (int i = 1; i < resp.size(); i += 2) {
+                ret.add(Document.load(new String((byte[]) resp.get(i)), (List) resp.get(i + 1)));
             }
             return ret;
 
@@ -99,7 +101,7 @@ public class Client {
         return null;
     }
 
-    public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[]payload) {
+    public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
         ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName, docId, Double.toString(score)));
         if (noSave) {
             args.add("NOSAVE");
@@ -117,7 +119,7 @@ public class Client {
         for (Map.Entry<String, Object> ent : fields.entrySet()) {
             args.add(ent.getKey());
             args.add(ent.getValue().toString());
-       }
+        }
 
         Jedis conn = _conn();
         String resp = conn.getClient().sendCommand(Commands.Command.ADD, args.toArray(new String[args.size()])).getStatusCodeReply();
@@ -132,4 +134,47 @@ public class Client {
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
     }
+
+    /* FT.ADDHASH {index} {docId} {score} [LANGUAGE language] [REPLACE] */
+
+    public boolean addHash(String docId, double score, boolean replace) {
+        ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName, docId, Double.toString(score)));
+
+        if (replace) {
+            args.add("REPLACE");
+        }
+
+        Jedis conn = _conn();
+        String resp = conn.getClient().sendCommand(Commands.Command.ADDHASH,
+                args.toArray(new String[args.size()])).getStatusCodeReply();
+        return resp.equals("OK");
+    }
+
+    public static class IndexInfo {
+
+    }
+
+    public IndexInfo getInfo() {
+        return null;
+    }
+
+    public boolean deleteDocument(String docId) {
+
+        Jedis conn = _conn();
+        Long r = conn.getClient().sendCommand(Commands.Command.DEL, this.indexName, docId).getIntegerReply();
+        return r == 1;
+    }
+
+    public boolean dropIndex() {
+        Jedis conn = _conn();
+        String r = conn.getClient().sendCommand(Commands.Command.DROP, this.indexName).getStatusCodeReply();
+        return r.equals("OK");
+    }
+
+    public long optimizeIndex() {
+        Jedis conn = _conn();
+        return conn.getClient().sendCommand(Commands.Command.DROP, this.indexName).getIntegerReply();
+    }
+
+
 }

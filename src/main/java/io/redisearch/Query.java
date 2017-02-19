@@ -25,6 +25,9 @@ public class Query {
 
     }
 
+    /**
+     * NumericFilter wraps a range filter on a numeric field. It can be inclusive or exclusive
+     */
     public static class NumericFilter extends Filter {
 
         private final double min;
@@ -63,6 +66,9 @@ public class Query {
         }
     }
 
+    /**
+     * GeoFilter encapsulates a radius filter on a geographical indexed fields
+     */
     public static class GeoFilter extends Filter {
 
         public static final String KILOMETERS = "km";
@@ -200,41 +206,73 @@ public class Query {
         return this;
     }
 
+    /**
+     * Add a filter to the query's filter list
+     * @param f either a numeric or geo filter object
+     * @return the query itself
+     */
     public Query addFilter(Filter f) {
         _filters.add(f);
         return this;
     }
 
+    /**
+     * Set the query to verbatim mode, disabling stemming and query expansion
+     * @return the query object
+     */
     public Query setVerbatim() {
         this._verbatim = true;
         return this;
     }
 
+    /**
+     * Set the query not to return the contents of documents, and rather just return the ids
+     * @return the query itself
+     */
     public Query setNoContent() {
         this._noContent = true;
         return this;
     }
 
+    /**
+     * Set the query not to filter for stopwords. In general this should not be used
+     * @return the query object
+     */
     public Query setNoStopwords() {
         this._noStopwords = true;
         return this;
     }
 
+    /**
+     * Set the query to return a factored score for each results. This is useful to merge results from multiple queries.
+     * @return the query object itself
+     */
     public Query setWithScores() {
         this._withScores = true;
         return this;
     }
 
+    /** Set the query to return object payloads, if any were given */
     public Query setWithPaload() {
         this._withPayloads = true;
         return this;
     }
 
+    /**
+     * Set the query language, for stemming purposes
+     * @param language a language. see http://redisearch.io for documentation on languages and stemming
+     * @return
+     */
     public Query setLanguage(String language) {
         this._language = language;
         return this;
     }
 
+    /**
+     * Limit the query to results that are limited to a specific set of fields
+     * @param fields a list of TEXT fields in the schemas
+     * @return the query object itself
+     */
     public Query limitFields(String... fields) {
         this._fields = fields;
         return this;

@@ -4,7 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by dvirsky on 07/02/16.
+ * Schema abstracs the schema definition when creating an index.
+ * Documents can contain fields not mentioned in the schema, but the index will only index pre-defined fields
  */
 public class Schema {
 
@@ -37,7 +38,7 @@ public class Schema {
         }
     }
 
-        /**
+    /**
      * FullText field spec.
      */
     public static class TextField extends Field {
@@ -72,16 +73,32 @@ public class Schema {
 
     }
 
+    /**
+     * Add a text field to the schema with a given weight
+     * @param name the field's name
+     * @param weight its weight, a positive floating point number
+     * @return the schema object
+     */
     public Schema addTextField(String name, double weight) {
         fields.add(new TextField(name, weight));
         return this;
     }
 
+    /**
+     * Add a geo filtering field to the schema.
+     * @param name the field's name
+     * @return the schema object
+     */
     public Schema addGeoField(String name) {
         fields.add(new Field(name, FieldType.Geo));
         return this;
     }
 
+    /**
+     * Add a numeric field to the schema
+     * @param name the fields's nam e
+     * @return the schema object
+     */
     public Schema addNumericField(String name) {
         fields.add( new Field(name, FieldType.Numeric));
         return this;

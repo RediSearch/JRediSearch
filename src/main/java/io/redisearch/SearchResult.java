@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Created by dvirsky on 19/02/17.
+ * SearchResult encapsulates the returned result from a search query.
+ * It contains publically accessible fields for the total number of results, and an array of {@link Document}
+ * objects conatining the actual returned documents.
  */
 public class SearchResult {
     public long totalResults;

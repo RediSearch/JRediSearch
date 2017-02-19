@@ -4,7 +4,7 @@ import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.util.SafeEncoder;
 
 /**
- * Created by dvirsky on 16/02/17.
+ * TODO: Abstract auto-complete commands
  */
 public class AutoCompleter {
 

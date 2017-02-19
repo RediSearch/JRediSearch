@@ -3,10 +3,10 @@ package io.redisearch.client;
 import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
+import io.redisearch.SearchResult;
 import org.junit.Test;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static junit.framework.TestCase.assertTrue;
@@ -30,9 +30,9 @@ public class ClientTest {
 
         assertTrue(cl.addDocument("doc1", doc));
 
-        List<Document> res = cl.search(new Query("hello world"));
+        SearchResult res = cl.search(new Query("hello world"));
 
-        for (Document d : res) {
+        for (Document d : res.docs) {
             System.out.println(d);
         }
 

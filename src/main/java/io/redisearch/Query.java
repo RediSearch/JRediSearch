@@ -98,6 +98,19 @@ public class Query {
     protected Paging _paging = new Paging(0, 10);
 
     protected boolean _verbatim = false;
+
+    public boolean getNoContent() {
+        return _noContent;
+    }
+
+    public boolean getWithScores() {
+        return _withScores;
+    }
+
+    public boolean getWithPayloads() {
+        return _withPayloads;
+    }
+
     protected boolean _noContent = false;
     protected boolean _noStopwords = false;
     protected boolean _withScores = false;
@@ -175,7 +188,7 @@ public class Query {
         return this;
     }
 
-    public Query setNoStopword() {
+    public Query setNoStopwords() {
         this._noStopwords = true;
         return this;
     }

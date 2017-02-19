@@ -13,10 +13,11 @@ import java.util.Map;
 public class Document implements Serializable {
 
     private String id;
-    private float score;
+    private double score;
+    private byte[]payload;
     private Map<String, Object> properties;
 
-    public Document(String id, float score) {
+    public Document(String id, Double score) {
         this.id = id;
         this.score = score;
         properties = new HashMap<>();
@@ -29,9 +30,10 @@ public class Document implements Serializable {
     }
 
 
-    public static Document load(String id, List fields) {
+    public static Document load(String id, Double score, byte[]payload, List fields) {
 
-        Document ret = new Document(id, 1);
+        Document ret = new Document(id, score);
+        ret.payload = payload;
         if (fields != null) {
             for (int i = 0; i < fields.size(); i += 2) {
                 ret.set(new String((byte[])fields.get(i)), new String((byte[])fields.get(i + 1)));
@@ -60,8 +62,12 @@ public class Document implements Serializable {
     /**
      * @return the document's score
      */
-    public float getScore() {
+    public double getScore() {
         return score;
+    }
+
+    public byte[]getPayload() {
+        return payload;
     }
 
     /**

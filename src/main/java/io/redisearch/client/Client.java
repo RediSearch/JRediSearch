@@ -1,8 +1,8 @@
 package io.redisearch.client;
 
-import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
+import io.redisearch.SearchResult;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
@@ -83,22 +83,14 @@ public class Client {
 
     }
 
-    public List<Document> search(Query q) {
+    public SearchResult search(Query q) {
         ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName));
         q.serializeRedisArgs(args);
 
         Jedis conn = _conn();
         List<Object> resp = conn.getClient().sendCommand(Commands.Command.SEARCH, args.toArray(new String[args.size()])).getObjectMultiBulkReply();
 
-        if (resp.size() > 1) {
-            List<Document> ret = new ArrayList<>(resp.size() - 1);
-            for (int i = 1; i < resp.size(); i += 2) {
-                ret.add(Document.load(new String((byte[]) resp.get(i)), (List) resp.get(i + 1)));
-            }
-            return ret;
-
-        }
-        return null;
+        return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
     }
 
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {

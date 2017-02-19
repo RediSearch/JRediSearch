@@ -6,10 +6,7 @@ import io.redisearch.SearchResult;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by dvirsky on 08/02/17.
@@ -104,7 +101,7 @@ public class Client {
         if (payload != null) {
             args.add("PAYLOAD");
             // TODO: Fix this
-            args.add(payload.toString());
+            args.add(new String(payload));
         }
 
         args.add("FIELDS");
@@ -114,7 +111,10 @@ public class Client {
         }
 
         Jedis conn = _conn();
-        String resp = conn.getClient().sendCommand(Commands.Command.ADD, args.toArray(new String[args.size()])).getStatusCodeReply();
+
+        String resp = conn.getClient().sendCommand(Commands.Command.ADD,
+                                                    args.toArray(new String[args.size()]))
+                                        .getStatusCodeReply();
         conn.close();
         return resp.equals("OK");
 
@@ -142,12 +142,23 @@ public class Client {
         return resp.equals("OK");
     }
 
-    public static class IndexInfo {
 
-    }
 
-    public IndexInfo getInfo() {
-        return null;
+    public Map<String, Object> getInfo() {
+
+        Jedis conn = _conn();
+        List<Object> res = conn.getClient().sendCommand(Commands.Command.INFO, this.indexName).getObjectMultiBulkReply();
+        conn.close();
+        Map<String, Object> info  = new HashMap<>();
+        for (int i = 0; i < res.size(); i+=2) {
+            String key = new String((byte[])res.get(i));
+            Object val = res.get(i+1);
+            if (val.getClass().equals((new byte[]{}).getClass())) {
+                val = new String((byte[])val);
+            }
+            info.put(key, val);
+        }
+        return info;
     }
 
     public boolean deleteDocument(String docId) {

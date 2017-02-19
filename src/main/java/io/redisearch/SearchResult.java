@@ -27,7 +27,7 @@ public class SearchResult {
         if (hasContent) {
             step += 1;
             if (hasPayloads) {
-                payloadOffset =2;
+                payloadOffset =scoreOffset+1;
                 step += 1;
                 contentOffset+=1;
             }

@@ -50,7 +50,7 @@ public class Client {
     private final String indexName;
     private JedisPool pool;
 
-    private Jedis _conn() {
+    Jedis _conn() {
         return pool.getResource();
     }
 
@@ -78,7 +78,7 @@ public class Client {
         String rep = conn.getClient()
                 .sendCommand(Commands.Command.CREATE, args.toArray(new String[args.size()]))
                 .getStatusCodeReply();
-
+        conn.close();
         return rep.equals("OK");
 
     }
@@ -89,7 +89,7 @@ public class Client {
 
         Jedis conn = _conn();
         List<Object> resp = conn.getClient().sendCommand(Commands.Command.SEARCH, args.toArray(new String[args.size()])).getObjectMultiBulkReply();
-
+        conn.close();
         return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
     }
 
@@ -115,6 +115,7 @@ public class Client {
 
         Jedis conn = _conn();
         String resp = conn.getClient().sendCommand(Commands.Command.ADD, args.toArray(new String[args.size()])).getStatusCodeReply();
+        conn.close();
         return resp.equals("OK");
 
     }
@@ -127,8 +128,6 @@ public class Client {
         return this.addDocument(docId, 1, fields, false, false, null);
     }
 
-    /* FT.ADDHASH {index} {docId} {score} [LANGUAGE language] [REPLACE] */
-
     public boolean addHash(String docId, double score, boolean replace) {
         ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName, docId, Double.toString(score)));
 
@@ -139,6 +138,7 @@ public class Client {
         Jedis conn = _conn();
         String resp = conn.getClient().sendCommand(Commands.Command.ADDHASH,
                 args.toArray(new String[args.size()])).getStatusCodeReply();
+        conn.close();
         return resp.equals("OK");
     }
 
@@ -154,18 +154,22 @@ public class Client {
 
         Jedis conn = _conn();
         Long r = conn.getClient().sendCommand(Commands.Command.DEL, this.indexName, docId).getIntegerReply();
+        conn.close();
         return r == 1;
     }
 
     public boolean dropIndex() {
         Jedis conn = _conn();
         String r = conn.getClient().sendCommand(Commands.Command.DROP, this.indexName).getStatusCodeReply();
+        conn.close();
         return r.equals("OK");
     }
 
     public long optimizeIndex() {
         Jedis conn = _conn();
-        return conn.getClient().sendCommand(Commands.Command.DROP, this.indexName).getIntegerReply();
+        long ret= conn.getClient().sendCommand(Commands.Command.DROP, this.indexName).getIntegerReply();
+        conn.close();
+        return ret;
     }
 
 

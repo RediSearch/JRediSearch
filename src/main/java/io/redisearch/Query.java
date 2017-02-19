@@ -28,26 +28,47 @@ public class Query {
     public static class NumericFilter extends Filter {
 
         private final double min;
+        boolean exclusiveMin;
         private final double max;
+        boolean exclusiveMax;
 
-        public NumericFilter(String property, double min, double max) {
+        public NumericFilter(String property, double min, boolean exclusiveMin, double max, boolean exclusiveMax) {
             super(property);
             this.min = min;
             this.max = max;
+            this.exclusiveMax = exclusiveMax;
+            this.exclusiveMin = exclusiveMin;
+        }
+
+        public NumericFilter(String property, double min, double max) {
+            this(property, min, false, max, false);
+        }
+
+        private String formatNum(double num, boolean exclude) {
+            if (num == Double.POSITIVE_INFINITY) {
+                return "+inf";
+            }
+            if (num == Double.NEGATIVE_INFINITY) {
+                return "-inf";
+            }
+            return String.format("%s%f", exclude ? "(" : "", num);
         }
 
         @Override
         public void serializeRedisArgs(List<String> args) {
-            args.addAll(Arrays.asList("FILTER", property, Double.toString(min), Double.toString(max)));
+            args.addAll(Arrays.asList("FILTER", property,
+                    formatNum(min, exclusiveMin),
+                    formatNum(max, exclusiveMax)));
+
         }
     }
 
     public static class GeoFilter extends Filter {
 
-        static final String KILOMETERS = "km";
-        static final String MEETERS = "m";
-        static final String FEET = "ft";
-        static final String MILES = "mi";
+        public static final String KILOMETERS = "km";
+        public static final String METERS = "m";
+        public static final String FEET = "ft";
+        public static final String MILES = "mi";
 
         private final double lon;
         private final double lat;
@@ -157,6 +178,12 @@ public class Query {
                     Integer.toString(_paging.offset),
                     Integer.toString(_paging.num)
             ));
+        }
+
+        if (_filters != null && _filters.size() > 0) {
+            for (Filter f : _filters) {
+                f.serializeRedisArgs(args);
+            }
         }
     }
 

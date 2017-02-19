@@ -77,7 +77,7 @@ public class Schema {
         return this;
     }
 
-    public Schema addGeoFields(String name) {
+    public Schema addGeoField(String name) {
         fields.add(new Field(name, FieldType.Geo));
         return this;
     }

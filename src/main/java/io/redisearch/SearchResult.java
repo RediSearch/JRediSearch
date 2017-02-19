@@ -16,13 +16,20 @@ public class SearchResult {
         // Calculate the step distance to walk over the results.
         // The order of results is id, score (if withScore), payLoad (if hasPayloads), fields
         int step = 1;
+        int scoreOffset = 0;
+        int contentOffset = 1;
+        int payloadOffset = 0;
         if (hasScores) {
             step += 1;
+            scoreOffset = 1;
+            contentOffset+=1;
         }
         if (hasContent) {
             step += 1;
             if (hasPayloads) {
+                payloadOffset =2;
                 step += 1;
+                contentOffset+=1;
             }
         }
 
@@ -37,14 +44,14 @@ public class SearchResult {
             byte[] payload = null;
             List fields = null;
             if (hasScores) {
-                score = Double.valueOf(new String((byte[]) resp.get(i + 1)));
+                score = Double.valueOf(new String((byte[]) resp.get(i + scoreOffset)));
             }
             if (hasPayloads) {
-                payload = (byte[]) resp.get(i + 2);
+                payload = (byte[]) resp.get(i + payloadOffset);
             }
 
             if (hasContent) {
-                fields = (List) resp.get(i + 1);
+                fields = (List) resp.get(i + contentOffset);
             }
 
             docs.add(Document.load(id, score, payload, fields));

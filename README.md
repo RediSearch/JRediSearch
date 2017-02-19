@@ -62,9 +62,9 @@ Query q = new Query("hello world")
                     .limit(0,5);
 
 // actual search
-SearchResult res = client.search(new Query("hello world")
-                        .limit(0, 5)
-                        .setWithScores());            
+SearchResult res = client.search(q);
+
+
 ```
 
 ---

@@ -4,4 +4,4 @@
 !**/*.jar
 !**/*.md
 !.gitignore
-
+!pom.xml

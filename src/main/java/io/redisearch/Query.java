@@ -176,6 +176,8 @@ public class Query {
             args.add(_language);
         }
         if (_fields != null && _fields.length > 0) {
+            args.add("INFIELDS");
+            args.add(String.format("%d", _fields.length));
             args.addAll(Arrays.asList(_fields));
         }
 

@@ -70,6 +70,7 @@ public class Client {
     Jedis _conn() {
         return pool.getResource();
     }
+    protected Commands.CommandProvider commands;
 
     /**
      * Create a new client to a RediSearch index
@@ -81,7 +82,9 @@ public class Client {
         pool = new JedisPool(host, port);
 
         this.indexName = indexName;
+        this.commands = new Commands.SingleNodeCommands();
     }
+
 
     /**
      * Create the index definition in redis
@@ -105,7 +108,8 @@ public class Client {
         }
 
         String rep = conn.getClient()
-                .sendCommand(Commands.Command.CREATE, args.toArray(new String[args.size()]))
+                .sendCommand(commands.getCreateCommand(),
+                             args.toArray(new String[args.size()]))
                 .getStatusCodeReply();
         conn.close();
         return rep.equals("OK");
@@ -122,7 +126,7 @@ public class Client {
         q.serializeRedisArgs(args);
 
         Jedis conn = _conn();
-        List<Object> resp = conn.getClient().sendCommand(Commands.Command.SEARCH, args.toArray(new String[args.size()])).getObjectMultiBulkReply();
+        List<Object> resp = conn.getClient().sendCommand(commands.getSearchCommand(), args.toArray(new String[args.size()])).getObjectMultiBulkReply();
         conn.close();
         return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
     }
@@ -159,7 +163,7 @@ public class Client {
 
         Jedis conn = _conn();
 
-        String resp = conn.getClient().sendCommand(Commands.Command.ADD,
+        String resp = conn.getClient().sendCommand(commands.getAddCommand(),
                 args.toArray(new String[args.size()]))
                 .getStatusCodeReply();
         conn.close();
@@ -190,7 +194,7 @@ public class Client {
         }
 
         Jedis conn = _conn();
-        String resp = conn.getClient().sendCommand(Commands.Command.ADDHASH,
+        String resp = conn.getClient().sendCommand(commands.getAddHashCommand(),
                 args.toArray(new String[args.size()])).getStatusCodeReply();
         conn.close();
         return resp.equals("OK");
@@ -203,7 +207,7 @@ public class Client {
     public Map<String, Object> getInfo() {
 
         Jedis conn = _conn();
-        List<Object> res = conn.getClient().sendCommand(Commands.Command.INFO, this.indexName).getObjectMultiBulkReply();
+        List<Object> res = conn.getClient().sendCommand(commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
         conn.close();
         Map<String, Object> info = new HashMap<>();
         for (int i = 0; i < res.size(); i += 2) {
@@ -225,7 +229,7 @@ public class Client {
     public boolean deleteDocument(String docId) {
 
         Jedis conn = _conn();
-        Long r = conn.getClient().sendCommand(Commands.Command.DEL, this.indexName, docId).getIntegerReply();
+        Long r = conn.getClient().sendCommand(commands.getDelCommand(), this.indexName, docId).getIntegerReply();
         conn.close();
         return r == 1;
     }
@@ -236,7 +240,7 @@ public class Client {
      */
     public boolean dropIndex() {
         Jedis conn = _conn();
-        String r = conn.getClient().sendCommand(Commands.Command.DROP, this.indexName).getStatusCodeReply();
+        String r = conn.getClient().sendCommand(commands.getDropCommand(), this.indexName).getStatusCodeReply();
         conn.close();
         return r.equals("OK");
     }
@@ -244,7 +248,7 @@ public class Client {
     /** Optimize memory consumption of the index by removing extra saved capacity. This does not affect speed */
     public long optimizeIndex() {
         Jedis conn = _conn();
-        long ret = conn.getClient().sendCommand(Commands.Command.DROP, this.indexName).getIntegerReply();
+        long ret = conn.getClient().sendCommand(commands.getOptimizeCommand(), this.indexName).getIntegerReply();
         conn.close();
         return ret;
     }

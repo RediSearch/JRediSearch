@@ -16,9 +16,13 @@ public class ClusterClient extends Client {
      * @param host      the redis host
      * @param port      the redis pot
      */
-    public ClusterClient(String indexName, String host, int port) {
-        super(indexName, host, port);
+    public ClusterClient(String indexName, String host, int port, int timeout, int poolSize) {
+        super(indexName, host, port, timeout, poolSize);
         this.commands = new Commands.ClusterCommands();
+    }
+
+    public ClusterClient(String indexName, String host, int port) {
+        this(indexName, host, port, 500, 100);
     }
 
     public List<Object> broadcast(String... args) {

@@ -76,13 +76,14 @@ public class ClusterTest {
         }
 
         SearchResult res = cl.search(new Query("hello world").
-                addFilter(new Query.NumericFilter("price", 0, 50)));
-        assertEquals(51, res.totalResults);
+                addFilter(new Query.NumericFilter("price", 0, 49)));
+
+        assertEquals(50, res.totalResults);
         assertEquals(10, res.docs.size());
         for (Document d : res.docs) {
             long price = Long.valueOf((String) d.get("price"));
             assertTrue(price >= 0);
-            assertTrue(price <= 50);
+            assertTrue(price <= 49);
         }
 
         res = cl.search(new Query("hello world").
@@ -95,8 +96,8 @@ public class ClusterTest {
             assertTrue(price < 49);
         }
         res = cl.search(new Query("hello world").
-                addFilter(new Query.NumericFilter("price", 60, 100)));
-        assertEquals(40, res.totalResults);
+                addFilter(new Query.NumericFilter("price", 50, 100)));
+        assertEquals(50, res.totalResults);
         assertEquals(10, res.docs.size());
         for (Document d : res.docs) {
             long price = Long.valueOf((String) d.get("price"));
@@ -105,8 +106,8 @@ public class ClusterTest {
         }
 
         res = cl.search(new Query("hello world").
-                addFilter(new Query.NumericFilter("price", 0, Double.POSITIVE_INFINITY)));
-        assertEquals(100, res.totalResults);
+                addFilter(new Query.NumericFilter("price", 20, Double.POSITIVE_INFINITY)));
+        assertEquals(80, res.totalResults);
         assertEquals(10, res.docs.size());
 
         res = cl.search(new Query("hello world").

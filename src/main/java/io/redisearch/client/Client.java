@@ -5,6 +5,7 @@ import io.redisearch.Schema;
 import io.redisearch.SearchResult;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import java.util.*;
 
@@ -78,13 +79,27 @@ public class Client {
      * @param host the redis host
      * @param port the redis pot
      */
-    public Client(String indexName, String host, int port) {
-        pool = new JedisPool(host, port);
+    public Client(String indexName, String host, int port, int timeout, int poolSize) {
+        JedisPoolConfig conf = new JedisPoolConfig();
+        conf.setMaxTotal(poolSize);
+        conf.setTestOnBorrow(false);
+        conf.setTestOnReturn(false);
+        conf.setTestOnCreate(false);
+        conf.setTestWhileIdle(false);
+        conf.setMinEvictableIdleTimeMillis(60000);
+        conf.setTimeBetweenEvictionRunsMillis(30000);
+        conf.setNumTestsPerEvictionRun(-1);
+        conf.setFairness(true);
+
+        pool = new JedisPool(conf, host, port, timeout);
 
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();
     }
 
+    public Client(String indexName, String host, int port) {
+        this(indexName, host, port, 500, 100);
+    }
 
     /**
      * Create the index definition in redis
@@ -170,6 +185,14 @@ public class Client {
         return resp.equals("OK");
 
     }
+
+    /**
+     * replaceDocument is a convenience for calling addDocument with replace=true
+     */
+    public boolean replaceDocument(String docId, double score, Map<String, Object> fields ) {
+        return addDocument( docId, score, fields,false, true, null);
+    }
+
     /** See above */
     public boolean addDocument(String docId, double score, Map<String, Object> fields) {
         return this.addDocument(docId, score, fields, false, false, null);

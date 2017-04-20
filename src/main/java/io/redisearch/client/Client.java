@@ -137,11 +137,12 @@ public class Client {
      * @return a {@link SearchResult} object with the results
      */
     public SearchResult search(Query q) {
-        ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName));
+        ArrayList<byte[]> args = new ArrayList(4);
+        args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
         Jedis conn = _conn();
-        List<Object> resp = conn.getClient().sendCommand(commands.getSearchCommand(), args.toArray(new String[args.size()])).getObjectMultiBulkReply();
+        List<Object> resp = conn.getClient().sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
         conn.close();
         return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
     }
@@ -157,29 +158,30 @@ public class Client {
      * @return
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
-        ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName, docId, Double.toString(score)));
+        ArrayList<byte[]> args = new ArrayList<byte[]>(
+                Arrays.asList(indexName.getBytes(), docId.getBytes(), Double.toString(score).getBytes()));
         if (noSave) {
-            args.add("NOSAVE");
+            args.add("NOSAVE".getBytes());
         }
         if (replace) {
-            args.add("REPLACE");
+            args.add("REPLACE".getBytes());
         }
         if (payload != null) {
-            args.add("PAYLOAD");
+            args.add("PAYLOAD".getBytes());
             // TODO: Fix this
-            args.add(new String(payload));
+            args.add(payload);
         }
 
-        args.add("FIELDS");
+        args.add("FIELDS".getBytes());
         for (Map.Entry<String, Object> ent : fields.entrySet()) {
-            args.add(ent.getKey());
-            args.add(ent.getValue().toString());
+            args.add(ent.getKey().getBytes());
+            args.add(ent.getValue().toString().getBytes());
         }
 
         Jedis conn = _conn();
 
         String resp = conn.getClient().sendCommand(commands.getAddCommand(),
-                args.toArray(new String[args.size()]))
+                args.toArray(new byte[args.size()][]))
                 .getStatusCodeReply();
         conn.close();
         return resp.equals("OK");

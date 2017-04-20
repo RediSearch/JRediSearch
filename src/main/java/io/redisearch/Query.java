@@ -17,7 +17,7 @@ public class Query {
 
         public String property;
 
-        public abstract void serializeRedisArgs(List<String> args);
+        public abstract void serializeRedisArgs(List<byte[]> args);
 
         public Filter(String property) {
             this.property = property;
@@ -58,10 +58,10 @@ public class Query {
         }
 
         @Override
-        public void serializeRedisArgs(List<String> args) {
-            args.addAll(Arrays.asList("FILTER", property,
-                    formatNum(min, exclusiveMin),
-                    formatNum(max, exclusiveMax)));
+        public void serializeRedisArgs(List<byte[]> args) {
+            args.addAll(Arrays.asList("FILTER".getBytes(), property.getBytes(),
+                    formatNum(min, exclusiveMin).getBytes(),
+                    formatNum(max, exclusiveMax).getBytes()));
 
         }
     }
@@ -90,11 +90,12 @@ public class Query {
         }
 
         @Override
-        public void serializeRedisArgs(List<String> args) {
-            args.addAll(Arrays.asList("GEOFILTER", property, Double.toString(lon),
-                    Double.toString(lat),
-                    Double.toString(radius),
-                    unit));
+        public void serializeRedisArgs(List<byte[]> args) {
+            args.addAll(Arrays.asList("GEOFILTER".getBytes(),
+                    property.getBytes(), Double.toString(lon).getBytes(),
+                    Double.toString(lat).getBytes(),
+                    Double.toString(radius).getBytes(),
+                    unit.getBytes()));
         }
     }
 
@@ -144,6 +145,7 @@ public class Query {
     protected boolean _withPayloads = false;
     protected String _language = null;
     protected String[] _fields = null;
+    protected byte []_payload = null;
 
     /**
      * Create a new index
@@ -153,38 +155,46 @@ public class Query {
         _queryString = queryString;
     }
 
-    public void serializeRedisArgs(List<String> args) {
-        args.add(_queryString);
+    public void serializeRedisArgs(List<byte[]> args) {
+        args.add(_queryString.getBytes());
 
         if (_verbatim) {
-            args.add("VERBATIM");
+            args.add("VERBATIM".getBytes());
         }
         if (_noContent) {
-            args.add("NOCONTENT");
+            args.add("NOCONTENT".getBytes());
         }
         if (_noStopwords) {
-            args.add("NOSTOPWORDS");
+            args.add("NOSTOPWORDS".getBytes());
         }
         if (_withScores) {
-            args.add("WITHSCORES");
+            args.add("WITHSCORES".getBytes());
         }
         if (_withPayloads) {
-            args.add("WITHPAYLOADS");
+            args.add("WITHPAYLOADS".getBytes());
         }
         if (_language != null) {
-            args.add("LANGUAGE");
-            args.add(_language);
+            args.add("LANGUAGE".getBytes());
+            args.add(_language.getBytes());
         }
         if (_fields != null && _fields.length > 0) {
-            args.add("INFIELDS");
-            args.add(String.format("%d", _fields.length));
-            args.addAll(Arrays.asList(_fields));
+            args.add("INFIELDS".getBytes());
+            args.add(String.format("%d", _fields.length).getBytes());
+            for (String f : _fields) {
+                args.add(f.getBytes());
+            }
+
+        }
+
+        if (_payload != null) {
+            args.add("PAYLOAD".getBytes());
+            args.add(_payload);
         }
 
         if (_paging.offset != 0 || _paging.num != 10) {
-            args.addAll(Arrays.asList("LIMIT",
-                    Integer.toString(_paging.offset),
-                    Integer.toString(_paging.num)
+            args.addAll(Arrays.asList("LIMIT".getBytes(),
+                    Integer.toString(_paging.offset).getBytes(),
+                    Integer.toString(_paging.num).getBytes()
             ));
         }
 
@@ -215,6 +225,12 @@ public class Query {
      */
     public Query addFilter(Filter f) {
         _filters.add(f);
+        return this;
+    }
+
+    /* Set the query payload to be evaluated by the scoring function */
+    public Query setPayload(byte []payload) {
+        _payload = payload;
         return this;
     }
 

@@ -9,6 +9,7 @@ import redis.clients.jedis.Jedis;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 import static junit.framework.TestCase.*;
@@ -221,6 +222,42 @@ public class ClientTest {
         res = cl.search(new Query("hello a world").setVerbatim().setNoStopwords());
         assertEquals(0, res.totalResults);
     }
+
+    @Test
+    public void testSortQueryFlags() throws Exception {
+
+        Client cl = new Client("testung", "localhost", 6379);
+        cl._conn().flushDB();
+
+        Schema sc = new Schema().addSortableTextField("title", 1.0);
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        Map<String, Object> fields = new HashMap<>();
+
+        fields.put("title", "b title");
+        cl.addDocument("doc1", 1.0 , fields,false,true,null);
+
+        fields.put("title", "a title");
+        cl.addDocument("doc2", 1.0, fields ,false,true,null);
+
+        fields.put("title", "c title");
+        cl.addDocument("doc3", 1.0 , fields,false,true,null);
+
+        Query q = new Query("title").setSortBy("title",true);
+        SearchResult res = cl.search(q);
+
+        assertEquals(3, res.totalResults);
+        Document doc1 =  res.docs.get(0);
+        assertEquals("a title",doc1.get("title") );
+
+        doc1 =  res.docs.get(1);
+        assertEquals("b title",doc1.get("title") );
+
+        doc1 =  res.docs.get(2);
+        assertEquals("c title",doc1.get("title") );
+
+    }
+
 
     @Test
     public void testAddHash() throws Exception {

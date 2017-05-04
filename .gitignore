@@ -1,3 +1,4 @@
+target/
 *
 !/**/
 !**/*.java
@@ -5,3 +6,4 @@
 !**/*.md
 !.gitignore
 !pom.xml
+.idea/

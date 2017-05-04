@@ -146,6 +146,8 @@ public class Query {
     protected String _language = null;
     protected String[] _fields = null;
     protected byte []_payload = null;
+    protected String _sortBy = null;
+    protected boolean _sortAsc = true;
 
     /**
      * Create a new index
@@ -184,6 +186,12 @@ public class Query {
                 args.add(f.getBytes());
             }
 
+        }
+
+        if (_sortBy != null) {
+            args.add("SORTBY".getBytes());
+            args.add(_sortBy.getBytes());
+            args.add((_sortAsc ? "ASC" : "DESC").getBytes());
         }
 
         if (_payload != null) {
@@ -293,6 +301,18 @@ public class Query {
      */
     public Query limitFields(String... fields) {
         this._fields = fields;
+        return this;
+    }
+
+    /**
+     * Set the query to be sorted by a sortable field defined in the schem
+     * @param field the sorting field's name
+     * @param ascending if set to true, the sorting order is ascending, else descending
+     * @return the query object itself
+     */
+    public Query setSortBy(String field, boolean ascending) {
+        _sortBy = field;
+        _sortAsc = ascending;
         return this;
     }
 }

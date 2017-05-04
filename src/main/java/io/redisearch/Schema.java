@@ -23,10 +23,12 @@ public class Schema {
     public static class Field {
         public String name;
         public FieldType type;
+        public boolean sortable;
 
-        public Field(String name, FieldType type) {
+        public Field(String name, FieldType type, boolean sortable) {
             this.name = name;
             this.type = type;
+            this.sortable = sortable;
         }
 
 
@@ -34,6 +36,9 @@ public class Schema {
 
             args.add(name);
             args.add(type.str);
+            if (sortable) {
+                args.add("SORTABLE");
+            }
 
         }
     }
@@ -45,21 +50,31 @@ public class Schema {
 
         double weight = 1.0;
 
+
         public TextField(String name, double weight) {
-            super(name, FieldType.FullText);
+            super(name, FieldType.FullText, false);
+            this.weight = weight;
+        }
+
+        public TextField(String name, double weight, boolean sortable) {
+            super(name, FieldType.FullText, sortable);
             this.weight = weight;
         }
 
         public TextField(String name) {
-            super(name, FieldType.FullText);
+            super(name, FieldType.FullText, false);
         }
 
         @Override
         public void serializeRedisArgs(List<String> args) {
-            super.serializeRedisArgs(args);
+            args.add(name);
+            args.add(type.str);
             if (weight != 1.0) {
                 args.add("WEIGHT");
                 args.add(Double.toString(weight));
+            }
+            if (sortable) {
+                args.add("SORTABLE");
             }
         }
     }
@@ -85,12 +100,23 @@ public class Schema {
     }
 
     /**
+     * Add a text field that can be sorted on
+     * @param name the field's name
+     * @param weight its weight, a positive floating point number
+     * @return the schema object
+     */
+    public Schema addSortableTextField(String name, double weight) {
+        fields.add(new TextField(name, weight, true));
+        return this;
+    }
+
+    /**
      * Add a geo filtering field to the schema.
      * @param name the field's name
      * @return the schema object
      */
     public Schema addGeoField(String name) {
-        fields.add(new Field(name, FieldType.Geo));
+        fields.add(new Field(name, FieldType.Geo, false));
         return this;
     }
 
@@ -100,7 +126,13 @@ public class Schema {
      * @return the schema object
      */
     public Schema addNumericField(String name) {
-        fields.add( new Field(name, FieldType.Numeric));
+        fields.add( new Field(name, FieldType.Numeric, false));
+        return this;
+    }
+
+    /* Add a numeric field that can be sorted on */
+    public Schema addSortableNumericField(String name) {
+        fields.add( new Field(name, FieldType.Numeric, true));
         return this;
     }
 

@@ -36,17 +36,45 @@ public class Client {
          */
         public static final int USE_SCORE_INDEXES = 0x04;
 
+        public static final int DEFAULT_FLAGS = USE_TERM_OFFSETS | KEEP_FIELD_FLAGS;
+
         int flags = 0x0;
 
+        List<String> stopwords = null;
+
+        /**
+         * Default constructor
+         * @param flags flag mask
+         */
         public IndexOptions(int flags) {
             this.flags = flags;
+            stopwords = null;
         }
+
+        /**
+         * Set a custom stopword list
+         * @return the options object itself, for builder-style construction
+         */
+        public IndexOptions SetStopwords(String ...stopwords) {
+            this.stopwords = Arrays.asList(stopwords);
+            return this;
+        }
+
+        /**
+         * Set the index to contain no stopwords, overriding the default list
+         * @return the options object itself, for builder-style constructions
+         */
+        public IndexOptions SetNoStopwords() {
+            stopwords = new ArrayList<>(0);
+            return this;
+        }
+
 
         /**
          * The default indexing options - use term offsets and keep fields flags
          */
         public static IndexOptions Default() {
-            return new IndexOptions(USE_TERM_OFFSETS | KEEP_FIELD_FLAGS);
+            return new IndexOptions(DEFAULT_FLAGS);
         }
 
         public void serializeRedisArgs(List<String> args) {
@@ -59,6 +87,16 @@ public class Client {
             }
             if ((flags & USE_SCORE_INDEXES) == 0) {
                 args.add("NOSCOREIDX");
+            }
+
+            if (stopwords!=null) {
+
+                args.add("STOPWORDS");
+                args.add(String.format("%d", stopwords.size()));
+                if (stopwords.size() > 0) {
+                    args.addAll(stopwords);
+                }
+
             }
         }
     }

@@ -123,6 +123,42 @@ public class ClientTest {
     }
 
     @Test
+    public void testStopwords() throws Exception {
+        Client cl = new Client("testung", "localhost", 6379);
+        cl._conn().flushDB();
+
+        Schema sc = new Schema().addTextField("title", 1.0);
+
+
+        assertTrue(cl.createIndex(sc,
+                Client.IndexOptions.Default().SetStopwords("foo", "bar", "baz")));
+
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("title", "hello world foo bar");
+        assertTrue(cl.addDocument("doc1", fields));
+        SearchResult res = cl.search(new Query("hello world"));
+        assertEquals(1, res.totalResults);
+        res = cl.search(new Query("foo bar"));
+        assertEquals(0, res.totalResults);
+
+        cl._conn().flushDB();
+
+        assertTrue(cl.createIndex(sc,
+                Client.IndexOptions.Default().SetNoStopwords()));
+        fields.put("title", "hello world foo bar to be or not to be");
+        assertTrue(cl.addDocument("doc1", fields));
+
+        assertEquals(1, cl.search(new Query("hello world")).totalResults);
+        assertEquals(1, cl.search(new Query("foo bar")).totalResults);
+        assertEquals(1, cl.search(new Query("to be or not to be")).totalResults);
+
+
+
+
+    }
+
+
+    @Test
     public void testGeoFilter() throws Exception {
         Client cl = new Client("testung", "localhost", 6379);
         cl._conn().flushDB();

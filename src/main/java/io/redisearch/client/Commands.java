@@ -33,15 +33,15 @@ import redis.clients.util.SafeEncoder;
 
     public enum ClusterCommand implements ProtocolCommand {
 
-        CREATE("DFT.CREATE"),
-        ADD("DFT.ADD"),
-        ADDHASH("DFT.ADDHASH"),
-        INFO("DFT.INFO"),
-        SEARCH("DFT.FSEARCH"),
-        DEL("DFT.DEL"),
-        DROP("DFT.DROP"),
-        OPTIMIZE("DFT.OPTIMIZE"),
-        BROADCAST("DFT.BROADCAST");
+        CREATE("FT.CREATE"),
+        ADD("FT.ADD"),
+        ADDHASH("FT.ADDHASH"),
+        INFO("FT.INFO"),
+        SEARCH("FT.FSEARCH"),
+        DEL("FT.DEL"),
+        DROP("FT.DROP"),
+        OPTIMIZE("FT.OPTIMIZE"),
+        BROADCAST("FT.BROADCAST");
         private final byte[] raw;
 
         ClusterCommand(String alt) {

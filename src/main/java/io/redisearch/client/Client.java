@@ -31,12 +31,6 @@ public class Client {
         public static final int KEEP_FIELD_FLAGS = 0x02;
 
         /**
-         * If set, we keep an index of the top entries per term, allowing extremely fast single word queries
-         * regardless of index size, at the cost of more memory
-         */
-        public static final int USE_SCORE_INDEXES = 0x04;
-
-        /**
          * With each document:term record, store how often the term appears within the document. This can be used
          * for sorting documents by their relevancy to the given term.
          */
@@ -90,9 +84,6 @@ public class Client {
             }
             if ((flags & KEEP_FIELD_FLAGS) == 0) {
                 args.add("NOFIELDS");
-            }
-            if ((flags & USE_SCORE_INDEXES) == 0) {
-                args.add("NOSCOREIDX");
             }
             if ((flags & KEEP_TERM_FREQUENCIES) == 0) {
                 args.add("NOFREQS");

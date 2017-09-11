@@ -326,6 +326,27 @@ public class ClientTest {
     }
 
     @Test
+    public void testNoStem() throws Exception {
+        Client cl = new Client("testung", "localhost", 6379);
+        cl._conn().flushDB();
+        Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("stemmed", "located");
+        doc.put("notStemmed", "located");
+        // Store it
+        assertTrue(cl.addDocument("doc", doc));
+
+        // Query
+        SearchResult res = cl.search(new Query("@stemmed:location"));
+        assertEquals(1, res.totalResults);
+
+        res = cl.search(new Query("@notStemmed:location"));
+        assertEquals(0, res.totalResults);
+    }
+
+    @Test
     public void testInfo() throws Exception {
         Client cl = new Client("testung", "localhost", 6379);
         cl._conn().flushDB();

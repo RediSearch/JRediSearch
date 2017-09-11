@@ -19,8 +19,6 @@ import static junit.framework.TestCase.*;
  * Created by dvirsky on 09/02/17.
  */
 public class ClientTest {
-
-
     @Test
     public void search() throws Exception {
         Client cl = new Client("testung", "localhost", 6379);
@@ -35,7 +33,6 @@ public class ClientTest {
         for (int i = 0; i < 100; i++) {
             assertTrue(cl.addDocument(String.format("doc%d", i), (double) i / 100.0, fields));
         }
-
 
         SearchResult res = cl.search(new Query("hello world").limit(0, 5).setWithScores());
         assertEquals(100, res.totalResults);
@@ -61,7 +58,6 @@ public class ClientTest {
             threw = true;
         }
         assertTrue(threw);
-
     }
 
 
@@ -151,10 +147,6 @@ public class ClientTest {
         assertEquals(1, cl.search(new Query("hello world")).totalResults);
         assertEquals(1, cl.search(new Query("foo bar")).totalResults);
         assertEquals(1, cl.search(new Query("to be or not to be")).totalResults);
-
-
-
-
     }
 
 
@@ -206,8 +198,6 @@ public class ClientTest {
         assertEquals(1, res.docs.size());
 
         assertEquals(payload, new String(res.docs.get(0).getPayload()));
-
-
     }
 
     @Test
@@ -291,9 +281,7 @@ public class ClientTest {
 
         doc1 =  res.docs.get(2);
         assertEquals("c title",doc1.get("title") );
-
     }
-
 
     @Test
     public void testAddHash() throws Exception {
@@ -310,7 +298,6 @@ public class ClientTest {
         SearchResult res = cl.search(new Query("hello world").setVerbatim());
         assertEquals(1, res.totalResults);
         assertEquals("foo", res.docs.get(0).getId());
-
     }
 
     @Test
@@ -327,7 +314,6 @@ public class ClientTest {
             assertTrue(cl.addDocument(String.format("doc%d", i), fields));
         }
 
-
         SearchResult res = cl.search(new Query("hello world"));
         assertEquals(100, res.totalResults);
 
@@ -337,9 +323,7 @@ public class ClientTest {
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());
-
     }
-
 
     @Test
     public void testInfo() throws Exception {

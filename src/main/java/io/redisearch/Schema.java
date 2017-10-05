@@ -24,6 +24,7 @@ public class Schema {
         public String name;
         public FieldType type;
         public boolean sortable;
+        public boolean noindex;
 
         public Field(String name, FieldType type, boolean sortable) {
             this.name = name;
@@ -31,15 +32,20 @@ public class Schema {
             this.sortable = sortable;
         }
 
+        public Field(String name, FieldType type, boolean sortable, boolean noindex) {
+            this(name, type, sortable);
+            this.noindex = noindex;
+        }
 
         public void serializeRedisArgs(List<String> args) {
-
             args.add(name);
             args.add(type.str);
             if (sortable) {
                 args.add("SORTABLE");
             }
-
+            if (noindex) {
+                args.add("NOINDEX");
+            }
         }
     }
 
@@ -67,6 +73,11 @@ public class Schema {
             this.nostem = nostem;
         }
 
+        public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex) {
+            this(name, weight, sortable, nostem);
+            this.noindex = noindex;
+        }
+
         public TextField(String name) {
             super(name, FieldType.FullText, false);
         }
@@ -84,6 +95,9 @@ public class Schema {
             }
             if (nostem) {
                 args.add("NOSTEM");
+            }
+            if (noindex) {
+                args.add("NOINDEX");
             }
         }
     }

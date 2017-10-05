@@ -358,4 +358,67 @@ public class ClientTest {
         assertEquals("testung", info.get("index_name"));
 
     }
+
+    @Test
+    public void testNoIndex() throws Exception {
+        Client cl = new Client("testung", "localhost", 6379);
+        cl._conn().flushDB();
+
+        Schema sc = new Schema()
+                .addField(new Schema.TextField("f1", 1.0,true, false, true))
+                .addField(new Schema.TextField("f2", 1.0));
+        cl.createIndex(sc, Client.IndexOptions.Default());
+
+        Map<String,Object> mm = new HashMap<>();
+
+        mm.put("f1", "MarkZZ");
+        mm.put("f2", "MarkZZ");
+        cl.addDocument("doc1", mm);
+
+        mm.clear();
+        mm.put("f1", "MarkAA");
+        mm.put("f2", "MarkBB");
+        cl.addDocument("doc2", mm);
+
+        SearchResult res = cl.search(new Query("@f1:Mark*"));
+        assertEquals(0, res.totalResults);
+
+        res = cl.search(new Query("@f2:Mark*"));
+        assertEquals(2, res.totalResults);
+
+        Document[] docs = new Document[2];
+
+        res = cl.search(new Query("@f2:Mark*").setSortBy("f1", false));
+        assertEquals(2, res.totalResults);
+
+        res.docs.toArray(docs);
+        assertEquals("doc1", docs[0].getId());
+
+        res = cl.search(new Query("@f2:Mark*").setSortBy("f1", true));
+        res.docs.toArray(docs);
+        assertEquals("doc2", docs[0].getId());
+
+    }
+
+    /*
+     def testPartial(self):
+     client = self.getCleanClient('idx')
+     client.create_index((TextField('f1'), TextField('f2'), TextField('f3')))
+
+     client.add_document('doc1', f1='f1_val', f2='f2_val')
+     client.add_document('doc2', f1='f1_val', f2='f2_val')
+
+     client.add_document('doc1', f3='f3_val', partial=True)
+     client.add_document('doc2', f3='f3_val', replace=True)
+
+     # Search for f3 value. All documents should have it
+     res = client.search('@f3:f3_val')
+     self.assertEqual(2, res.total)
+
+     # Only the document updated with PARTIAL should still have the f1 and f2
+     # values
+     res = client.search('@f3:f3_val @f2:f2_val @f1:f1_val')
+     self.assertEqual(1, res.total)
+
+     */
 }

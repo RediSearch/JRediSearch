@@ -18,8 +18,7 @@ import redis.clients.util.SafeEncoder;
         INFO("FT.INFO"),
         SEARCH("FT.SEARCH"),
         DEL("FT.DEL"),
-        DROP("FT.DROP"),
-        OPTIMIZE("FT.OPTIMIZE");
+        DROP("FT.DROP");
         private final byte[] raw;
 
         Command(String alt) {
@@ -40,7 +39,6 @@ import redis.clients.util.SafeEncoder;
         SEARCH("FT.FSEARCH"),
         DEL("FT.DEL"),
         DROP("FT.DROP"),
-        OPTIMIZE("FT.OPTIMIZE"),
         BROADCAST("FT.BROADCAST");
         private final byte[] raw;
 
@@ -61,7 +59,6 @@ import redis.clients.util.SafeEncoder;
         ProtocolCommand getInfoCommand();
         ProtocolCommand getDropCommand();
         ProtocolCommand getSearchCommand();
-        ProtocolCommand getOptimizeCommand();
     }
 
     public static class SingleNodeCommands implements CommandProvider {
@@ -100,11 +97,6 @@ import redis.clients.util.SafeEncoder;
         public ProtocolCommand getSearchCommand() {
             return Command.SEARCH;
         }
-
-        @Override
-        public ProtocolCommand getOptimizeCommand() {
-            return Command.OPTIMIZE;
-        }
     }
 
     public static class ClusterCommands implements CommandProvider {
@@ -142,11 +134,6 @@ import redis.clients.util.SafeEncoder;
         @Override
         public ProtocolCommand getSearchCommand() {
             return ClusterCommand.SEARCH;
-        }
-
-        @Override
-        public ProtocolCommand getOptimizeCommand() {
-            return ClusterCommand.OPTIMIZE;
         }
     }
 

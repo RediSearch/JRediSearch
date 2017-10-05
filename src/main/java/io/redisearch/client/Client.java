@@ -308,13 +308,5 @@ public class Client {
         return r.equals("OK");
     }
 
-    /** Optimize memory consumption of the index by removing extra saved capacity. This does not affect speed */
-    public long optimizeIndex() {
-        Jedis conn = _conn();
-        long ret = conn.getClient().sendCommand(commands.getOptimizeCommand(), this.indexName).getIntegerReply();
-        conn.close();
-        return ret;
-    }
-
 
 }

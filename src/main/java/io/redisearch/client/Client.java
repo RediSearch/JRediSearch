@@ -186,6 +186,20 @@ public class Client {
     }
 
     /**
+     * Generate an explanatory textual query tree for this query string
+     * @param q The query to explain
+     * @return A string describing this query
+     */
+    public String explain(Query q) {
+        ArrayList<byte[]> args = new ArrayList(4);
+        args.add(indexName.getBytes());
+        q.serializeRedisArgs(args);
+
+        Jedis conn = _conn();
+        return conn.getClient().sendCommand(commands.getExplainCommand(), args.toArray(new byte[args.size()][])).getStatusCodeReply();
+    }
+
+    /**
      * Add a single document to the query
      * @param docId the id of the document. It cannot belong to a document already in the index unless replace is set
      * @param score the document's score, floating point number between 0 and 1

@@ -432,4 +432,20 @@ public class ClientTest {
         res = cl.search(new Query("@f3:f3_val @f2:f2_val @f1:f1_val"));
         assertEquals(1, res.totalResults);
     }
+
+    @Test
+    public void testExplain() throws Exception {
+        Client cl = new Client("testung", "localhost", 6379);
+        cl._conn().flushDB();
+
+        Schema sc = new Schema()
+                .addTextField("f1", 1.0)
+                .addTextField("f2", 1.0)
+                .addTextField("f3", 1.0);
+        cl.createIndex(sc, Client.IndexOptions.Default());
+
+        String res = cl.explain(new Query("@f3:f3_val @f2:f2_val @f1:f1_val"));
+        assertNotNull(res);
+        assertFalse(res.isEmpty());
+    }
 }

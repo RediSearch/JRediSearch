@@ -196,6 +196,13 @@ public class Client {
      * @return
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
+        return doAddDocument(docId, score, fields, noSave, replace, false, payload);
+    }
+
+    private boolean doAddDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, boolean partial, byte[] payload) {
+        if (partial) {
+            replace = true;
+        }
         ArrayList<byte[]> args = new ArrayList<byte[]>(
                 Arrays.asList(indexName.getBytes(), docId.getBytes(), Double.toString(score).getBytes()));
         if (noSave) {
@@ -203,6 +210,9 @@ public class Client {
         }
         if (replace) {
             args.add("REPLACE".getBytes());
+            if (partial) {
+                args.add("PARTIAL".getBytes());
+            }
         }
         if (payload != null) {
             args.add("PAYLOAD".getBytes());
@@ -223,7 +233,6 @@ public class Client {
                 .getStatusCodeReply();
         conn.close();
         return resp.equals("OK");
-
     }
 
     /**
@@ -231,6 +240,19 @@ public class Client {
      */
     public boolean replaceDocument(String docId, double score, Map<String, Object> fields ) {
         return addDocument( docId, score, fields,false, true, null);
+    }
+
+    /**
+     * Replace specific fields in a document. Unlike #replaceDocument(), fields not present in the field list
+     * are not erased, but retained. This avoids reindexing the entire document if the new values are not
+     * indexed (though a reindex will happen
+     * @param docId
+     * @param score
+     * @param fields
+     * @return
+     */
+    public boolean updateDocument(String docId, double score, Map<String, Object> fields) {
+        return doAddDocument(docId, score, fields, false, true, true, null);
     }
 
     /** See above */
@@ -241,6 +263,8 @@ public class Client {
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
     }
+
+
 
     /** Index a document already in redis as a HASH key.
      *

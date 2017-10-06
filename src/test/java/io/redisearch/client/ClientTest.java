@@ -6,6 +6,7 @@ import io.redisearch.Schema;
 import io.redisearch.SearchResult;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
+import sun.jvm.hotspot.oops.ExceptionTableElement;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -400,25 +401,35 @@ public class ClientTest {
 
     }
 
-    /*
-     def testPartial(self):
-     client = self.getCleanClient('idx')
-     client.create_index((TextField('f1'), TextField('f2'), TextField('f3')))
+    @Test
+    public void testReplacePartial() throws Exception {
+        Client cl = new Client("testung", "localhost", 6379);
+        cl._conn().flushDB();
 
-     client.add_document('doc1', f1='f1_val', f2='f2_val')
-     client.add_document('doc2', f1='f1_val', f2='f2_val')
+        Schema sc = new Schema()
+                .addTextField("f1", 1.0)
+                .addTextField("f2", 1.0)
+                .addTextField("f3", 1.0);
+        cl.createIndex(sc, Client.IndexOptions.Default());
 
-     client.add_document('doc1', f3='f3_val', partial=True)
-     client.add_document('doc2', f3='f3_val', replace=True)
+        Map<String,Object> mm = new HashMap<>();
+        mm.put("f1", "f1_val");
+        mm.put("f2", "f2_val");
 
-     # Search for f3 value. All documents should have it
-     res = client.search('@f3:f3_val')
-     self.assertEqual(2, res.total)
+        cl.addDocument("doc1", mm);
+        cl.addDocument("doc2", mm);
 
-     # Only the document updated with PARTIAL should still have the f1 and f2
-     # values
-     res = client.search('@f3:f3_val @f2:f2_val @f1:f1_val')
-     self.assertEqual(1, res.total)
+        mm.clear();
+        mm.put("f3", "f3_val");
 
-     */
+        cl.updateDocument("doc1", 1.0, mm);
+        cl.replaceDocument("doc2", 1.0, mm);
+
+        // Search for f3 value. All documents should have it.
+        SearchResult res = cl.search(new Query(("@f3:f3_Val")));
+        assertEquals(2, res.totalResults);
+
+        res = cl.search(new Query("@f3:f3_val @f2:f2_val @f1:f1_val"));
+        assertEquals(1, res.totalResults);
+    }
 }

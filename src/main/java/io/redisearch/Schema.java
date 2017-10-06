@@ -49,6 +49,7 @@ public class Schema {
     public static class TextField extends Field {
 
         double weight = 1.0;
+        boolean nostem = false;
 
 
         public TextField(String name, double weight) {
@@ -59,6 +60,11 @@ public class Schema {
         public TextField(String name, double weight, boolean sortable) {
             super(name, FieldType.FullText, sortable);
             this.weight = weight;
+        }
+
+        public TextField(String name, double weight, boolean sortable, boolean nostem) {
+            this(name, weight, sortable);
+            this.nostem = nostem;
         }
 
         public TextField(String name) {
@@ -76,6 +82,9 @@ public class Schema {
             if (sortable) {
                 args.add("SORTABLE");
             }
+            if (nostem) {
+                args.add("NOSTEM");
+            }
         }
     }
 
@@ -83,7 +92,6 @@ public class Schema {
     public List<Field> fields;
 
     public Schema() {
-
         this.fields = new ArrayList<>();
 
     }
@@ -136,5 +144,9 @@ public class Schema {
         return this;
     }
 
+    public Schema addField(Field field) {
+        fields.add(field);
+        return this;
+    }
 
 }

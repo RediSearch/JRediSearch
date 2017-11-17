@@ -101,4 +101,47 @@ public class QueryTest {
 
     }
 
+    @Test
+    public void highlightFields() throws Exception {
+        assertEquals(false, query.wantsHighlight);
+        assertEquals(null, query.highlightFields);
+
+        query = new Query("Hello");
+        assertEquals(query, query.highlightFields("foo", "bar"));
+        assertEquals(2, query.highlightFields.length);
+        assertEquals(null, query.highlightTags);
+        assertEquals(true, query.wantsHighlight);
+
+        query = new Query("Hello").highlightFields();
+        assertEquals(null, query.highlightFields);
+        assertEquals(null, query.highlightTags);
+        assertEquals(true, query.wantsHighlight);
+
+        assertEquals(query, query.highlightFields(new Query.HighlightTags("<b>","</b>")));
+        assertEquals(null, query.highlightFields);
+        assertEquals(2, query.highlightTags.length);
+        assertEquals("<b>", query.highlightTags[0]);
+        assertEquals("</b>", query.highlightTags[1]);
+    }
+
+    @Test
+    public void summarizeFields() throws Exception {
+        assertEquals(false, query.wantsSummarize);
+        assertEquals(null, query.summarizeFields);
+
+        query = new Query("Hello");
+        assertEquals(query, query.summarizeFields());
+        assertEquals(true, query.wantsSummarize);
+        assertEquals(null, query.summarizeFields);
+        assertEquals(-1, query.summarizeFragmentLen);
+        assertEquals(-1, query.summarizeNumFragments);
+
+        query = new Query("Hello");
+        assertEquals(query, query.summarizeFields("someField"));
+        assertEquals(true, query.wantsSummarize);
+        assertEquals(1, query.summarizeFields.length);
+        assertEquals(-1, query.summarizeFragmentLen);
+        assertEquals(-1, query.summarizeNumFragments);
+    }
+
 }

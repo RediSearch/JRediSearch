@@ -6,11 +6,9 @@ import io.redisearch.Schema;
 import io.redisearch.SearchResult;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
-import sun.jvm.hotspot.oops.ExceptionTableElement;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Random;
 import java.util.Set;
 
 import static junit.framework.TestCase.*;

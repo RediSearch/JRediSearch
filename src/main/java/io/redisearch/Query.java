@@ -109,6 +109,15 @@ public class Query {
         }
     }
 
+    public static class HighlightTags {
+        String open;
+        String close;
+        public HighlightTags(String open, String close) {
+            this.open = open;
+            this.close = close;
+        }
+    }
+
     /**
      * The query's filter list. We only support AND operation on all those filters
      */
@@ -145,9 +154,17 @@ public class Query {
     protected boolean _withPayloads = false;
     protected String _language = null;
     protected String[] _fields = null;
+    protected String[] highlightFields = null;
+    protected String[] summarizeFields = null;
+    protected String[] highlightTags = null;
+    protected String summarizeSeparator = null;
+    protected int summarizeNumFragments = -1;
+    protected int summarizeFragmentLen = -1;
     protected byte []_payload = null;
     protected String _sortBy = null;
     protected boolean _sortAsc = true;
+    protected boolean wantsHighlight = false;
+    protected boolean wantsSummarize = false;
 
     /**
      * Create a new index
@@ -209,6 +226,45 @@ public class Query {
         if (_filters != null && _filters.size() > 0) {
             for (Filter f : _filters) {
                 f.serializeRedisArgs(args);
+            }
+        }
+
+        if (wantsHighlight) {
+            args.add("HIGHLIGHT".getBytes());
+            if (highlightFields != null) {
+                args.add("FIELDS".getBytes());
+                args.add(Integer.toString(highlightFields.length).getBytes());
+                for (String s : highlightFields) {
+                    args.add(s.getBytes());
+                }
+            }
+            if (highlightTags != null) {
+                args.add("TAGS".getBytes());
+                for (String t : highlightTags) {
+                    args.add(toString().getBytes());
+                }
+            }
+        }
+        if (wantsSummarize) {
+            args.add("SUMMARIZE".getBytes());
+            if (summarizeFields != null) {
+                args.add("FIELDS".getBytes());
+                args.add(Integer.toString(summarizeFields.length).getBytes());
+                for (String s: summarizeFields) {
+                    args.add(s.getBytes());
+                }
+            }
+            if (summarizeNumFragments != -1) {
+                args.add("FRAGS".getBytes());
+                args.add(Integer.toString(summarizeNumFragments).getBytes());
+            }
+            if (summarizeFragmentLen != -1) {
+                args.add("LEN".getBytes());
+                args.add(Integer.toString(summarizeFragmentLen).getBytes());
+            }
+            if (summarizeSeparator != null) {
+                args.add("SEPARATOR".getBytes());
+                args.add(summarizeSeparator.getBytes());
             }
         }
     }
@@ -302,6 +358,38 @@ public class Query {
     public Query limitFields(String... fields) {
         this._fields = fields;
         return this;
+    }
+
+    public Query highlightFields(HighlightTags tags, String... fields) {
+        if (fields == null || fields.length > 0) {
+            highlightFields = fields;
+        }
+        if (tags != null) {
+            highlightTags = new String[]{tags.open, tags.close};
+        } else {
+            highlightTags = null;
+        }
+        wantsHighlight = true;
+        return this;
+    }
+
+    public Query highlightFields(String... fields) {
+        return highlightFields(null, fields);
+    }
+
+    public Query summarizeFields(int contextLen, int fragmentCount, String separator, String ... fields) {
+        if (fields == null || fields.length > 0) {
+            summarizeFields = fields;
+        }
+        summarizeFragmentLen = contextLen;
+        summarizeNumFragments = fragmentCount;
+        summarizeSeparator = separator;
+        wantsSummarize = true;
+        return this;
+    }
+
+    public Query summarizeFields(String... fields) {
+        return summarizeFields(-1, -1, null, fields);
     }
 
     /**

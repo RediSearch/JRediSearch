@@ -4,6 +4,8 @@ import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
 import io.redisearch.SearchResult;
+import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 
@@ -18,11 +20,28 @@ import static junit.framework.TestCase.*;
  * Created by dvirsky on 09/02/17.
  */
 public class ClusterTest {
+    static int CLUSTER_PORT = Integer.parseInt(System.getProperty("redis.cluster.port", "0"));
+    static String CLUSTER_HOST = System.getProperty("redis.cluster.host", "localhost");
+    static String CLUSTER_INDEX = System.getProperty("redis.cluster.rsIndex", "testung");
 
+
+    private ClusterClient getClient(String indexName) {
+        return new ClusterClient(indexName, CLUSTER_HOST, CLUSTER_PORT);
+    }
+
+    private ClusterClient getClient() {
+        return  getClient(CLUSTER_INDEX);
+    }
+
+
+    @BeforeClass
+    static public void setUp() {
+        Assume.assumeFalse(CLUSTER_PORT == 0);
+    }
 
     @Test
     public void search() throws Exception {
-        ClusterClient cl = new ClusterClient("testung", "localhost", 7000);
+        ClusterClient cl = getClient();
         cl.broadcast("FLUSHDB");
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
@@ -61,7 +80,7 @@ public class ClusterTest {
 //
     @Test
     public void testNumericFilter() throws Exception {
-        ClusterClient cl = new ClusterClient("testung", "localhost", 7000);
+        ClusterClient cl = getClient();
         cl.broadcast("FLUSHDB");
 
         Schema sc = new Schema().addTextField("title", 1.0).addNumericField("price");
@@ -119,7 +138,7 @@ public class ClusterTest {
 //
     @Test
     public void testGeoFilter() throws Exception {
-        ClusterClient cl = new ClusterClient("testung", "localhost", 7000);
+        ClusterClient cl = getClient();
         cl.broadcast("FLUSHDB");
         Schema sc = new Schema().addTextField("title", 1.0).addGeoField("loc");
 
@@ -148,7 +167,7 @@ public class ClusterTest {
 //
     @Test
     public void testPayloads() throws Exception {
-        ClusterClient cl = new ClusterClient("testung", "localhost", 7000);
+        ClusterClient cl = getClient();
         cl.broadcast("FLUSHDB");
 
         Schema sc = new Schema().addTextField("title", 1.0);
@@ -171,7 +190,7 @@ public class ClusterTest {
     @Test
     public void testQueryFlags() throws Exception {
 
-        ClusterClient cl = new ClusterClient("testung", "localhost", 7000);
+        ClusterClient cl = getClient();
         cl.broadcast("FLUSHDB");
 
         Schema sc = new Schema().addTextField("title", 1.0);

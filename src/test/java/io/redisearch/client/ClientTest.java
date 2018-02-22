@@ -4,6 +4,7 @@ import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
 import io.redisearch.SearchResult;
+import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 
@@ -18,10 +19,26 @@ import static junit.framework.TestCase.*;
  * Created by dvirsky on 09/02/17.
  */
 public class ClientTest {
+    static private final int TEST_PORT = Integer.parseInt(System.getProperty("redis.port", "6379"));
+    static private final String TEST_HOST = System.getProperty("redis.host", "localhost");
+    static private final String TEST_INDEX = System.getProperty("redis.rsIndex", "testung");
+
+    private Client getClient(String indexName) {
+        return new Client(indexName, TEST_HOST, TEST_PORT);
+    }
+
+    private Client getClient() {
+        return  getClient(TEST_INDEX);
+    }
+
+    @Before
+    public void setUp() {
+        getClient()._conn().flushDB();
+    }
+
     @Test
     public void search() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
 
@@ -62,8 +79,7 @@ public class ClientTest {
 
     @Test
     public void testNumericFilter() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addNumericField("price");
 
@@ -119,8 +135,7 @@ public class ClientTest {
 
     @Test
     public void testStopwords() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -151,8 +166,7 @@ public class ClientTest {
 
     @Test
     public void testGeoFilter() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addGeoField("loc");
 
@@ -181,8 +195,7 @@ public class ClientTest {
 
     @Test
     public void testPayloads() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -201,9 +214,7 @@ public class ClientTest {
 
     @Test
     public void testQueryFlags() throws Exception {
-
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -252,10 +263,7 @@ public class ClientTest {
 
     @Test
     public void testSortQueryFlags() throws Exception {
-
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
-
+        Client cl = getClient();
         Schema sc = new Schema().addSortableTextField("title", 1.0);
 
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
@@ -286,9 +294,8 @@ public class ClientTest {
 
     @Test
     public void testAddHash() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
+        Client cl = getClient();
         Jedis conn = cl._conn();
-        conn.flushDB();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
         HashMap hm = new HashMap();
@@ -303,7 +310,7 @@ public class ClientTest {
 
     @Test
     public void testDrop() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
+        Client cl = getClient();
         cl._conn().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
@@ -328,7 +335,7 @@ public class ClientTest {
 
     @Test
     public void testNoStem() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
+        Client cl = getClient();
         cl._conn().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
@@ -349,21 +356,19 @@ public class ClientTest {
 
     @Test
     public void testInfo() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
 
         Map<String, Object> info = cl.getInfo();
-        assertEquals("testung", info.get("index_name"));
+        assertEquals(TEST_INDEX, info.get("index_name"));
 
     }
 
     @Test
     public void testNoIndex() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema()
                 .addField(new Schema.TextField("f1", 1.0,true, false, true))
@@ -403,8 +408,7 @@ public class ClientTest {
 
     @Test
     public void testReplacePartial() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
@@ -435,8 +439,7 @@ public class ClientTest {
 
     @Test
     public void testExplain() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
-        cl._conn().flushDB();
+        Client cl = getClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
@@ -451,9 +454,8 @@ public class ClientTest {
 
     @Test
     public void testHighlightSummarize() throws Exception {
-        Client cl = new Client("testung", "localhost", 6379);
+        Client cl = getClient();
         Schema sc = new Schema().addTextField("text", 1.0);
-        cl._conn().flushDB();
         cl.createIndex(sc, Client.IndexOptions.Default());
 
         Map<String, Object> doc = new HashMap<>();

@@ -1,0 +1,26 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-jdk-browsers
+      - image: redislabs/redisearch:latest
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: jredisearch-{{ checksum "pom.xml" }}
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: jredisearch-{{ checksum "pom.xml" }}
+      - run: mvn package -Dredis.port=6379
+
+      - store_test_results:
+          path: target/surefire-reports
+
+#      - store_artifacts:
+#          path: target/demo-java-spring-0.0.1-SNAPSHOT.jar

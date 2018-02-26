@@ -6,4 +6,5 @@ target/
 !**/*.md
 !.gitignore
 !pom.xml
+!.circleci/**
 .idea/

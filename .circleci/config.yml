@@ -18,6 +18,3 @@ jobs:
             - ~/.m2
           key: jredisearch-{{ checksum "pom.xml" }}
       - run: mvn package -Dredis.port=6379
-
-      - store_test_results:
-          path: target/surefire-reports

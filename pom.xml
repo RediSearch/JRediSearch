@@ -6,11 +6,26 @@
 
     <groupId>com.redislabs</groupId>
     <artifactId>jredisearch</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>0.9.0-SNAPSHOT</version>
 
     <name>JRediSearch</name>
     <description>Official client for Redis Search</description>
     <url>http://redisearch.io</url>
+    <scm>
+        <url>https://github.com/RedisLabs/JRediSearch</url>
+        <connection>scm:git:git://github.com/RedisLabs/JRediSearch.git</connection>
+        <developerConnection>scm:git:git@github.com:RedisLabs/JRediSearch.git</developerConnection>
+    </scm>
+    <developers>
+        <developer>
+            <name>Mark Nunberg</name>
+            <organization>Redis Labs, Inc.</organization>
+        </developer>
+        <developer>
+            <name>Dvir Volk</name>
+            <organization>Redis Labs, Inc.</organization>
+        </developer>
+    </developers>
     <licenses>
         <license>
             <name>BSD 2 Clause</name>

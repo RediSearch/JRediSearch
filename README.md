@@ -7,7 +7,44 @@ A Java Client Library for [RediSearch](https://redisearch.io)
 This project contains a Java library abstracting the API of the RediSearch Redis module, that implements a powerful 
 in-memory search engine inside Redis. 
  
-See [http://redisearch.io](http://redisearch.io) for installation instructions of the module.
+## Installing
+
+JRediSearch is available using the maven central snapshot repository and via official
+releases.
+
+### Official Releases
+
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>com.redislabs</groupId>
+      <artifactId>jredisearch</artifactId>
+      <version>0.9.0</version>
+    </dependency>
+  </dependencies>
+```
+
+### Snapshots
+
+```xml
+  <repositories>
+    <repository>
+      <id>snapshots-repo</id>
+      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+    </repository>
+  </repositories>
+```
+
+and
+```xml
+  <dependencies>
+    <dependency>
+      <groupId>com.redislabs</groupId>
+      <artifactId>jredisearch</artifactId>
+      <version>0.9.1-SNAPSHOT</version>
+    </dependency>
+  </dependencies>
+```
 
 ## Usage example
 

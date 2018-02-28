@@ -18,20 +18,34 @@ public class Document implements Serializable {
     private Map<String, Object> properties;
 
     public Document(String id, Double score) {
-        this.id = id;
-        this.score = score;
-        properties = new HashMap<>();
+        this(id, new HashMap<>(), score.floatValue());
     }
 
     public Document(String id) {
+        this(id, 1.0);
+    }
+
+    public Document(String id, Map<String,Object> fields) {
+        this(id, fields, 1.0f);
+    }
+
+    public Document(String id, Map<String, Object> fields, double score) {
+        this(id, fields, score, null);
+    }
+
+    public Document(String id, Map<String, Object> fields, double score, byte[] payload) {
         this.id = id;
-        this.score = 1.0f;
-        properties = new HashMap<>();
+        this.properties = new HashMap<>(fields);
+        this.score = score;
+        this.payload = payload;
+    }
+
+    public Iterable<Map.Entry<String, Object>> getProperties() {
+        return properties.entrySet();
     }
 
 
     public static Document load(String id, Double score, byte[]payload, List fields) {
-
         Document ret = new Document(id, score);
         ret.payload = payload;
         if (fields != null) {

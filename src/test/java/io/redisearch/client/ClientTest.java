@@ -7,6 +7,7 @@ import io.redisearch.SearchResult;
 import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -19,6 +20,8 @@ import static junit.framework.TestCase.*;
  * Created by dvirsky on 09/02/17.
  */
 public class ClientTest {
+    // NOTE: My IDEA config hard-codes this property to 7777! - don't modify this line, rather change it in the
+    // configuration settings
     static private final int TEST_PORT = Integer.parseInt(System.getProperty("redis.port", "6379"));
     static private final String TEST_HOST = System.getProperty("redis.host", "localhost");
     static private final String TEST_INDEX = System.getProperty("redis.rsIndex", "testung");
@@ -467,5 +470,27 @@ public class ClientTest {
 
         assertEquals("is often referred as a <b>data</b> structures server. What this means is that Redis provides... What this means is that Redis provides access to mutable <b>data</b> structures via a set of commands, which are sent using a... So different processes can query and modify the same <b>data</b> structures in a shared... ",
                 res.docs.get(0).get("text"));
+    }
+
+    @Test
+    public void testLanguage() throws Exception {
+        Client cl = getClient();
+        Schema sc = new Schema().addTextField("text", 1.0);
+        cl.createIndex(sc, Client.IndexOptions.Default());
+
+        Document d = new Document("doc1").set("text", "hello");
+        AddOptions options = new AddOptions().setLanguage("spanish");
+        assertTrue(cl.addDocument(d, options));
+        boolean caught = false;
+
+        options.setLanguage("ybreski");
+        cl.deleteDocument(d.getId());
+
+        try {
+            cl.addDocument(d, options);
+        } catch (JedisDataException t) {
+            caught = true;
+        }
+        assertTrue(caught);
     }
 }

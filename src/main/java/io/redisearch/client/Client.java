@@ -1,5 +1,6 @@
 package io.redisearch.client;
 
+import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
 import io.redisearch.SearchResult;
@@ -214,28 +215,48 @@ public class Client {
     }
 
     private boolean doAddDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, boolean partial, byte[] payload) {
-        if (partial) {
-            replace = true;
+        Document doc = new Document(docId, fields, score, payload);
+        AddOptions options = new AddOptions().setNosave(noSave);
+        if (replace) {
+            options.setReplacementPolicy(AddOptions.ReplacementPolicy.FULL);
         }
-        ArrayList<byte[]> args = new ArrayList<byte[]>(
-                Arrays.asList(indexName.getBytes(), docId.getBytes(), Double.toString(score).getBytes()));
-        if (noSave) {
+        if (partial) {
+            options.setReplacementPolicy(AddOptions.ReplacementPolicy.PARTIAL);
+        }
+        return addDocument(doc, options);
+    }
+
+    /**
+     * Add a document to the index
+     * @param doc The document to add
+     * @param options Options for the operation
+     * @return true if the operation succeeded, false otherwise. Note that if the operation fails, an exception
+     *  will be thrown
+     */
+    public boolean addDocument(Document doc, AddOptions options) {
+        ArrayList<byte[]> args = new ArrayList<>(
+                Arrays.asList(indexName.getBytes(), doc.getId().getBytes(), Double.toString(doc.getScore()).getBytes()));
+        if (options.getNosave()) {
             args.add("NOSAVE".getBytes());
         }
-        if (replace) {
+        if (options.getReplacementPolicy() != AddOptions.ReplacementPolicy.NONE) {
             args.add("REPLACE".getBytes());
-            if (partial) {
+            if (options.getReplacementPolicy() == AddOptions.ReplacementPolicy.PARTIAL) {
                 args.add("PARTIAL".getBytes());
             }
         }
-        if (payload != null) {
+        if (options.getLanguage() != null && !options.getLanguage().isEmpty()) {
+            args.add("LANGUAGE".getBytes());
+            args.add(options.getLanguage().getBytes());
+        }
+        if (doc.getPayload() != null) {
             args.add("PAYLOAD".getBytes());
             // TODO: Fix this
-            args.add(payload);
+            args.add(doc.getPayload());
         }
 
         args.add("FIELDS".getBytes());
-        for (Map.Entry<String, Object> ent : fields.entrySet()) {
+        for (Map.Entry<String, Object> ent : doc.getProperties()) {
             args.add(ent.getKey().getBytes());
             args.add(ent.getValue().toString().getBytes());
         }
@@ -247,6 +268,7 @@ public class Client {
                 .getStatusCodeReply();
         conn.close();
         return resp.equals("OK");
+
     }
 
     /**
@@ -277,8 +299,6 @@ public class Client {
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
     }
-
-
 
     /** Index a document already in redis as a HASH key.
      *

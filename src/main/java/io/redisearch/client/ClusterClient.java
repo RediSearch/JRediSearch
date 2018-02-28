@@ -26,10 +26,9 @@ public class ClusterClient extends Client {
     }
 
     public List<Object> broadcast(String... args) {
-
-        Jedis conn = _conn();
-        List ret = conn.getClient().sendCommand(Commands.ClusterCommand.BROADCAST, args).getObjectMultiBulkReply();
-        conn.close();
-        return ret;
+        try (Jedis conn = _conn()) {
+            List ret = conn.getClient().sendCommand(Commands.ClusterCommand.BROADCAST, args).getObjectMultiBulkReply();
+            return ret;
+        }
     }
 }

@@ -148,7 +148,6 @@ public class Client {
      * @return true if successful
      */
     public boolean createIndex(Schema schema, IndexOptions options) {
-        Jedis conn = _conn();
 
         ArrayList<String> args = new ArrayList<>();
 
@@ -162,13 +161,12 @@ public class Client {
             f.serializeRedisArgs(args);
         }
 
-        String rep = conn.getClient()
-                .sendCommand(commands.getCreateCommand(),
-                             args.toArray(new String[args.size()]))
-                .getStatusCodeReply();
-        conn.close();
-        return rep.equals("OK");
-
+        try (Jedis conn = _conn()) {
+            String rep = conn.getClient()
+                    .sendCommand(commands.getCreateCommand(), args.toArray(new String[args.size()]))
+                    .getStatusCodeReply();
+            return rep.equals("OK");
+        }
     }
 
     /**
@@ -181,10 +179,12 @@ public class Client {
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
-        Jedis conn = _conn();
-        List<Object> resp = conn.getClient().sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
-        conn.close();
-        return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
+        try (Jedis conn = _conn()) {
+            List<Object> resp = conn.getClient().
+                    sendCommand(commands.getSearchCommand(),
+                            args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
+            return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
+        }
     }
 
     /**
@@ -197,8 +197,10 @@ public class Client {
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
-        Jedis conn = _conn();
-        return conn.getClient().sendCommand(commands.getExplainCommand(), args.toArray(new byte[args.size()][])).getStatusCodeReply();
+        try (Jedis conn = _conn()) {
+            return conn.getClient().
+                    sendCommand(commands.getExplainCommand(), args.toArray(new byte[args.size()][])).getStatusCodeReply();
+        }
     }
 
     /**
@@ -262,14 +264,12 @@ public class Client {
             args.add(ent.getValue().toString().getBytes());
         }
 
-        Jedis conn = _conn();
-
-        String resp = conn.getClient().sendCommand(commands.getAddCommand(),
-                args.toArray(new byte[args.size()][]))
-                .getStatusCodeReply();
-        conn.close();
-        return resp.equals("OK");
-
+        try (Jedis conn = _conn()) {
+            String resp = conn.getClient().sendCommand(commands.getAddCommand(),
+                    args.toArray(new byte[args.size()][]))
+                    .getStatusCodeReply();
+            return resp.equals("OK");
+        }
     }
 
     /**
@@ -315,11 +315,11 @@ public class Client {
             args.add("REPLACE");
         }
 
-        Jedis conn = _conn();
-        String resp = conn.getClient().sendCommand(commands.getAddHashCommand(),
-                args.toArray(new String[args.size()])).getStatusCodeReply();
-        conn.close();
-        return resp.equals("OK");
+        try (Jedis conn = _conn()) {
+            String resp = conn.getClient().sendCommand(commands.getAddHashCommand(),
+                    args.toArray(new String[args.size()])).getStatusCodeReply();
+            return resp.equals("OK");
+        }
     }
 
     /** Get the index info, including memory consumption and other statistics.
@@ -327,10 +327,10 @@ public class Client {
      * @return a map of key/value pairs
      */
     public Map<String, Object> getInfo() {
-
-        Jedis conn = _conn();
-        List<Object> res = conn.getClient().sendCommand(commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
-        conn.close();
+        List<Object> res;
+        try (Jedis conn = _conn()) {
+            res = conn.getClient().sendCommand(commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
+        }
         Map<String, Object> info = new HashMap<>();
         for (int i = 0; i < res.size(); i += 2) {
             String key = new String((byte[]) res.get(i));
@@ -349,11 +349,10 @@ public class Client {
      * @return true if it has been deleted, false if it did not exist
      */
     public boolean deleteDocument(String docId) {
-
-        Jedis conn = _conn();
-        Long r = conn.getClient().sendCommand(commands.getDelCommand(), this.indexName, docId).getIntegerReply();
-        conn.close();
-        return r == 1;
+        try (Jedis conn = _conn()) {
+            Long r = conn.getClient().sendCommand(commands.getDelCommand(), this.indexName, docId).getIntegerReply();
+            return r == 1;
+        }
     }
 
     /**

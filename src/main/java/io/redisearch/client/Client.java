@@ -7,6 +7,7 @@ import io.redisearch.SearchResult;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.*;
 
@@ -360,11 +361,25 @@ public class Client {
      * @return true on success
      */
     public boolean dropIndex() {
-        Jedis conn = _conn();
-        String r = conn.getClient().sendCommand(commands.getDropCommand(), this.indexName).getStatusCodeReply();
-        conn.close();
-        return r.equals("OK");
+        return dropIndex(false);
     }
 
-
+    /**
+     * Drop the index and associated keys, including documents
+     * @param missingOk If the index does not exist, don't throw an exception, but return false instead
+     * @return True if the index was dropped, false if it did not exist (or some other error occurred).
+     */
+    public boolean dropIndex(boolean missingOk) {
+        String r;
+        try (Jedis conn = _conn()) {
+            r = conn.getClient().sendCommand(commands.getDropCommand(), this.indexName).getStatusCodeReply();
+        } catch (JedisDataException ex) {
+            if (missingOk && ex.getMessage().toLowerCase().contains("unknown")) {
+                return false;
+            } else {
+                throw ex;
+            }
+        }
+        return r.equals("OK");
+    }
 }

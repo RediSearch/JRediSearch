@@ -493,4 +493,17 @@ public class ClientTest {
         }
         assertTrue(caught);
     }
+
+    @Test
+    public void testDropMissing() throws Exception {
+        Client cl = getClient("dummyIndexNotExist");
+        assertFalse(cl.dropIndex(true));
+        boolean caught = false;
+        try {
+            cl.dropIndex();
+        } catch (JedisDataException ex) {
+            caught = true;
+        }
+        assertTrue(caught);
+    }
 }

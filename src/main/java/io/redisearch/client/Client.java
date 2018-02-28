@@ -10,6 +10,7 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.*;
+import java.util.function.Function;
 
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
@@ -322,6 +323,22 @@ public class Client {
         }
     }
 
+    @FunctionalInterface
+    private interface KVHandler {
+        void apply(String key, Object value);
+    }
+
+    private static void handleListMapping(List<Object> items, KVHandler handler) {
+        for (int i = 0; i < items.size(); i += 2) {
+            String key = new String((byte[])items.get(i));
+            Object val = items.get(i+1);
+            if (val.getClass().equals((new byte[]{}).getClass())) {
+                val = new String((byte[]) val);
+            }
+            handler.apply(key, val);
+        }
+    }
+
     /** Get the index info, including memory consumption and other statistics.
      * TODO: Make a class for easier access to the index properties
      * @return a map of key/value pairs
@@ -331,15 +348,9 @@ public class Client {
         try (Jedis conn = _conn()) {
             res = conn.getClient().sendCommand(commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
         }
+
         Map<String, Object> info = new HashMap<>();
-        for (int i = 0; i < res.size(); i += 2) {
-            String key = new String((byte[]) res.get(i));
-            Object val = res.get(i + 1);
-            if (val.getClass().equals((new byte[]{}).getClass())) {
-                val = new String((byte[]) val);
-            }
-            info.put(key, val);
-        }
+        handleListMapping(res, info::put);
         return info;
     }
 
@@ -352,6 +363,23 @@ public class Client {
         try (Jedis conn = _conn()) {
             Long r = conn.getClient().sendCommand(commands.getDelCommand(), this.indexName, docId).getIntegerReply();
             return r == 1;
+        }
+    }
+
+    /**
+     * Get a document from the index
+     * @param docId The document ID to retrieve
+     * @return The document as stored in the index. If the document does not exist, null is returned.
+     */
+    public Document getDocument(String docId) {
+        Document d = new Document(docId);
+        try (Jedis conn = _conn()) {
+            List<Object> res = conn.getClient().sendCommand(commands.getGetCommand(), indexName, docId).getObjectMultiBulkReply();
+            if (res == null) {
+                return null;
+            }
+            handleListMapping(res, d::set);
+            return d;
         }
     }
 

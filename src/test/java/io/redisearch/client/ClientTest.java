@@ -506,4 +506,17 @@ public class ClientTest {
         }
         assertTrue(caught);
     }
+
+    @Test
+    public void testGet() throws Exception {
+        Client cl = getClient();
+        cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.Default());
+        cl.addDocument(new Document("doc1").set("txt1", "Hello World!"), new AddOptions());
+        Document d = cl.getDocument("doc1");
+        assertNotNull(d);
+        assertEquals("Hello World!", d.get("txt1"));
+
+        // Get something that does not exist. Shouldn't explode
+        assertNull(cl.getDocument("nonexist"));
+    }
 }

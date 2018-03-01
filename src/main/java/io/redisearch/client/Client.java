@@ -1,9 +1,11 @@
 package io.redisearch.client;
 
 import io.redisearch.Document;
+import io.redisearch.AggregationResult;
 import io.redisearch.Query;
 import io.redisearch.Schema;
 import io.redisearch.SearchResult;
+import io.redisearch.aggregation.AggregationRequest;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
@@ -186,6 +188,17 @@ public class Client {
                             args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
             return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
         }
+    }
+
+    public AggregationResult aggregate(AggregationRequest q) {
+        ArrayList<byte[]> args = new ArrayList<>();
+        args.add(indexName.getBytes());
+        q.serializeRedisArgs(args);
+
+        Jedis conn = _conn();
+        List<Object> resp = conn.getClient().sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
+        conn.close();
+        return new AggregationResult(resp);
     }
 
     /**

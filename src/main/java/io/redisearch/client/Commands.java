@@ -20,7 +20,8 @@ import redis.clients.util.SafeEncoder;
         EXPLAIN("FT.EXPLAIN"),
         DEL("FT.DEL"),
         DROP("FT.DROP"),
-        GET("FT.GET");
+        GET("FT.GET"),
+        AGGREGATE("AGGREGATE");
         private final byte[] raw;
 
         Command(String alt) {
@@ -43,7 +44,8 @@ import redis.clients.util.SafeEncoder;
         DEL("FT.DEL"),
         DROP("FT.DROP"),
         BROADCAST("FT.BROADCAST"),
-        GET("FT.GET");
+        GET("FT.GET"),
+        AGGREGATE("FT.AGGREGATE");
         private final byte[] raw;
 
         ClusterCommand(String alt) {
@@ -65,6 +67,7 @@ import redis.clients.util.SafeEncoder;
         ProtocolCommand getSearchCommand();
         ProtocolCommand getExplainCommand();
         ProtocolCommand getGetCommand();
+        ProtocolCommand getAggregateCommand();
     }
 
     public static class SingleNodeCommands implements CommandProvider {
@@ -113,6 +116,11 @@ import redis.clients.util.SafeEncoder;
         public ProtocolCommand getGetCommand() {
             return Command.GET;
         }
+
+        @Override
+        public ProtocolCommand getAggregateCommand() {
+            return Command.AGGREGATE;
+        }
     }
 
     public static class ClusterCommands implements CommandProvider {
@@ -160,6 +168,11 @@ import redis.clients.util.SafeEncoder;
         @Override
         public ProtocolCommand getGetCommand() {
             return ClusterCommand.GET;
+        }
+
+        @Override
+        public ProtocolCommand getAggregateCommand() {
+            return ClusterCommand.AGGREGATE;
         }
     }
 }

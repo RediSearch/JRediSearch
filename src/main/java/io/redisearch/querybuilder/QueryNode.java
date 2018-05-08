@@ -4,23 +4,45 @@ import java.util.*;
 
 public abstract class QueryNode implements Node {
     private List<Node> children = new ArrayList<>();
-
     protected abstract String getJoinString();
 
+    /**
+     * Add a match criteria to this node
+     * @param field The field to check. If null or empty, then any field is checked
+     * @param values Values to check for.
+     * @return The current node, for chaining.
+     */
     public QueryNode add(String field, Value ...values) {
         children.add(new ValueNode(field, getJoinString(), values));
         return this;
     }
 
+    /**
+     * Convenience method to add a list of string values
+     * @param field Field to check for
+     * @param values One or more string values.
+     * @return The current node, for chaining.
+     */
     public QueryNode add(String field, String ...values) {
         children.add(new ValueNode(field, getJoinString(), values));
         return this;
     }
 
+    /**
+     * Add a list of values from a collection
+     * @param field The field to check
+     * @param values Collection of values to match
+     * @return The current node for chaining.
+     */
     public QueryNode add(String field, Collection<Value> values) {
         return add(field, (Value[])values.toArray());
     }
 
+    /**
+     * Add children nodes to this node.
+     * @param nodes Children nodes to add
+     * @return The current node, for chaining.
+     */
     public QueryNode add(Node ...nodes) {
         children.addAll(Arrays.asList(nodes));
         return this;

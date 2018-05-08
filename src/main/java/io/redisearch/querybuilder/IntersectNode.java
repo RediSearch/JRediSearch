@@ -1,7 +1,9 @@
 package io.redisearch.querybuilder;
 
 /**
- * Created by mnunberg on 2/23/18.
+ * The intersection node evaluates to true if any of its children are true.
+ *
+ * In RS: {@code @f1:v1 @f2:v2}
  */
 public class IntersectNode extends QueryNode {
     @Override

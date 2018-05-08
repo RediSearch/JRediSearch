@@ -1,7 +1,5 @@
 package io.redisearch.querybuilder;
 
-import java.util.HashSet;
-import java.util.Set;
 import java.util.StringJoiner;
 
 /**
@@ -31,6 +29,9 @@ public class ValueNode implements Node {
     }
 
     private String formatField() {
+        if (field == null || field.isEmpty()) {
+            return "";
+        }
         return "@" + field + ":";
     }
 

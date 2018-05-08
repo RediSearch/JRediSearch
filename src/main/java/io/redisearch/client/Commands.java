@@ -1,7 +1,7 @@
 package io.redisearch.client;
 
 import redis.clients.jedis.commands.ProtocolCommand;
-import redis.clients.util.SafeEncoder;
+import redis.clients.jedis.util.SafeEncoder;
 
 /**
  * Jedis enum for command encapsulation

@@ -6,9 +6,8 @@ import io.redisearch.Query;
 import io.redisearch.Schema;
 import io.redisearch.SearchResult;
 import io.redisearch.aggregation.AggregationRequest;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.*;
+import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.*;
@@ -143,7 +142,16 @@ public class Client {
     public Client(String indexName, String host, int port) {
         this(indexName, host, port, 500, 100);
     }
-
+    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String ...args) {
+        BinaryClient client = conn.getClient();
+        client.sendCommand(provider, args);
+        return client;
+    }
+    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, byte[][] args) {
+        BinaryClient client = conn.getClient();
+        client.sendCommand(provider, args);
+        return client;
+    }
     /**
      * Create the index definition in redis
      * @param schema a schema definition, see {@link Schema}
@@ -165,8 +173,7 @@ public class Client {
         }
 
         try (Jedis conn = _conn()) {
-            String rep = conn.getClient()
-                    .sendCommand(commands.getCreateCommand(), args.toArray(new String[args.size()]))
+            String rep =  sendCommand(conn, commands.getCreateCommand(), args.toArray(new String[args.size()]))
                     .getStatusCodeReply();
             return rep.equals("OK");
         }
@@ -183,8 +190,8 @@ public class Client {
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
-            List<Object> resp = conn.getClient().
-                    sendCommand(commands.getSearchCommand(),
+            List<Object> resp =
+                    sendCommand(conn, commands.getSearchCommand(),
                             args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
             return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
         }
@@ -196,7 +203,7 @@ public class Client {
         q.serializeRedisArgs(args);
 
         Jedis conn = _conn();
-        List<Object> resp = conn.getClient().sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
+        List<Object> resp = sendCommand(conn, commands.getSearchCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
         conn.close();
         return new AggregationResult(resp);
     }
@@ -212,8 +219,7 @@ public class Client {
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
-            return conn.getClient().
-                    sendCommand(commands.getExplainCommand(), args.toArray(new byte[args.size()][])).getStatusCodeReply();
+            return sendCommand(conn, commands.getExplainCommand(), args.toArray(new byte[args.size()][])).getStatusCodeReply();
         }
     }
 
@@ -279,8 +285,7 @@ public class Client {
         }
 
         try (Jedis conn = _conn()) {
-            String resp = conn.getClient().sendCommand(commands.getAddCommand(),
-                    args.toArray(new byte[args.size()][]))
+            String resp = sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][]))
                     .getStatusCodeReply();
             return resp.equals("OK");
         }
@@ -330,8 +335,7 @@ public class Client {
         }
 
         try (Jedis conn = _conn()) {
-            String resp = conn.getClient().sendCommand(commands.getAddHashCommand(),
-                    args.toArray(new String[args.size()])).getStatusCodeReply();
+            String resp = sendCommand(conn, commands.getAddHashCommand(), args.toArray(new String[args.size()])).getStatusCodeReply();
             return resp.equals("OK");
         }
     }
@@ -359,7 +363,7 @@ public class Client {
     public Map<String, Object> getInfo() {
         List<Object> res;
         try (Jedis conn = _conn()) {
-            res = conn.getClient().sendCommand(commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
+            res = sendCommand(conn, commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
         }
 
         Map<String, Object> info = new HashMap<>();
@@ -374,7 +378,7 @@ public class Client {
      */
     public boolean deleteDocument(String docId) {
         try (Jedis conn = _conn()) {
-            Long r = conn.getClient().sendCommand(commands.getDelCommand(), this.indexName, docId).getIntegerReply();
+            Long r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
             return r == 1;
         }
     }
@@ -387,7 +391,7 @@ public class Client {
     public Document getDocument(String docId) {
         Document d = new Document(docId);
         try (Jedis conn = _conn()) {
-            List<Object> res = conn.getClient().sendCommand(commands.getGetCommand(), indexName, docId).getObjectMultiBulkReply();
+            List<Object> res = sendCommand(conn, commands.getGetCommand(), indexName, docId).getObjectMultiBulkReply();
             if (res == null) {
                 return null;
             }
@@ -412,7 +416,7 @@ public class Client {
     public boolean dropIndex(boolean missingOk) {
         String r;
         try (Jedis conn = _conn()) {
-            r = conn.getClient().sendCommand(commands.getDropCommand(), this.indexName).getStatusCodeReply();
+            r = sendCommand(conn, commands.getDropCommand(), this.indexName).getStatusCodeReply();
         } catch (JedisDataException ex) {
             if (missingOk && ex.getMessage().toLowerCase().contains("unknown")) {
                 return false;

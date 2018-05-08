@@ -1,5 +1,6 @@
 package io.redisearch.client;
 
+import redis.clients.jedis.BinaryClient;
 import redis.clients.jedis.Jedis;
 
 import java.util.List;
@@ -27,7 +28,9 @@ public class ClusterClient extends Client {
 
     public List<Object> broadcast(String... args) {
         try (Jedis conn = _conn()) {
-            List ret = conn.getClient().sendCommand(Commands.ClusterCommand.BROADCAST, args).getObjectMultiBulkReply();
+            BinaryClient client = conn.getClient();
+            client.sendCommand(Commands.ClusterCommand.BROADCAST, args);
+            List ret = client.getObjectMultiBulkReply();
             return ret;
         }
     }

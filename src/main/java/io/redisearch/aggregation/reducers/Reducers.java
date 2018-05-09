@@ -1,6 +1,7 @@
 package io.redisearch.aggregation.reducers;
 
 import io.redisearch.aggregation.SortedField;
+import io.redisearch.querybuilder.IntersectNode;
 
 import java.util.List;
 
@@ -91,5 +92,25 @@ public class Reducers {
 
     public static Reducer first_value(String field) {
         return first_value(field, null);
+    }
+
+    public static Reducer to_list(String field) {
+        return singleFieldReducer("TOLIST", field);
+    }
+
+    public static Reducer random_sample(String field, int size) {
+        return new Reducer(field) {
+            @Override
+            public String getName() {
+                return "RANDOM_SAMPLE";
+            }
+
+            @Override
+            protected List<String> getOwnArgs() {
+                List<String> args = super.getOwnArgs();
+                args.add(Integer.toString(size));
+                return args;
+            }
+        };
     }
 }

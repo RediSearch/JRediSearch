@@ -11,7 +11,6 @@ import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.*;
-import java.util.function.Function;
 
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
@@ -105,8 +104,6 @@ public class Client {
         }
     }
 
-    ;
-
     private final String indexName;
     private JedisPool pool;
 
@@ -122,6 +119,10 @@ public class Client {
      * @param port the redis pot
      */
     public Client(String indexName, String host, int port, int timeout, int poolSize) {
+        this(indexName, host, port, timeout, poolSize, null);
+    }
+
+    public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
         JedisPoolConfig conf = new JedisPoolConfig();
         conf.setMaxTotal(poolSize);
         conf.setTestOnBorrow(false);
@@ -133,7 +134,7 @@ public class Client {
         conf.setNumTestsPerEvictionRun(-1);
         conf.setFairness(true);
 
-        pool = new JedisPool(conf, host, port, timeout);
+        pool = new JedisPool(conf, host, port, timeout, password);
 
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();

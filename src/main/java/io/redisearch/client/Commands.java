@@ -21,7 +21,7 @@ import redis.clients.jedis.util.SafeEncoder;
         DEL("FT.DEL"),
         DROP("FT.DROP"),
         GET("FT.GET"),
-        AGGREGATE("AGGREGATE");
+        AGGREGATE("FT.AGGREGATE");
         private final byte[] raw;
 
         Command(String alt) {

@@ -54,6 +54,12 @@ public class AggregationRequest {
         return this;
     }
 
+    public AggregationRequest sortBy(SortedField field, int max) {
+        sortBy(field);
+        sortbyMax = max;
+        return this;
+    }
+
     public AggregationRequest sortByAsc(String field) {
         return sortBy(SortedField.asc(field));
     }

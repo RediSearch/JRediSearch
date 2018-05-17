@@ -203,7 +203,7 @@ public class Client {
         q.serializeRedisArgs(args);
 
         Jedis conn = _conn();
-        List<Object> resp = sendCommand(conn, commands.getSearchCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
+        List<Object> resp = sendCommand(conn, commands.getAggregateCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
         conn.close();
         return new AggregationResult(resp);
     }
@@ -289,6 +289,10 @@ public class Client {
                     .getStatusCodeReply();
             return resp.equals("OK");
         }
+    }
+
+    public boolean addDocument(Document doc) {
+        return addDocument(doc, new AddOptions());
     }
 
     /**

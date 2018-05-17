@@ -26,11 +26,11 @@ public class ClientTest {
     static private final String TEST_HOST = System.getProperty("redis.host", "localhost");
     static private final String TEST_INDEX = System.getProperty("redis.rsIndex", "testung");
 
-    private Client getClient(String indexName) {
+    protected Client getClient(String indexName) {
         return new Client(indexName, TEST_HOST, TEST_PORT);
     }
 
-    private Client getClient() {
+    protected Client getClient() {
         return  getClient(TEST_INDEX);
     }
 

@@ -39,7 +39,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ADD("FT.ADD"),
         ADDHASH("FT.ADDHASH"),
         INFO("FT.INFO"),
-        SEARCH("FT.FSEARCH"),
+        SEARCH("FT.SEARCH"),
         EXPLAIN("FT.EXPLAIN"),
         DEL("FT.DEL"),
         DROP("FT.DROP"),

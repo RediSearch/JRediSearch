@@ -1,6 +1,6 @@
 # JRediSearch
 
-A Java Client Library for [RediSearch](https://redisearch.io)
+A Java Client Library for [RediSearch](https://oss.redislabs.com/redisearch/)
 
 ## Overview 
 
@@ -113,5 +113,5 @@ SearchResult res = client.search(q);
 * Union matching
 * Stemming in 17 languages
 * Deleting and updating documents on the fly
-* And much more... See [http://redisearch.io](http://redisearch.io) for more details.
+* And much more... See [https://oss.redislabs.com/redisearch/](https://oss.redislabs.com/redisearch/) for more details.
 

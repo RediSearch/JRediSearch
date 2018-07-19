@@ -202,11 +202,12 @@ public class Client {
         ArrayList<byte[]> args = new ArrayList<>();
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
-
-        Jedis conn = _conn();
-        List<Object> resp = sendCommand(conn, commands.getAggregateCommand(), args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
-        conn.close();
-        return new AggregationResult(resp);
+        
+        try (Jedis conn = _conn()) {
+            List<Object> resp = sendCommand(conn, commands.getAggregateCommand(), args.toArray(new byte[args.size()][]))
+                    .getObjectMultiBulkReply();
+            return new AggregationResult(resp);
+        }
     }
 
     /**

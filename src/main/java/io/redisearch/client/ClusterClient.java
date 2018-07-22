@@ -22,6 +22,20 @@ public class ClusterClient extends Client {
         this.commands = new Commands.ClusterCommands();
     }
 
+    /**
+     * Create a new ClusterClient to a RediSearch index which can connect to password protected
+     * Redis Server
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param host      the redis host
+     * @param port      the redis pot
+     * @param password  the password for authentication in a password protected Redis server
+     */
+    public ClusterClient(String indexName, String host, int port, int timeout, int poolSize, String password) {
+        super(indexName, host, port, timeout, poolSize, password);
+        this.commands = new Commands.ClusterCommands();
+    }
+
     public ClusterClient(String indexName, String host, int port) {
         this(indexName, host, port, 500, 100);
     }

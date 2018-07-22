@@ -9,6 +9,7 @@ import io.redisearch.aggregation.AggregationRequest;
 import redis.clients.jedis.*;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.util.Pool;
 
 import java.util.*;
 
@@ -105,7 +106,7 @@ public class Client {
     }
 
     private final String indexName;
-    private JedisPool pool;
+    private Pool<Jedis> pool;
 
     Jedis _conn() {
         return pool.getResource();
@@ -123,16 +124,7 @@ public class Client {
     }
 
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = new JedisPoolConfig();
-        conf.setMaxTotal(poolSize);
-        conf.setTestOnBorrow(false);
-        conf.setTestOnReturn(false);
-        conf.setTestOnCreate(false);
-        conf.setTestWhileIdle(false);
-        conf.setMinEvictableIdleTimeMillis(60000);
-        conf.setTimeBetweenEvictionRunsMillis(30000);
-        conf.setNumTestsPerEvictionRun(-1);
-        conf.setFairness(true);
+        JedisPoolConfig conf = initPoolConfig(poolSize);
 
         pool = new JedisPool(conf, host, port, timeout, password);
 
@@ -143,6 +135,65 @@ public class Client {
     public Client(String indexName, String host, int port) {
         this(indexName, host, port, 500, 100);
     }
+
+    /**
+     * Create a new client to a RediSearch index with JediSentinelPool implementation. JedisSentinelPool
+     * takes care of reconfiguring the Pool when there is a failover of master node thus providing high
+     * availability and automatic failover.
+     * 
+     * @param indexName the name of the index we are connecting to or creating
+     * @param masterName the masterName to connect from list of masters monitored by sentinels
+     * @param sentinels the set of sentinels monitoring the cluster
+     * @param timeout the timeout in milliseconds
+     * @param poolSize the poolSize of JedisSentinelPool
+     * @param password the password for authentication in a password protected Redis server
+     */
+    public Client(String indexName, String master, Set<String> sentinels, int timeout, int poolSize, String password) {
+        JedisPoolConfig conf = initPoolConfig(poolSize);
+
+        this.pool = new JedisSentinelPool(master, sentinels, conf, timeout, password);
+
+        this.indexName = indexName;
+        this.commands = new Commands.SingleNodeCommands();
+    }
+
+    /**
+     * Create a new client to a RediSearch index with JediSentinelPool implementation. JedisSentinelPool
+     * takes care of reconfiguring the Pool when there is a failover of master node thus providing high
+     * availability and automatic failover.
+     * 
+     * <p>The Client is initialized with following default values for {@link JedisSentinelPool}
+     * <ul><li> password - NULL, no authentication required to connect to Redis Server</li></ul>
+     * 
+     * @param indexName the name of the index we are connecting to or creating
+     * @param masterName the masterName to connect from list of masters monitored by sentinels
+     * @param sentinels the set of sentinels monitoring the cluster
+     * @param timeout the timeout in milliseconds
+     * @param poolSize the poolSize of JedisSentinelPool
+     */
+    public Client(String indexName, String masterName, Set<String> sentinels, int timeout, int poolSize) {
+        this(indexName, masterName, sentinels, timeout, poolSize, null);
+    }
+
+    /**
+     * Create a new client to a RediSearch index with JediSentinelPool implementation. JedisSentinelPool
+     * takes care of reconfiguring the Pool when there is a failover of master node thus providing high
+     * availability and automatic failover.
+     * 
+     * <p>The Client is initialized with following default values for {@link JedisSentinelPool}
+     * <ul> <li>timeout - 500 mills</li>
+     * <li> poolSize - 100 connections</li>
+     * <li> password - NULL, no authentication required to connect to Redis Server</li></ul>
+     * 
+     * 
+     * @param indexName the name of the index we are connecting to or creating
+     * @param masterName the masterName to connect from list of masters monitored by sentinels
+     * @param sentinels the set of sentinels monitoring the cluster
+     */
+    public Client(String indexName, String masterName, Set<String> sentinels) {
+        this(indexName, masterName, sentinels, 500, 100);
+    }
+
     private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String ...args) {
         BinaryClient client = conn.getClient();
         client.sendCommand(provider, args);
@@ -153,6 +204,28 @@ public class Client {
         client.sendCommand(provider, args);
         return client;
     }
+    
+    /**
+     * Constructs JedisPoolConfig object.
+     * 
+     * @param poolSize size of the JedisPool
+     * @return {@link JedisPoolConfig} object with a few default settings
+     */
+    private JedisPoolConfig initPoolConfig(int poolSize) {
+        JedisPoolConfig conf = new JedisPoolConfig();
+        conf.setMaxTotal(poolSize);
+        conf.setTestOnBorrow(false);
+        conf.setTestOnReturn(false);
+        conf.setTestOnCreate(false);
+        conf.setTestWhileIdle(false);
+        conf.setMinEvictableIdleTimeMillis(60000);
+        conf.setTimeBetweenEvictionRunsMillis(30000);
+        conf.setNumTestsPerEvictionRun(-1);
+        conf.setFairness(true);
+        
+        return conf;
+    }
+    
     /**
      * Create the index definition in redis
      * @param schema a schema definition, see {@link Schema}

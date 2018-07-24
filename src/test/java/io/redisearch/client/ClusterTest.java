@@ -25,8 +25,8 @@ public class ClusterTest {
     static String CLUSTER_HOST = System.getProperty("redis.cluster.host", "localhost");
     static String CLUSTER_INDEX = System.getProperty("redis.cluster.rsIndex", "testung");
 
-    static String PROTECTED_CLUSTER_HOST = System.getProperty("redis.protected.cluster.host", "172.16.48.167");
-    static int PROTECTED_CLUSTER_PORT = Integer.parseInt(System.getProperty("redis.protected.cluster.port", "7001"));
+    static String PROTECTED_CLUSTER_HOST = System.getProperty("redis.protected.cluster.host", "localhost");
+    static int PROTECTED_CLUSTER_PORT = Integer.parseInt(System.getProperty("redis.protected.cluster.port", "7000"));
     static String PROTECTD_CLUSTER_PASSWORD = System.getProperty("redis.protected.cluster.password", "password");
     static String WRONG_PASSWORD = System.getProperty("redis.wrong.password", "wrong pass");
     static  int TIMEOUT = Integer.parseInt(System.getProperty("redis.cluster.timeout", "500"));

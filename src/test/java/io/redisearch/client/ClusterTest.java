@@ -8,6 +8,7 @@ import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +25,12 @@ public class ClusterTest {
     static String CLUSTER_HOST = System.getProperty("redis.cluster.host", "localhost");
     static String CLUSTER_INDEX = System.getProperty("redis.cluster.rsIndex", "testung");
 
+    static String PROTECTED_CLUSTER_HOST = System.getProperty("redis.protected.cluster.host", "172.16.48.167");
+    static int PROTECTED_CLUSTER_PORT = Integer.parseInt(System.getProperty("redis.protected.cluster.port", "7001"));
+    static String PROTECTD_CLUSTER_PASSWORD = System.getProperty("redis.protected.cluster.password", "password");
+    static String WRONG_PASSWORD = System.getProperty("redis.wrong.password", "wrong pass");
+    static  int TIMEOUT = Integer.parseInt(System.getProperty("redis.cluster.timeout", "500"));
+    static int POOL_SIZE = Integer.parseInt(System.getProperty("redis.cluster.poolSize", "10"));
 
     private ClusterClient getClient(String indexName) {
         return new ClusterClient(indexName, CLUSTER_HOST, CLUSTER_PORT);
@@ -37,6 +44,24 @@ public class ClusterTest {
     @BeforeClass
     static public void setUp() {
         Assume.assumeFalse(CLUSTER_PORT == 0);
+    }
+
+    @Test
+    public void getClusterClientWithPasswordTest(){
+        ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, PROTECTD_CLUSTER_PASSWORD);
+        
+        try ( Jedis conn = clusterClient._conn()){
+            assertEquals("SUCCESS", conn.ping("SUCCESS"));
+        }
+    }
+    
+    @Test(expected = JedisConnectionException.class)
+    public void getClusterClientWithWrongPasswordTest(){
+        ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, WRONG_PASSWORD);
+        
+        try ( Jedis conn = clusterClient._conn()){
+            fail("Should throw JedisConnectionException as password is incorrect.");
+        }
     }
 
     @Test

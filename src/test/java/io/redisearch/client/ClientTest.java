@@ -1,15 +1,13 @@
 package io.redisearch.client;
 
-import io.redisearch.Document;
-import io.redisearch.Query;
-import io.redisearch.Schema;
-import io.redisearch.SearchResult;
+import io.redisearch.*;
 import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -31,7 +29,7 @@ public class ClientTest {
     }
 
     protected Client getClient() {
-        return  getClient(TEST_INDEX);
+        return getClient(TEST_INDEX);
     }
 
     @Before
@@ -273,26 +271,26 @@ public class ClientTest {
         Map<String, Object> fields = new HashMap<>();
 
         fields.put("title", "b title");
-        cl.addDocument("doc1", 1.0 , fields,false,true,null);
+        cl.addDocument("doc1", 1.0, fields, false, true, null);
 
         fields.put("title", "a title");
-        cl.addDocument("doc2", 1.0, fields ,false,true,null);
+        cl.addDocument("doc2", 1.0, fields, false, true, null);
 
         fields.put("title", "c title");
-        cl.addDocument("doc3", 1.0 , fields,false,true,null);
+        cl.addDocument("doc3", 1.0, fields, false, true, null);
 
-        Query q = new Query("title").setSortBy("title",true);
+        Query q = new Query("title").setSortBy("title", true);
         SearchResult res = cl.search(q);
 
         assertEquals(3, res.totalResults);
-        Document doc1 =  res.docs.get(0);
-        assertEquals("a title",doc1.get("title") );
+        Document doc1 = res.docs.get(0);
+        assertEquals("a title", doc1.get("title"));
 
-        doc1 =  res.docs.get(1);
-        assertEquals("b title",doc1.get("title") );
+        doc1 = res.docs.get(1);
+        assertEquals("b title", doc1.get("title"));
 
-        doc1 =  res.docs.get(2);
-        assertEquals("c title",doc1.get("title") );
+        doc1 = res.docs.get(2);
+        assertEquals("c title", doc1.get("title"));
     }
 
     @Test
@@ -374,11 +372,11 @@ public class ClientTest {
         Client cl = getClient();
 
         Schema sc = new Schema()
-                .addField(new Schema.TextField("f1", 1.0,true, false, true))
+                .addField(new Schema.TextField("f1", 1.0, true, false, true))
                 .addField(new Schema.TextField("f2", 1.0));
         cl.createIndex(sc, Client.IndexOptions.Default());
 
-        Map<String,Object> mm = new HashMap<>();
+        Map<String, Object> mm = new HashMap<>();
 
         mm.put("f1", "MarkZZ");
         mm.put("f2", "MarkZZ");
@@ -419,7 +417,7 @@ public class ClientTest {
                 .addTextField("f3", 1.0);
         cl.createIndex(sc, Client.IndexOptions.Default());
 
-        Map<String,Object> mm = new HashMap<>();
+        Map<String, Object> mm = new HashMap<>();
         mm.put("f1", "f1_val");
         mm.put("f2", "f2_val");
 
@@ -519,4 +517,45 @@ public class ClientTest {
         // Get something that does not exist. Shouldn't explode
         assertNull(cl.getDocument("nonexist"));
     }
+
+    @Test
+    public void testAddSuggestionGetSuggestionFuzzy() throws Exception {
+        Client cl = getClient();
+        Suggestion suggestion = Suggestion.builder().str("TOPIC OF WORDS").score(10).build();
+        // test can add a suggestion string
+        assertTrue(suggestion.toString() + " insert should of returned at least 1", cl.addSuggestion(suggestion, true) > 0);
+        // test that the partial part of that string will be returned using fuzzy
+        assertTrue(suggestion.toString() + " suppose to be returned", cl.getSuggestion(suggestion.getString().substring(0, 3), false, 6, true, false).contains(suggestion.getString()));
+    }
+
+    @Test
+    public void testAddSuggestionGetSuggestion() throws Exception {
+        Client cl = getClient();
+        Suggestion suggestion = Suggestion.builder().str("ANOTHER_WORD").score(10).build();
+        Suggestion noMatch = Suggestion.builder().str("_WORD MISSED").score(10).build();
+
+        assertTrue(suggestion.toString() + " should of inserted at least 1", cl.addSuggestion(suggestion, false) > 0);
+        assertTrue(noMatch.toString() + " should of inserted at least 1", cl.addSuggestion(noMatch, false) > 0);
+
+        // test that with a partial part of that string will have the entire word returned
+        assertTrue(suggestion.getString() + " did not get a match with 3 characters", cl.getSuggestion(suggestion.getString().substring(0, 3), false, 6, false, false).contains(suggestion.getString()));
+        // turn off fuzzy start at second word no hit
+        assertFalse(noMatch.getString() + " no fuzzy and starting at 1, should not match", cl.getSuggestion(noMatch.getString().substring(1, 6), false, 6, false, false).contains(noMatch.getString()));
+        // my attempt to trigger the fuzzy and not
+        assertTrue(noMatch.getString() + " fuzzy is on starting at 1 position should match", cl.getSuggestion(noMatch.getString().substring(1, 6), false, 6, true, false).contains(noMatch.getString()));
+    }
+
+    @Test
+    public void testAddSuggestionGetSuggestionPayloadScores() throws Exception {
+        Client cl = getClient();
+        Suggestion suggestion = Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ".getBytes()).score(8).build();
+        assertTrue(suggestion.toString() + " insert should of at least returned 1", cl.addSuggestion(suggestion, false) > 0);
+        assertTrue("Count single added should return more than 1", cl.addSuggestion(suggestion.toBuilder().str("COUNT").payload("My PAYLOAD is better".getBytes()).build(), false) > 1);
+        // test that with a partial part of that string will have the entire word returned
+        List<String> payloads = cl.getSuggestion(suggestion.getString().substring(0, 3), true, 6, false, true);
+        assertEquals("2 suggestions with scores and payloads should have 6 items in array", 6, payloads.size());
+
+    }
+
+
 }

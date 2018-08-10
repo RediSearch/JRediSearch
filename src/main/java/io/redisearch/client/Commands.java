@@ -9,6 +9,26 @@ import redis.clients.jedis.util.SafeEncoder;
  public class Commands {
 
 
+    public enum GeneralKey implements  ProtocolCommand {
+
+        INCREMENT("INCR"),
+        PAYLOAD("PAYLOAD"),
+        WITHPAYLOADS("WITHPAYLOADS"),
+        MAX("MAX"),
+        FUZZY("FUZZY"),
+        SCORES("WITHSCORES");
+
+        private final byte[] raw;
+
+        GeneralKey(String alt) {
+            raw = SafeEncoder.encode(alt);
+        }
+
+        public byte[] getRaw() {
+            return raw;
+        }
+    }
+
     // TODO: Move this to the client and autocompleter as two different enums
     public enum Command implements ProtocolCommand {
 

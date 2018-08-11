@@ -48,7 +48,7 @@ and
 
 ## Usage example
 
-Initializing the client:
+Initializing the client with JedisPool:
 
 ```java
 
@@ -61,6 +61,32 @@ import io.redisearch.Schema;
 ...
 
 Client client = new Client("testung", "localhost", 6379);
+
+```
+Initializing the client with JedisSentinelPool:
+
+```java
+
+import io.redisearch.client.Client;
+import io.redisearch.Document;
+import io.redisearch.SearchResult;
+import io.redisearch.Query;
+import io.redisearch.Schema;
+
+...
+
+private static final String MASTER_NAME = "mymaster";
+private static final Set<String> sentinels;
+static {
+    sentinels = new HashSet();
+    sentinels.add("localhost:7000");
+    sentinels.add("localhost:7001");
+    sentinels.add("localhost:7002");
+}
+
+...
+
+Client client = new Client("testung", MASTER_NAME, sentinels);
 
 ```
 

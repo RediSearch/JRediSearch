@@ -3,15 +3,14 @@ package io.redisearch.client;
 import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
+import io.redisearch.SearchClient;
 import io.redisearch.SearchResult;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import redis.clients.jedis.Jedis;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static junit.framework.TestCase.*;
 
@@ -26,7 +25,7 @@ public class ClusterTest {
 
 
     private ClusterClient getClient(String indexName) {
-        return new ClusterClient(indexName, CLUSTER_HOST, CLUSTER_PORT);
+        return ClientBuilder.builder().indexName(indexName).host(CLUSTER_HOST).port(CLUSTER_PORT).buildCluster();
     }
 
     private ClusterClient getClient() {

@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * Created by dvirvolk on 12/04/2017.
  */
-public class ClusterClient extends Client {
+class ClusterClient extends Client implements io.redisearch.ClusterClient {
 
     /**
      * Create a new client to a RediSearch index
@@ -17,13 +17,9 @@ public class ClusterClient extends Client {
      * @param host      the redis host
      * @param port      the redis pot
      */
-    public ClusterClient(String indexName, String host, int port, int timeout, int poolSize) {
-        super(indexName, host, port, timeout, poolSize);
+    protected ClusterClient(String indexName, String host, int port, int timeout, int poolSize, String password) {
+        super(indexName, host, port, timeout, poolSize, password);
         this.commands = new Commands.ClusterCommands();
-    }
-
-    public ClusterClient(String indexName, String host, int port) {
-        this(indexName, host, port, 500, 100);
     }
 
     public List<Object> broadcast(String... args) {

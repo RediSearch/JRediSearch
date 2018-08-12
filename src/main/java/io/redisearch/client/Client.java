@@ -14,24 +14,13 @@ import java.util.*;
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
  */
-public class Client {
+class Client implements SearchClient {
 
     private final String indexName;
     protected Commands.CommandProvider commands;
     private JedisPool pool;
 
-    /**
-     * Create a new client to a RediSearch index
-     *
-     * @param indexName the name of the index we are connecting to or creating
-     * @param host      the redis host
-     * @param port      the redis pot
-     */
-    public Client(String indexName, String host, int port, int timeout, int poolSize) {
-        this(indexName, host, port, timeout, poolSize, null);
-    }
-
-    public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
+    protected Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
         JedisPoolConfig conf = new JedisPoolConfig();
         conf.setMaxTotal(poolSize);
         conf.setTestOnBorrow(false);
@@ -47,10 +36,6 @@ public class Client {
 
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();
-    }
-
-    public Client(String indexName, String host, int port) {
-        this(indexName, host, port, 500, 100);
     }
 
     private static void handleListMapping(List<Object> items, KVHandler handler) {
@@ -87,6 +72,7 @@ public class Client {
      * @param options index option flags, see {@link IndexOptions}
      * @return true if successful
      */
+    @Override
     public boolean createIndex(Schema schema, IndexOptions options) {
 
         ArrayList<String> args = new ArrayList<>();
@@ -114,6 +100,7 @@ public class Client {
      * @param q a {@link Query} object with the query string and optional parameters
      * @return a {@link SearchResult} object with the results
      */
+    @Override
     public SearchResult search(Query q) {
         ArrayList<byte[]> args = new ArrayList(4);
         args.add(indexName.getBytes());
@@ -127,6 +114,7 @@ public class Client {
         }
     }
 
+    @Override
     public AggregationResult aggregate(AggregationRequest q) {
         ArrayList<byte[]> args = new ArrayList<>();
         args.add(indexName.getBytes());
@@ -145,6 +133,7 @@ public class Client {
      * @param q The query to explain
      * @return A string describing this query
      */
+    @Override
     public String explain(Query q) {
         ArrayList<byte[]> args = new ArrayList(4);
         args.add(indexName.getBytes());
@@ -166,6 +155,7 @@ public class Client {
      * @param payload if set, we can save a payload in the index to be retrieved or evaluated by scoring functions on the server
      * @return
      */
+    @Override
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
         return doAddDocument(docId, score, fields, noSave, replace, false, payload);
     }
@@ -190,6 +180,7 @@ public class Client {
      * @return true if the operation succeeded, false otherwise. Note that if the operation fails, an exception
      * will be thrown
      */
+    @Override
     public boolean addDocument(Document doc, AddOptions options) {
         ArrayList<byte[]> args = new ArrayList<>(
                 Arrays.asList(indexName.getBytes(), doc.getId().getBytes(), Double.toString(doc.getScore()).getBytes()));
@@ -225,6 +216,7 @@ public class Client {
         }
     }
 
+    @Override
     public boolean addDocument(Document doc) {
         return addDocument(doc, new AddOptions());
     }
@@ -232,6 +224,7 @@ public class Client {
     /**
      * replaceDocument is a convenience for calling addDocument with replace=true
      */
+    @Override
     public boolean replaceDocument(String docId, double score, Map<String, Object> fields) {
         return addDocument(docId, score, fields, false, true, null);
     }
@@ -246,6 +239,7 @@ public class Client {
      * @param fields
      * @return
      */
+    @Override
     public boolean updateDocument(String docId, double score, Map<String, Object> fields) {
         return doAddDocument(docId, score, fields, false, true, true, null);
     }
@@ -253,6 +247,7 @@ public class Client {
     /**
      * See above
      */
+    @Override
     public boolean addDocument(String docId, double score, Map<String, Object> fields) {
         return this.addDocument(docId, score, fields, false, false, null);
     }
@@ -260,6 +255,7 @@ public class Client {
     /**
      * See above
      */
+    @Override
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
     }
@@ -272,6 +268,7 @@ public class Client {
      * @param replace if set, and the document already exists, we reindex and update it
      * @return true on success
      */
+    @Override
     public boolean addHash(String docId, double score, boolean replace) {
         ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName, docId, Double.toString(score)));
 
@@ -291,6 +288,7 @@ public class Client {
      *
      * @return a map of key/value pairs
      */
+    @Override
     public Map<String, Object> getInfo() {
         List<Object> res;
         try (Jedis conn = _conn()) {
@@ -308,6 +306,7 @@ public class Client {
      * @param docId the document's id
      * @return true if it has been deleted, false if it did not exist
      */
+    @Override
     public boolean deleteDocument(String docId) {
         try (Jedis conn = _conn()) {
             Long r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
@@ -321,6 +320,7 @@ public class Client {
      * @param docId The document ID to retrieve
      * @return The document as stored in the index. If the document does not exist, null is returned.
      */
+    @Override
     public Document getDocument(String docId) {
         Document d = new Document(docId);
         try (Jedis conn = _conn()) {
@@ -338,6 +338,7 @@ public class Client {
      *
      * @return true on success
      */
+    @Override
     public boolean dropIndex() {
         return dropIndex(false);
     }
@@ -348,6 +349,7 @@ public class Client {
      * @param missingOk If the index does not exist, don't throw an exception, but return false instead
      * @return True if the index was dropped, false if it did not exist (or some other error occurred).
      */
+    @Override
     public boolean dropIndex(boolean missingOk) {
         String r;
         try (Jedis conn = _conn()) {
@@ -362,6 +364,7 @@ public class Client {
         return r.equals("OK");
     }
 
+    @Override
     public Long addSuggestion(Suggestion suggestion, boolean increment) {
         ArrayList<byte[]> args = new ArrayList<>(
                 Arrays.asList(indexName.getBytes(), suggestion.getString().getBytes(), Double.toString(suggestion.getScore()).getBytes()));
@@ -379,7 +382,7 @@ public class Client {
         }
     }
 
-    protected List<String> getSuggestion(String prefix, boolean withPayloads, int max, boolean fuzzy, boolean scores) {
+    public List<String> getSuggestion(String prefix, boolean withPayloads, int max, boolean fuzzy, boolean scores) {
         ArrayList<byte[]> args = new ArrayList<>(
                 Arrays.asList(indexName.getBytes(), prefix.getBytes(), Integer.toString(max).getBytes()));
 
@@ -410,93 +413,5 @@ public class Client {
         void apply(String key, Object value);
     }
 
-    /**
-     * IndexOptions encapsulates flags for index creation and shuold be given to the client on index creation
-     */
-    public static class IndexOptions {
-        /**
-         * Set this to tell the index not to save term offset vectors. This reduces memory consumption but does not
-         * allow performing exact matches, and reduces overall relevance of multi-term queries
-         */
-        public static final int USE_TERM_OFFSETS = 0x01;
-
-        /**
-         * If set (default), we keep flags per index record telling us what fields the term appeared on,
-         * and allowing us to filter results by field
-         */
-        public static final int KEEP_FIELD_FLAGS = 0x02;
-
-        /**
-         * With each document:term record, store how often the term appears within the document. This can be used
-         * for sorting documents by their relevancy to the given term.
-         */
-        public static final int KEEP_TERM_FREQUENCIES = 0x08;
-
-        public static final int DEFAULT_FLAGS = USE_TERM_OFFSETS | KEEP_FIELD_FLAGS | KEEP_TERM_FREQUENCIES;
-
-        int flags = 0x0;
-
-        List<String> stopwords = null;
-
-        /**
-         * Default constructor
-         *
-         * @param flags flag mask
-         */
-        public IndexOptions(int flags) {
-            this.flags = flags;
-            stopwords = null;
-        }
-
-        /**
-         * The default indexing options - use term offsets and keep fields flags
-         */
-        public static IndexOptions Default() {
-            return new IndexOptions(DEFAULT_FLAGS);
-        }
-
-        /**
-         * Set a custom stopword list
-         *
-         * @return the options object itself, for builder-style construction
-         */
-        public IndexOptions SetStopwords(String... stopwords) {
-            this.stopwords = Arrays.asList(stopwords);
-            return this;
-        }
-
-        /**
-         * Set the index to contain no stopwords, overriding the default list
-         *
-         * @return the options object itself, for builder-style constructions
-         */
-        public IndexOptions SetNoStopwords() {
-            stopwords = new ArrayList<>(0);
-            return this;
-        }
-
-        public void serializeRedisArgs(List<String> args) {
-
-            if ((flags & USE_TERM_OFFSETS) == 0) {
-                args.add("NOOFFSETS");
-            }
-            if ((flags & KEEP_FIELD_FLAGS) == 0) {
-                args.add("NOFIELDS");
-            }
-            if ((flags & KEEP_TERM_FREQUENCIES) == 0) {
-                args.add("NOFREQS");
-            }
-
-            if (stopwords != null) {
-
-                args.add("STOPWORDS");
-                args.add(String.format("%d", stopwords.size()));
-                if (stopwords.size() > 0) {
-                    args.addAll(stopwords);
-                }
-
-            }
-        }
-    }
 
 }

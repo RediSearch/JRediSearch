@@ -1,6 +1,11 @@
 package io.redisearch.client;
 
-import io.redisearch.*;
+import io.redisearch.Document;
+import io.redisearch.Query;
+import io.redisearch.Schema;
+import io.redisearch.SearchClient;
+import io.redisearch.SearchResult;
+import io.redisearch.Suggestion;
 import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
@@ -11,7 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertFalse;
+import static junit.framework.TestCase.assertNotNull;
+import static junit.framework.TestCase.assertNull;
+import static junit.framework.TestCase.assertTrue;
 
 
 /**
@@ -24,22 +33,22 @@ public class ClientTest {
     static private final String TEST_HOST = System.getProperty("redis.host", "localhost");
     static private final String TEST_INDEX = System.getProperty("redis.rsIndex", "testung");
 
-    protected Client getClient(String indexName) {
-        return new Client(indexName, TEST_HOST, TEST_PORT);
+    protected SearchClient getClient(String indexName) {
+        return ClientBuilder.builder().indexName(indexName).host(TEST_HOST).port(TEST_PORT).build();
     }
 
-    protected Client getClient() {
+    protected SearchClient getClient() {
         return getClient(TEST_INDEX);
     }
 
     @Before
     public void setUp() {
-        getClient()._conn().flushDB();
+        ((Client) getClient())._conn().flushDB();
     }
 
     @Test
     public void search() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
 
@@ -80,7 +89,7 @@ public class ClientTest {
 
     @Test
     public void testNumericFilter() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addNumericField("price");
 
@@ -136,7 +145,7 @@ public class ClientTest {
 
     @Test
     public void testStopwords() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -152,7 +161,7 @@ public class ClientTest {
         res = cl.search(new Query("foo bar"));
         assertEquals(0, res.totalResults);
 
-        cl._conn().flushDB();
+        ((Client)cl)._conn().flushDB();
 
         assertTrue(cl.createIndex(sc,
                 Client.IndexOptions.Default().SetNoStopwords()));
@@ -167,7 +176,7 @@ public class ClientTest {
 
     @Test
     public void testGeoFilter() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addGeoField("loc");
 
@@ -196,7 +205,7 @@ public class ClientTest {
 
     @Test
     public void testPayloads() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -215,7 +224,7 @@ public class ClientTest {
 
     @Test
     public void testQueryFlags() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -264,7 +273,7 @@ public class ClientTest {
 
     @Test
     public void testSortQueryFlags() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
         Schema sc = new Schema().addSortableTextField("title", 1.0);
 
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
@@ -295,8 +304,8 @@ public class ClientTest {
 
     @Test
     public void testAddHash() throws Exception {
-        Client cl = getClient();
-        Jedis conn = cl._conn();
+        SearchClient cl = getClient();
+        Jedis conn = ((Client)cl)._conn();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
         HashMap hm = new HashMap();
@@ -311,8 +320,8 @@ public class ClientTest {
 
     @Test
     public void testDrop() throws Exception {
-        Client cl = getClient();
-        cl._conn().flushDB();
+        SearchClient cl = getClient();
+        ((Client)cl)._conn().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -328,7 +337,7 @@ public class ClientTest {
 
         assertTrue(cl.dropIndex());
 
-        Jedis conn = cl._conn();
+        Jedis conn = ((Client)cl)._conn();
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());
@@ -336,8 +345,8 @@ public class ClientTest {
 
     @Test
     public void testNoStem() throws Exception {
-        Client cl = getClient();
-        cl._conn().flushDB();
+        SearchClient cl = getClient();
+        ((Client)cl)._conn().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
 
@@ -357,7 +366,7 @@ public class ClientTest {
 
     @Test
     public void testInfo() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
@@ -369,7 +378,7 @@ public class ClientTest {
 
     @Test
     public void testNoIndex() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema()
                 .addField(new Schema.TextField("f1", 1.0, true, false, true))
@@ -409,7 +418,7 @@ public class ClientTest {
 
     @Test
     public void testReplacePartial() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
@@ -440,7 +449,7 @@ public class ClientTest {
 
     @Test
     public void testExplain() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
@@ -455,7 +464,7 @@ public class ClientTest {
 
     @Test
     public void testHighlightSummarize() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
         Schema sc = new Schema().addTextField("text", 1.0);
         cl.createIndex(sc, Client.IndexOptions.Default());
 
@@ -472,7 +481,7 @@ public class ClientTest {
 
     @Test
     public void testLanguage() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
         Schema sc = new Schema().addTextField("text", 1.0);
         cl.createIndex(sc, Client.IndexOptions.Default());
 
@@ -494,7 +503,7 @@ public class ClientTest {
 
     @Test
     public void testDropMissing() throws Exception {
-        Client cl = getClient("dummyIndexNotExist");
+        SearchClient cl = getClient("dummyIndexNotExist");
         assertFalse(cl.dropIndex(true));
         boolean caught = false;
         try {
@@ -507,7 +516,7 @@ public class ClientTest {
 
     @Test
     public void testGet() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
         cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.Default());
         cl.addDocument(new Document("doc1").set("txt1", "Hello World!"), new AddOptions());
         Document d = cl.getDocument("doc1");
@@ -520,7 +529,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionFuzzy() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
         Suggestion suggestion = Suggestion.builder().str("TOPIC OF WORDS").score(10).build();
         // test can add a suggestion string
         assertTrue(suggestion.toString() + " insert should of returned at least 1", cl.addSuggestion(suggestion, true) > 0);
@@ -530,7 +539,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestion() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
         Suggestion suggestion = Suggestion.builder().str("ANOTHER_WORD").score(10).build();
         Suggestion noMatch = Suggestion.builder().str("_WORD MISSED").score(10).build();
 
@@ -547,7 +556,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionPayloadScores() throws Exception {
-        Client cl = getClient();
+        SearchClient cl = getClient();
         Suggestion suggestion = Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ".getBytes()).score(8).build();
         assertTrue(suggestion.toString() + " insert should of at least returned 1", cl.addSuggestion(suggestion, false) > 0);
         assertTrue("Count single added should return more than 1", cl.addSuggestion(suggestion.toBuilder().str("COUNT").payload("My PAYLOAD is better".getBytes()).build(), false) > 1);

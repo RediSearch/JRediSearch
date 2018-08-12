@@ -8,7 +8,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public interface SearchClient {
+public interface Client {
     boolean createIndex(Schema schema, IndexOptions options);
 
     SearchResult search(Query q);

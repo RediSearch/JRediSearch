@@ -14,7 +14,7 @@ import java.util.*;
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
  */
-class Client implements SearchClient {
+class Client implements io.redisearch.Client {
 
     private final String indexName;
     protected Commands.CommandProvider commands;

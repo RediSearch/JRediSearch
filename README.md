@@ -60,7 +60,7 @@ import io.redisearch.Schema;
 
 ...
 
-Client client = new Client("testung", "localhost", 6379);
+Client client = ClientBuilder.builder().indexName("testung").host("localhost").build();
 
 ```
 

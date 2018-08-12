@@ -3,7 +3,7 @@ package io.redisearch.client;
 import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
-import io.redisearch.SearchClient;
+import io.redisearch.Client;
 import io.redisearch.SearchResult;
 import io.redisearch.Suggestion;
 import org.junit.Before;
@@ -33,26 +33,26 @@ public class ClientTest {
     static private final String TEST_HOST = System.getProperty("redis.host", "localhost");
     static private final String TEST_INDEX = System.getProperty("redis.rsIndex", "testung");
 
-    protected SearchClient getClient(String indexName) {
+    protected Client getClient(String indexName) {
         return ClientBuilder.builder().indexName(indexName).host(TEST_HOST).port(TEST_PORT).build();
     }
 
-    protected SearchClient getClient() {
+    protected Client getClient() {
         return getClient(TEST_INDEX);
     }
 
     @Before
     public void setUp() {
-        ((Client) getClient())._conn().flushDB();
+        ((io.redisearch.client.Client) getClient())._conn().flushDB();
     }
 
     @Test
     public void search() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         fields.put("body", "lorem ipsum");
@@ -89,11 +89,11 @@ public class ClientTest {
 
     @Test
     public void testNumericFilter() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addNumericField("price");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
 
@@ -145,13 +145,13 @@ public class ClientTest {
 
     @Test
     public void testStopwords() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
 
         assertTrue(cl.createIndex(sc,
-                Client.IndexOptions.Default().SetStopwords("foo", "bar", "baz")));
+                io.redisearch.client.Client.IndexOptions.Default().SetStopwords("foo", "bar", "baz")));
 
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world foo bar");
@@ -161,10 +161,10 @@ public class ClientTest {
         res = cl.search(new Query("foo bar"));
         assertEquals(0, res.totalResults);
 
-        ((Client)cl)._conn().flushDB();
+        ((io.redisearch.client.Client)cl)._conn().flushDB();
 
         assertTrue(cl.createIndex(sc,
-                Client.IndexOptions.Default().SetNoStopwords()));
+                io.redisearch.client.Client.IndexOptions.Default().SetNoStopwords()));
         fields.put("title", "hello world foo bar to be or not to be");
         assertTrue(cl.addDocument("doc1", fields));
 
@@ -176,11 +176,11 @@ public class ClientTest {
 
     @Test
     public void testGeoFilter() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addGeoField("loc");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         fields.put("loc", "-0.441,51.458");
@@ -205,11 +205,11 @@ public class ClientTest {
 
     @Test
     public void testPayloads() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
 
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
@@ -224,11 +224,11 @@ public class ClientTest {
 
     @Test
     public void testQueryFlags() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         Map<String, Object> fields = new HashMap<>();
 
 
@@ -273,10 +273,10 @@ public class ClientTest {
 
     @Test
     public void testSortQueryFlags() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
         Schema sc = new Schema().addSortableTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         Map<String, Object> fields = new HashMap<>();
 
         fields.put("title", "b title");
@@ -304,10 +304,10 @@ public class ClientTest {
 
     @Test
     public void testAddHash() throws Exception {
-        SearchClient cl = getClient();
-        Jedis conn = ((Client)cl)._conn();
+        Client cl = getClient();
+        Jedis conn = ((io.redisearch.client.Client)cl)._conn();
         Schema sc = new Schema().addTextField("title", 1.0);
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         HashMap hm = new HashMap();
         hm.put("title", "hello world");
         conn.hmset("foo", hm);
@@ -320,12 +320,12 @@ public class ClientTest {
 
     @Test
     public void testDrop() throws Exception {
-        SearchClient cl = getClient();
-        ((Client)cl)._conn().flushDB();
+        Client cl = getClient();
+        ((io.redisearch.client.Client)cl)._conn().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         for (int i = 0; i < 100; i++) {
@@ -337,7 +337,7 @@ public class ClientTest {
 
         assertTrue(cl.dropIndex());
 
-        Jedis conn = ((Client)cl)._conn();
+        Jedis conn = ((io.redisearch.client.Client)cl)._conn();
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());
@@ -345,10 +345,10 @@ public class ClientTest {
 
     @Test
     public void testNoStem() throws Exception {
-        SearchClient cl = getClient();
-        ((Client)cl)._conn().flushDB();
+        Client cl = getClient();
+        ((io.redisearch.client.Client)cl)._conn().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
 
         Map<String, Object> doc = new HashMap<>();
         doc.put("stemmed", "located");
@@ -366,10 +366,10 @@ public class ClientTest {
 
     @Test
     public void testInfo() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
 
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
@@ -378,12 +378,12 @@ public class ClientTest {
 
     @Test
     public void testNoIndex() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema()
                 .addField(new Schema.TextField("f1", 1.0, true, false, true))
                 .addField(new Schema.TextField("f2", 1.0));
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default());
 
         Map<String, Object> mm = new HashMap<>();
 
@@ -418,13 +418,13 @@ public class ClientTest {
 
     @Test
     public void testReplacePartial() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
                 .addTextField("f2", 1.0)
                 .addTextField("f3", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default());
 
         Map<String, Object> mm = new HashMap<>();
         mm.put("f1", "f1_val");
@@ -449,13 +449,13 @@ public class ClientTest {
 
     @Test
     public void testExplain() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
                 .addTextField("f2", 1.0)
                 .addTextField("f3", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default());
 
         String res = cl.explain(new Query("@f3:f3_val @f2:f2_val @f1:f1_val"));
         assertNotNull(res);
@@ -464,9 +464,9 @@ public class ClientTest {
 
     @Test
     public void testHighlightSummarize() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
         Schema sc = new Schema().addTextField("text", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default());
 
         Map<String, Object> doc = new HashMap<>();
         doc.put("text", "Redis is often referred as a data structures server. What this means is that Redis provides access to mutable data structures via a set of commands, which are sent using a server-client model with TCP sockets and a simple protocol. So different processes can query and modify the same data structures in a shared way");
@@ -481,9 +481,9 @@ public class ClientTest {
 
     @Test
     public void testLanguage() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
         Schema sc = new Schema().addTextField("text", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default());
 
         Document d = new Document("doc1").set("text", "hello");
         AddOptions options = new AddOptions().setLanguage("spanish");
@@ -503,7 +503,7 @@ public class ClientTest {
 
     @Test
     public void testDropMissing() throws Exception {
-        SearchClient cl = getClient("dummyIndexNotExist");
+        Client cl = getClient("dummyIndexNotExist");
         assertFalse(cl.dropIndex(true));
         boolean caught = false;
         try {
@@ -516,8 +516,8 @@ public class ClientTest {
 
     @Test
     public void testGet() throws Exception {
-        SearchClient cl = getClient();
-        cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.Default());
+        Client cl = getClient();
+        cl.createIndex(new Schema().addTextField("txt1", 1.0), io.redisearch.client.Client.IndexOptions.Default());
         cl.addDocument(new Document("doc1").set("txt1", "Hello World!"), new AddOptions());
         Document d = cl.getDocument("doc1");
         assertNotNull(d);
@@ -529,7 +529,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionFuzzy() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
         Suggestion suggestion = Suggestion.builder().str("TOPIC OF WORDS").score(10).build();
         // test can add a suggestion string
         assertTrue(suggestion.toString() + " insert should of returned at least 1", cl.addSuggestion(suggestion, true) > 0);
@@ -539,7 +539,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestion() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
         Suggestion suggestion = Suggestion.builder().str("ANOTHER_WORD").score(10).build();
         Suggestion noMatch = Suggestion.builder().str("_WORD MISSED").score(10).build();
 
@@ -556,7 +556,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionPayloadScores() throws Exception {
-        SearchClient cl = getClient();
+        Client cl = getClient();
         Suggestion suggestion = Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ".getBytes()).score(8).build();
         assertTrue(suggestion.toString() + " insert should of at least returned 1", cl.addSuggestion(suggestion, false) > 0);
         assertTrue("Count single added should return more than 1", cl.addSuggestion(suggestion.toBuilder().str("COUNT").payload("My PAYLOAD is better".getBytes()).build(), false) > 1);

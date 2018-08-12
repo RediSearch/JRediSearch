@@ -3,7 +3,7 @@ package io.redisearch.client;
 import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
-import io.redisearch.SearchClient;
+import io.redisearch.Client;
 import io.redisearch.SearchResult;
 import org.junit.Assume;
 import org.junit.BeforeClass;

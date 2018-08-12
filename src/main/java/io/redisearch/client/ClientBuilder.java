@@ -1,6 +1,6 @@
 package io.redisearch.client;
 
-import io.redisearch.SearchClient;
+import io.redisearch.Client;
 
 public class ClientBuilder {
     private String indexName;
@@ -60,9 +60,9 @@ public class ClientBuilder {
      *
      * @return the interface to the Search for Redis
      */
-    public SearchClient build() {
+    public Client build() {
         validate();
-        return new Client(indexName, host, port, timeout, poolSize, password);
+        return new io.redisearch.client.Client(indexName, host, port, timeout, poolSize, password);
     }
 
     /**

@@ -43,9 +43,55 @@ public interface Client {
 
     boolean dropIndex(boolean missingOk);
 
+    /**
+     * Add a word to the suggestion index for redis plugin
+     *
+     * @param suggestion the Suggestion to be added
+     * @param increment  if we should increment this suggestion or not
+     * @return the current size after your added suggestion has been added
+     */
     Long addSuggestion(Suggestion suggestion, boolean increment);
 
-    List<String> getSuggestion(String prefix, boolean withPayloads, int max, boolean fuzzy, boolean scores);
+    /**
+     * No Score will be retrieved from the Redis search plugin a payload will be returned if it was added
+     *
+     * @param prefix the start of the word to match on
+     * @param max    the total number of results
+     * @param fuzzy  should it be fuzzy or not
+     * @return the list of matches or an empty list
+     */
+    List<Suggestion> getSuggestionWithPayload(String prefix, int max, boolean fuzzy);
+
+    /**
+     * No Payload or Score will be retrieved from the Redis search plugin
+     *
+     * @param prefix the start of the word to match on
+     * @param max    the total number of results
+     * @param fuzzy  should it be fuzzy or not
+     * @return the list of matches or an empty list
+     */
+    List<Suggestion> getSuggestion(String prefix, int max, boolean fuzzy);
+
+    /**
+     * No Payload will be retrieved from the Redis search plugin score returned as added when loading suggestion
+     *
+     * @param prefix the start of the word to match on
+     * @param max    the total number of results
+     * @param fuzzy  should it be fuzzy or not
+     * @return the list of matches or an empty list
+     */
+    List<Suggestion> getSuggestionWithScore(String prefix, int max, boolean fuzzy);
+
+    /**
+     * Will ask for both Score and Payload to added to the return, still depends on if it was added when index for
+     * suggestion was given such data
+     *
+     * @param prefix the start of the word to match on
+     * @param max    the total number of results
+     * @param fuzzy  should it be fuzzy or not
+     * @return the list of matches or an empty list
+     */
+    List<Suggestion> getSuggestionWithScoreAndPayload(String prefix, int max, boolean fuzzy);
 
 
     /**

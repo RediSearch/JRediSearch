@@ -1,11 +1,7 @@
 package io.redisearch.client;
 
-import io.redisearch.Document;
-import io.redisearch.Query;
-import io.redisearch.Schema;
 import io.redisearch.Client;
-import io.redisearch.SearchResult;
-import io.redisearch.Suggestion;
+import io.redisearch.*;
 import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
@@ -16,11 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertNotNull;
-import static junit.framework.TestCase.assertNull;
-import static junit.framework.TestCase.assertTrue;
+import static junit.framework.TestCase.*;
 
 
 /**
@@ -161,7 +153,7 @@ public class ClientTest {
         res = cl.search(new Query("foo bar"));
         assertEquals(0, res.totalResults);
 
-        ((io.redisearch.client.Client)cl)._conn().flushDB();
+        ((io.redisearch.client.Client) cl)._conn().flushDB();
 
         assertTrue(cl.createIndex(sc,
                 io.redisearch.client.Client.IndexOptions.Default().SetNoStopwords()));
@@ -305,7 +297,7 @@ public class ClientTest {
     @Test
     public void testAddHash() throws Exception {
         Client cl = getClient();
-        Jedis conn = ((io.redisearch.client.Client)cl)._conn();
+        Jedis conn = ((io.redisearch.client.Client) cl)._conn();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
         HashMap hm = new HashMap();
@@ -321,7 +313,7 @@ public class ClientTest {
     @Test
     public void testDrop() throws Exception {
         Client cl = getClient();
-        ((io.redisearch.client.Client)cl)._conn().flushDB();
+        ((io.redisearch.client.Client) cl)._conn().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -337,7 +329,7 @@ public class ClientTest {
 
         assertTrue(cl.dropIndex());
 
-        Jedis conn = ((io.redisearch.client.Client)cl)._conn();
+        Jedis conn = ((io.redisearch.client.Client) cl)._conn();
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());
@@ -346,7 +338,7 @@ public class ClientTest {
     @Test
     public void testNoStem() throws Exception {
         Client cl = getClient();
-        ((io.redisearch.client.Client)cl)._conn().flushDB();
+        ((io.redisearch.client.Client) cl)._conn().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
         assertTrue(cl.createIndex(sc, io.redisearch.client.Client.IndexOptions.Default()));
 
@@ -530,39 +522,99 @@ public class ClientTest {
     @Test
     public void testAddSuggestionGetSuggestionFuzzy() throws Exception {
         Client cl = getClient();
-        Suggestion suggestion = Suggestion.builder().str("TOPIC OF WORDS").score(10).build();
+        Suggestion suggestion = Suggestion.builder().str("TOPIC OF WORDS").score(1).build();
         // test can add a suggestion string
         assertTrue(suggestion.toString() + " insert should of returned at least 1", cl.addSuggestion(suggestion, true) > 0);
         // test that the partial part of that string will be returned using fuzzy
-        assertTrue(suggestion.toString() + " suppose to be returned", cl.getSuggestion(suggestion.getString().substring(0, 3), false, 6, true, false).contains(suggestion.getString()));
+        assertEquals(suggestion.toString() + " suppose to be returned", suggestion, cl.getSuggestion(suggestion.getString().substring(0, 3), 4, false).get(0));
     }
 
     @Test
     public void testAddSuggestionGetSuggestion() throws Exception {
         Client cl = getClient();
-        Suggestion suggestion = Suggestion.builder().str("ANOTHER_WORD").score(10).build();
-        Suggestion noMatch = Suggestion.builder().str("_WORD MISSED").score(10).build();
+        Suggestion suggestion = Suggestion.builder().str("ANOTHER_WORD").score(1).build();
+        Suggestion noMatch = Suggestion.builder().str("_WORD MISSED").score(1).build();
 
         assertTrue(suggestion.toString() + " should of inserted at least 1", cl.addSuggestion(suggestion, false) > 0);
         assertTrue(noMatch.toString() + " should of inserted at least 1", cl.addSuggestion(noMatch, false) > 0);
 
         // test that with a partial part of that string will have the entire word returned
-        assertTrue(suggestion.getString() + " did not get a match with 3 characters", cl.getSuggestion(suggestion.getString().substring(0, 3), false, 6, false, false).contains(suggestion.getString()));
+        assertEquals(suggestion.getString() + " did not get a match with 3 characters", 1, cl.getSuggestion(suggestion.getString().substring(0, 3), 6, false).size());
         // turn off fuzzy start at second word no hit
-        assertFalse(noMatch.getString() + " no fuzzy and starting at 1, should not match", cl.getSuggestion(noMatch.getString().substring(1, 6), false, 6, false, false).contains(noMatch.getString()));
+        assertEquals(noMatch.getString() + " no fuzzy and starting at 1, should not match", 0, cl.getSuggestion(noMatch.getString().substring(1, 6), 5, false).size());
         // my attempt to trigger the fuzzy and not
-        assertTrue(noMatch.getString() + " fuzzy is on starting at 1 position should match", cl.getSuggestion(noMatch.getString().substring(1, 6), false, 6, true, false).contains(noMatch.getString()));
+        assertEquals(noMatch.getString() + " fuzzy is on starting at 1 position should match", 0, cl.getSuggestion(noMatch.getString().substring(1, 6), 3, true).size());
     }
 
     @Test
     public void testAddSuggestionGetSuggestionPayloadScores() throws Exception {
         Client cl = getClient();
-        Suggestion suggestion = Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ".getBytes()).score(8).build();
+
+        Suggestion suggestion = Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ".getBytes()).score(0.2).build();
         assertTrue(suggestion.toString() + " insert should of at least returned 1", cl.addSuggestion(suggestion, false) > 0);
         assertTrue("Count single added should return more than 1", cl.addSuggestion(suggestion.toBuilder().str("COUNT").payload("My PAYLOAD is better".getBytes()).build(), false) > 1);
+        assertTrue("Count single added should return more than 1", cl.addSuggestion(suggestion.toBuilder().str("COUNT_ANOTHER").score(1).payload(null).build(), false) > 1);
+
+        Suggestion noScoreOrPayload = Suggestion.builder().str("COUNT NO PAYLOAD OR COUNT").build();
+        assertTrue("Count single added should return more than 1", cl.addSuggestion(noScoreOrPayload, true) > 1);
+
+
+        List<Suggestion> payloads = cl.getSuggestionWithScoreAndPayload(suggestion.getString().substring(0, 3), 5, true);
+        assertEquals("4 suggestions with scores and payloads ", 4, payloads.size());
+        assertTrue("Assert that a suggestion has a payload ", payloads.get(2).getPayload().length > 0);
+        assertTrue("Assert that a suggestion has a score not default 1 ", payloads.get(1).getScore() < .299);
+
+
+    }
+
+    @Test
+    public void testAddSuggestionGetSuggestionPayload() throws Exception {
+        Client cl = getClient();
+        cl.addSuggestion(Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ".getBytes()).build(), false);
+        cl.addSuggestion(Suggestion.builder().str("COUNT").payload("ANOTHER PAYLOAD ".getBytes()).build(), false);
+        cl.addSuggestion(Suggestion.builder().str("COUNT NO PAYLOAD OR COUNT").build(), false);
+
         // test that with a partial part of that string will have the entire word returned
-        List<String> payloads = cl.getSuggestion(suggestion.getString().substring(0, 3), true, 6, false, true);
-        assertEquals("2 suggestions with scores and payloads should have 6 items in array", 6, payloads.size());
+        List<Suggestion> payloads = cl.getSuggestionWithPayload("COU", 3, false);
+        assertEquals("3 suggestions payloads ", 3, payloads.size());
+
+    }
+
+
+    @Test
+    public void testGetSuggestionNoPayloadTwoOnly() throws Exception {
+        Client cl = getClient();
+
+        cl.addSuggestion(Suggestion.builder().str("DIFF_WORD").score(0.4).payload("PAYLOADS ROCK ".getBytes()).build(), false);
+        cl.addSuggestion(Suggestion.builder().str("DIFF wording").score(0.5).payload("ANOTHER PAYLOAD ".getBytes()).build(), false);
+        cl.addSuggestion(Suggestion.builder().str("DIFFERENT").score(0.7).payload("I am a payload".getBytes()).build(), false);
+
+        List<Suggestion> payloads = cl.getSuggestion("DIF", 2, false);
+        assertEquals("3 suggestions should match but only asking for 2 and payloads should have 2 items in array", 2, payloads.size());
+
+        List<Suggestion> three = cl.getSuggestion("DIF", 3, false);
+        assertEquals("3 suggestions and payloads should have 3 items in array", 3, three.size());
+
+    }
+
+    @Test
+    public void testGetSuggestionWithScore() throws Exception {
+        Client cl = getClient();
+
+        cl.addSuggestion(Suggestion.builder().str("DIFF_WORD").score(0.4).payload("PAYLOADS ROCK ".getBytes()).build(), true);
+        List<Suggestion> list = cl.getSuggestionWithScore("DIF", 2, false);
+        assertTrue(list.get(0).getScore() <= .2);
+
+    }
+
+    @Test
+    public void testGetSuggestionAllNoHit() throws Exception {
+        Client cl = getClient();
+
+        cl.addSuggestion(Suggestion.builder().str("NO WORD").score(0.4).build(), false);
+
+        List<Suggestion> none = cl.getSuggestion("DIF", 3, false);
+        assertEquals("Empty list not hit in index for partial word", 0, none.size());
 
     }
 

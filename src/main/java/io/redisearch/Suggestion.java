@@ -66,7 +66,7 @@ public class Suggestion {
 
     public static final class Builder {
         private String string;
-        private double score;
+        private double score = 1.0;
         private byte[] payload;
 
         public Builder() {
@@ -99,8 +99,8 @@ public class Suggestion {
             if (this.string == null) {
                 missing += " string";
             }
-            if (this.score < 0) {
-                missing += " score";
+            if (this.score < 0.0 || this.score > 1.0) {
+                missing += " score not within range";
             }
 
             if (!missing.isEmpty()) {

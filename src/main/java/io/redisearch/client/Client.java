@@ -382,7 +382,8 @@ class Client implements io.redisearch.Client {
         }
     }
 
-    public List<String> getSuggestion(String prefix, boolean withPayloads, int max, boolean fuzzy, boolean scores) {
+    @Override
+    public List<Suggestion> getSuggestion(String prefix, int max, boolean fuzzy) {
         ArrayList<byte[]> args = new ArrayList<>(
                 Arrays.asList(indexName.getBytes(), prefix.getBytes(), Integer.toString(max).getBytes()));
 
@@ -390,19 +391,106 @@ class Client implements io.redisearch.Client {
             args.add(Commands.GeneralKey.MAX.getRaw());
             args.add(Integer.toString(max).getBytes());
         }
-        if (withPayloads) {
-            args.add(Commands.GeneralKey.WITHPAYLOADS.getRaw());
 
+        final List<Suggestion> list = new ArrayList<>();
+        try (Jedis conn = _conn()) {
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new byte[args.size()][])).getMultiBulkReply();
+            if (result != null) {
+                result.forEach(str -> {
+                    list.add(Suggestion.builder().str(str).build());
+                });
+            }
         }
+        return list;
+    }
+
+    @Override
+    public List<Suggestion> getSuggestionWithPayload(String prefix, int max, boolean fuzzy) {
+        ArrayList<byte[]> args = new ArrayList<>(
+                Arrays.asList(indexName.getBytes(), prefix.getBytes(), Integer.toString(max).getBytes(), Commands.GeneralKey.WITHPAYLOADS.getRaw()));
+
+        if (max >= 0) {
+            args.add(Commands.GeneralKey.MAX.getRaw());
+            args.add(Integer.toString(max).getBytes());
+        }
+
         if (fuzzy) {
             args.add(Commands.GeneralKey.FUZZY.getRaw());
         }
-        if(scores) {
-            args.add(Commands.GeneralKey.SCORES.getRaw());
+
+        try (Jedis conn = _conn()) {
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new byte[args.size()][])).getMultiBulkReply();
+            List<Suggestion> list = new ArrayList<>();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 2 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    if (result.get(i - 1) != null) {
+                        builder.payload(result.get(i - 1).getBytes());
+                    }
+                    list.add(builder.str(result.get(i - 2)).build());
+                }
+            }
+            return list;
+        }
+
+    }
+
+    @Override
+    public List<Suggestion> getSuggestionWithScore(String prefix, int max, boolean fuzzy) {
+        ArrayList<byte[]> args = new ArrayList<>(
+                Arrays.asList(indexName.getBytes(), prefix.getBytes(), Integer.toString(max).getBytes(), Commands.GeneralKey.SCORES.getRaw()));
+
+        if (max >= 0) {
+            args.add(Commands.GeneralKey.MAX.getRaw());
+            args.add(Integer.toString(max).getBytes());
+        }
+
+        if (fuzzy) {
+            args.add(Commands.GeneralKey.FUZZY.getRaw());
         }
 
         try (Jedis conn = _conn()) {
-            return sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new byte[args.size()][])).getMultiBulkReply();
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new byte[args.size()][])).getMultiBulkReply();
+            List<Suggestion> list = new ArrayList<>();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 2 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    list.add(builder.str(result.get(i - 2)).score(Double.parseDouble(result.get(i - 1))).build());
+                }
+            }
+            return list;
+        }
+
+    }
+
+    @Override
+    public List<Suggestion> getSuggestionWithScoreAndPayload(String prefix, int max, boolean fuzzy) {
+        ArrayList<byte[]> args = new ArrayList<>(
+                Arrays.asList(indexName.getBytes(), prefix.getBytes(), Integer.toString(max).getBytes(), Commands.GeneralKey.SCORES.getRaw()
+                        , Commands.GeneralKey.WITHPAYLOADS.getRaw()));
+
+        if (max >= 0) {
+            args.add(Commands.GeneralKey.MAX.getRaw());
+            args.add(Integer.toString(max).getBytes());
+        }
+
+        if (fuzzy) {
+            args.add(Commands.GeneralKey.FUZZY.getRaw());
+        }
+
+        try (Jedis conn = _conn()) {
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new byte[args.size()][])).getMultiBulkReply();
+            List<Suggestion> list = new ArrayList<>();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 3 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    if (result.get(i - 1) != null) {
+                        builder.payload(result.get(i - 1).getBytes());
+                    }
+                    list.add(builder.str(result.get(i - 3)).score(Double.parseDouble(result.get(i - 2))).build());
+                }
+            }
+            return list;
         }
 
     }

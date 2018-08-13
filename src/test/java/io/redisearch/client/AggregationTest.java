@@ -1,24 +1,22 @@
 package io.redisearch.client;
 
 import io.redisearch.AggregationResult;
+import io.redisearch.Client;
 import io.redisearch.Document;
 import io.redisearch.Schema;
-import io.redisearch.SearchResult;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.aggregation.Row;
 import io.redisearch.aggregation.SortedField;
 import io.redisearch.aggregation.reducers.Reducers;
 import org.junit.Test;
 
-import java.util.List;
-import java.util.Map;
-
-import static junit.framework.TestCase.*;
+import static junit.framework.TestCase.assertEquals;
+import static junit.framework.TestCase.assertNotNull;
 
 /**
  * Created by mnunberg on 5/17/18.
  */
-public class AggregationTest extends  ClientTest {
+public class AggregationTest extends ClientTest {
     @Test
     public void testAggregations() {
         /**

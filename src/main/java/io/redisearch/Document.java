@@ -45,7 +45,7 @@ public class Document implements Serializable {
     }
 
 
-    public static Document load(String id, Double score, byte[]payload, List fields) {
+    public static Document load(String id, Double score, byte[] payload, List fields) {
         Document ret = new Document(id, score);
         ret.payload = payload;
         if (fields != null) {
@@ -66,7 +66,8 @@ public class Document implements Serializable {
      * return the property value inside a key
      *
      * @param key key of the property
-     * @return
+     * 
+     * @return the property value 
      */
     public Object get(String key) {
         return properties.get(key);

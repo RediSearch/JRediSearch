@@ -1,3 +1,7 @@
+[![CircleCI](https://circleci.com/gh/RedisLabs/JRediSearch/tree/master.svg?style=svg)](https://circleci.com/gh/RedisLabs/JRediSearch/tree/master)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch)
+
+
 # JRediSearch
 
 A Java Client Library for [RediSearch](https://oss.redislabs.com/redisearch/)

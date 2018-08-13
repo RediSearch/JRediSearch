@@ -1,3 +1,6 @@
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch)
+
+
 # JRediSearch
 
 A Java Client Library for [RediSearch](https://oss.redislabs.com/redisearch/)

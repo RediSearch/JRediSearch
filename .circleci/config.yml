@@ -20,4 +20,4 @@ jobs:
           
       - run: mvn package -Dredis.port=6379
       
-      - run: mvn -s .circleci.settings.xml -DskipTests deploy
+      - run: mvn -s .cirecleci/.circleci.settings.xml -DskipTests deploy

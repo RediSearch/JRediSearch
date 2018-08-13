@@ -60,6 +60,7 @@ import io.redisearch.Schema;
 
 ...
 
+// port not supplied 6379 default used
 Client client = ClientBuilder.builder().indexName("testung").host("localhost").build();
 
 ```

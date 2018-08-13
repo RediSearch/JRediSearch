@@ -57,6 +57,9 @@ public class Client {
 
         /**
          * Set a custom stopword list
+         * 
+         * @param stopwords the list of stopwords 
+         * 
          * @return the options object itself, for builder-style construction
          */
         public IndexOptions SetStopwords(String ...stopwords) {
@@ -259,7 +262,7 @@ public class Client {
      * @return a {@link SearchResult} object with the results
      */
     public SearchResult search(Query q) {
-        ArrayList<byte[]> args = new ArrayList(4);
+        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
@@ -289,7 +292,7 @@ public class Client {
      * @return A string describing this query
      */
     public String explain(Query q) {
-        ArrayList<byte[]> args = new ArrayList(4);
+        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
@@ -306,7 +309,8 @@ public class Client {
      * @param noSave if set, we only index the document and do not save its contents. This allows fetching just doc ids
      * @param replace if set, and the document already exists, we reindex and update it
      * @param payload if set, we can save a payload in the index to be retrieved or evaluated by scoring functions on the server
-     * @return
+     * 
+     * @return true on success
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
         return doAddDocument(docId, score, fields, noSave, replace, false, payload);
@@ -330,6 +334,8 @@ public class Client {
      * @param options Options for the operation
      * @return true if the operation succeeded, false otherwise. Note that if the operation fails, an exception
      *  will be thrown
+     *  
+     *  @return true on success
      */
     public boolean addDocument(Document doc, AddOptions options) {
         ArrayList<byte[]> args = new ArrayList<>(
@@ -372,6 +378,12 @@ public class Client {
 
     /**
      * replaceDocument is a convenience for calling addDocument with replace=true
+     * 
+     * @param docId
+     * @param score
+     * @param fields
+     * 
+     * @return true on success
      */
     public boolean replaceDocument(String docId, double score, Map<String, Object> fields ) {
         return addDocument( docId, score, fields,false, true, null);
@@ -381,10 +393,12 @@ public class Client {
      * Replace specific fields in a document. Unlike #replaceDocument(), fields not present in the field list
      * are not erased, but retained. This avoids reindexing the entire document if the new values are not
      * indexed (though a reindex will happen
-     * @param docId
-     * @param score
-     * @param fields
-     * @return
+     * 
+     * @param docId the id of the document. It cannot belong to a document already in the index unless replace is set
+     * @param score the document's score, floating point number between 0 and 1
+     * @param fields a map of the document's fields
+     * 
+     * @return true on success
      */
     public boolean updateDocument(String docId, double score, Map<String, Object> fields) {
         return doAddDocument(docId, score, fields, false, true, true, null);

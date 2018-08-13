@@ -6,7 +6,7 @@
 
     <groupId>com.redislabs</groupId>
     <artifactId>jredisearch</artifactId>
-    <version>0.10.0</version>
+    <version>0.11.0-SNAPSHOT</version>
 
     <name>JRediSearch</name>
     <description>Official client for Redis Search</description>
@@ -111,6 +111,10 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+         					<additionalparam>-Xdoclint:none</additionalparam>
+         					<additionalOptions>-Xdoclint:none</additionalOptions>
+      					</configuration>
                         <version>2.9.1</version>
                         <executions>
                             <execution>

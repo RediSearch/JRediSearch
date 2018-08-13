@@ -18,6 +18,8 @@ public class ClusterClient extends Client {
      * @param indexName the name of the index we are connecting to or creating
      * @param host      the redis host
      * @param port      the redis pot
+     * @param timeout	the connection timeout
+     * @param poolSize	the connection pool size
      */
     public ClusterClient(String indexName, String host, int port, int timeout, int poolSize) {
         super(indexName, host, port, timeout, poolSize);
@@ -31,6 +33,8 @@ public class ClusterClient extends Client {
      * @param indexName the name of the index we are connecting to or creating
      * @param host      the redis host
      * @param port      the redis pot
+     * @param timeout	the connection timeout
+     * @param poolSize  the connection pool size
      * @param password  the password for authentication in a password protected Redis server
      */
     public ClusterClient(String indexName, String host, int port, int timeout, int poolSize, String password) {

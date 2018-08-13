@@ -168,9 +168,10 @@ public class Query {
 
     /**
      * Create a new index
+     *
+     * @param queryString the textual part of the query
      */
     public Query(String queryString) {
-
         _queryString = queryString;
     }
 
@@ -334,7 +335,11 @@ public class Query {
         return this;
     }
 
-    /** Set the query to return object payloads, if any were given */
+    /**
+     * Set the query to return object payloads, if any were given
+     * 
+     * @return the query object itself
+     * */
     public Query setWithPaload() {
         this._withPayloads = true;
         return this;
@@ -343,7 +348,8 @@ public class Query {
     /**
      * Set the query language, for stemming purposes
      * @param language a language. see http://redisearch.io for documentation on languages and stemming
-     * @return
+     * 
+     * @return the query object itself
      */
     public Query setLanguage(String language) {
         this._language = language;

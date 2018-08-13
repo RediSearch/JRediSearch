@@ -17,4 +17,7 @@ jobs:
           paths:
             - ~/.m2
           key: jredisearch-{{ checksum "pom.xml" }}
+          
       - run: mvn package -Dredis.port=6379
+      
+      - run: mvn -s .circleci.settings.xml -DskipTests deploy

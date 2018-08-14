@@ -1,22 +1,32 @@
 package io.redisearch.client;
 
-import io.redisearch.Document;
 import io.redisearch.AggregationResult;
+import io.redisearch.Document;
 import io.redisearch.Query;
 import io.redisearch.Schema;
 import io.redisearch.SearchResult;
+import io.redisearch.Suggestion;
 import io.redisearch.aggregation.AggregationRequest;
-import redis.clients.jedis.*;
+import redis.clients.jedis.BinaryClient;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisSentinelPool;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.Pool;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
  */
-public class Client {
+public class Client implements io.redisearch.Client {
 
     /**
      * IndexOptions encapsulates flags for index creation and shuold be given to the client on index creation
@@ -48,6 +58,7 @@ public class Client {
 
         /**
          * Default constructor
+         *
          * @param flags flag mask
          */
         public IndexOptions(int flags) {
@@ -57,9 +68,9 @@ public class Client {
 
         /**
          * Set a custom stopword list
-         * 
-         * @param stopwords the list of stopwords 
-         * 
+         *
+         * @param stopwords the list of stopwords
+         *
          * @return the options object itself, for builder-style construction
          */
         public IndexOptions SetStopwords(String ...stopwords) {
@@ -143,7 +154,7 @@ public class Client {
      * Create a new client to a RediSearch index with JediSentinelPool implementation. JedisSentinelPool
      * takes care of reconfiguring the Pool when there is a failover of master node thus providing high
      * availability and automatic failover.
-     * 
+     *
      * @param indexName the name of the index we are connecting to or creating
      * @param masterName the masterName to connect from list of masters monitored by sentinels
      * @param sentinels the set of sentinels monitoring the cluster
@@ -164,10 +175,10 @@ public class Client {
      * Create a new client to a RediSearch index with JediSentinelPool implementation. JedisSentinelPool
      * takes care of reconfiguring the Pool when there is a failover of master node thus providing high
      * availability and automatic failover.
-     * 
+     *
      * <p>The Client is initialized with following default values for {@link JedisSentinelPool}
      * <ul><li> password - NULL, no authentication required to connect to Redis Server</li></ul>
-     * 
+     *
      * @param indexName the name of the index we are connecting to or creating
      * @param masterName the masterName to connect from list of masters monitored by sentinels
      * @param sentinels the set of sentinels monitoring the cluster
@@ -182,13 +193,13 @@ public class Client {
      * Create a new client to a RediSearch index with JediSentinelPool implementation. JedisSentinelPool
      * takes care of reconfiguring the Pool when there is a failover of master node thus providing high
      * availability and automatic failover.
-     * 
+     *
      * <p>The Client is initialized with following default values for {@link JedisSentinelPool}
      * <ul> <li>timeout - 500 mills</li>
      * <li> poolSize - 100 connections</li>
      * <li> password - NULL, no authentication required to connect to Redis Server</li></ul>
-     * 
-     * 
+     *
+     *
      * @param indexName the name of the index we are connecting to or creating
      * @param masterName the masterName to connect from list of masters monitored by sentinels
      * @param sentinels the set of sentinels monitoring the cluster
@@ -207,10 +218,10 @@ public class Client {
         client.sendCommand(provider, args);
         return client;
     }
-    
+
     /**
      * Constructs JedisPoolConfig object.
-     * 
+     *
      * @param poolSize size of the JedisPool
      * @return {@link JedisPoolConfig} object with a few default settings
      */
@@ -225,10 +236,10 @@ public class Client {
         conf.setTimeBetweenEvictionRunsMillis(30000);
         conf.setNumTestsPerEvictionRun(-1);
         conf.setFairness(true);
-        
+
         return conf;
     }
-    
+
     /**
      * Create the index definition in redis
      * @param schema a schema definition, see {@link Schema}
@@ -278,7 +289,7 @@ public class Client {
         ArrayList<byte[]> args = new ArrayList<>();
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
-        
+
         try (Jedis conn = _conn()) {
             List<Object> resp = sendCommand(conn, commands.getAggregateCommand(), args.toArray(new byte[args.size()][]))
                     .getObjectMultiBulkReply();
@@ -309,7 +320,7 @@ public class Client {
      * @param noSave if set, we only index the document and do not save its contents. This allows fetching just doc ids
      * @param replace if set, and the document already exists, we reindex and update it
      * @param payload if set, we can save a payload in the index to be retrieved or evaluated by scoring functions on the server
-     * 
+     *
      * @return true on success
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
@@ -334,7 +345,7 @@ public class Client {
      * @param options Options for the operation
      * @return true if the operation succeeded, false otherwise. Note that if the operation fails, an exception
      *  will be thrown
-     *  
+     *
      *  @return true on success
      */
     public boolean addDocument(Document doc, AddOptions options) {
@@ -378,11 +389,11 @@ public class Client {
 
     /**
      * replaceDocument is a convenience for calling addDocument with replace=true
-     * 
+     *
      * @param docId
      * @param score
      * @param fields
-     * 
+     *
      * @return true on success
      */
     public boolean replaceDocument(String docId, double score, Map<String, Object> fields ) {
@@ -393,11 +404,11 @@ public class Client {
      * Replace specific fields in a document. Unlike #replaceDocument(), fields not present in the field list
      * are not erased, but retained. This avoids reindexing the entire document if the new values are not
      * indexed (though a reindex will happen
-     * 
+     *
      * @param docId the id of the document. It cannot belong to a document already in the index unless replace is set
      * @param score the document's score, floating point number between 0 and 1
      * @param fields a map of the document's fields
-     * 
+     *
      * @return true on success
      */
     public boolean updateDocument(String docId, double score, Map<String, Object> fields) {
@@ -519,4 +530,136 @@ public class Client {
         }
         return r.equals("OK");
     }
+
+    @Override
+    public Long addSuggestion(Suggestion suggestion, boolean increment) {
+        ArrayList<String> args = new ArrayList(
+                Arrays.asList(this.indexName, suggestion.getString(), Double.toString(suggestion.getScore())));
+
+        if (increment) {
+            args.add(INCREMENT_FLAG);
+        }
+        if (suggestion.getPayload() != null) {
+            args.add(PAYLOAD_FLAG);
+            args.add(suggestion.getPayload());
+        }
+
+        try (Jedis conn = _conn()) {
+            return sendCommand(conn, AutoCompleter.Command.SUGADD, args.toArray(new String[args.size()])).getIntegerReply();
+        }
+    }
+
+    @Override
+    public List<Suggestion> getSuggestion(String prefix, int max, boolean fuzzy) {
+        ArrayList<String> args = new ArrayList(
+                Arrays.asList(this.indexName, prefix, Integer.toString(max)));
+
+        if (max >= 0) {
+            args.add(MAX_FLAG);
+            args.add(Integer.toString(max));
+        }
+
+        final List<Suggestion> list = new ArrayList<>();
+        try (Jedis conn = _conn()) {
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
+            if (result != null) {
+                result.forEach(str -> {
+                    list.add(Suggestion.builder().str(str).build());
+                });
+            }
+        }
+        return list;
+    }
+
+    @Override
+    public List<Suggestion> getSuggestionWithPayload(String prefix, int max, boolean fuzzy) {
+        ArrayList<String> args = new ArrayList(
+                Arrays.asList(this.indexName, prefix, Integer.toString(max), WITHPAYLOADS_FLAG));
+
+        if (max >= 0) {
+            args.add(MAX_FLAG);
+            args.add(Integer.toString(max));
+        }
+
+        if (fuzzy) {
+            args.add(FUZZY_FLAG);
+        }
+
+        try (Jedis conn = _conn()) {
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
+            List<Suggestion> list = new ArrayList<>();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 2 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    if (result.get(i - 1) != null) {
+                        builder.payload(result.get(i - 1));
+                    }
+                    list.add(builder.str(result.get(i - 2)).build());
+                }
+            }
+            return list;
+        }
+
+    }
+
+    @Override
+    public List<Suggestion> getSuggestionWithScore(String prefix, int max, boolean fuzzy) {
+        ArrayList<String> args = new ArrayList(
+                Arrays.asList(this.indexName, prefix, Integer.toString(max), WITHSCORES_FLAG));
+
+        if (max >= 0) {
+            args.add(MAX_FLAG);
+            args.add(Integer.toString(max));
+        }
+
+        if (fuzzy) {
+            args.add(FUZZY_FLAG);
+        }
+
+        try (Jedis conn = _conn()) {
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
+            List<Suggestion> list = new ArrayList<>();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 2 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    list.add(builder.str(result.get(i - 2)).score(Double.parseDouble(result.get(i - 1))).build());
+                }
+            }
+            return list;
+        }
+
+    }
+
+    @Override
+    public List<Suggestion> getSuggestionWithScoreAndPayload(String prefix, int max, boolean fuzzy) {
+        ArrayList<String> args = new ArrayList(
+                Arrays.asList(this.indexName, prefix, Integer.toString(max), WITHSCORES_FLAG
+                        , WITHPAYLOADS_FLAG));
+
+        if (max >= 0) {
+            args.add(MAX_FLAG);
+            args.add(Integer.toString(max));
+        }
+
+        if (fuzzy) {
+            args.add(FUZZY_FLAG);
+        }
+
+        try (Jedis conn = _conn()) {
+            List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
+            List<Suggestion> list = new ArrayList<>();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 3 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    if (result.get(i - 1) != null) {
+                        builder.payload(result.get(i - 1));
+                    }
+                    list.add(builder.str(result.get(i - 3)).score(Double.parseDouble(result.get(i - 2))).build());
+                }
+            }
+            return list;
+        }
+
+    }
+
 }

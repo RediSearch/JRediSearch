@@ -70,16 +70,16 @@ public class Client implements io.redisearch.Client {
          * Set a custom stopword list
          *
          * @param stopwords the list of stopwords
-         *
          * @return the options object itself, for builder-style construction
          */
-        public IndexOptions SetStopwords(String ...stopwords) {
+        public IndexOptions SetStopwords(String... stopwords) {
             this.stopwords = Arrays.asList(stopwords);
             return this;
         }
 
         /**
          * Set the index to contain no stopwords, overriding the default list
+         *
          * @return the options object itself, for builder-style constructions
          */
         public IndexOptions SetNoStopwords() {
@@ -107,7 +107,7 @@ public class Client implements io.redisearch.Client {
                 args.add("NOFREQS");
             }
 
-            if (stopwords!=null) {
+            if (stopwords != null) {
 
                 args.add("STOPWORDS");
                 args.add(String.format("%d", stopwords.size()));
@@ -122,28 +122,25 @@ public class Client implements io.redisearch.Client {
     private final String indexName;
     private Pool<Jedis> pool;
 
-    Jedis _conn() {
+    protected Jedis _conn() {
         return pool.getResource();
     }
+
     protected Commands.CommandProvider commands;
 
     /**
      * Create a new client to a RediSearch index
+     *
      * @param indexName the name of the index we are connecting to or creating
-     * @param host the redis host
-     * @param port the redis pot
+     * @param host      the redis host
+     * @param port      the redis pot
      */
     public Client(String indexName, String host, int port, int timeout, int poolSize) {
         this(indexName, host, port, timeout, poolSize, null);
     }
 
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        pool = new JedisPool(conf, host, port, timeout, password);
-
-        this.indexName = indexName;
-        this.commands = new Commands.SingleNodeCommands();
+        this(indexName, new JedisPool(initPoolConfig(poolSize), host, port, timeout, password));
     }
 
     public Client(String indexName, String host, int port) {
@@ -155,20 +152,15 @@ public class Client implements io.redisearch.Client {
      * takes care of reconfiguring the Pool when there is a failover of master node thus providing high
      * availability and automatic failover.
      *
-     * @param indexName the name of the index we are connecting to or creating
+     * @param indexName  the name of the index we are connecting to or creating
      * @param masterName the masterName to connect from list of masters monitored by sentinels
-     * @param sentinels the set of sentinels monitoring the cluster
-     * @param timeout the timeout in milliseconds
-     * @param poolSize the poolSize of JedisSentinelPool
-     * @param password the password for authentication in a password protected Redis server
+     * @param sentinels  the set of sentinels monitoring the cluster
+     * @param timeout    the timeout in milliseconds
+     * @param poolSize   the poolSize of JedisSentinelPool
+     * @param password   the password for authentication in a password protected Redis server
      */
-    public Client(String indexName, String master, Set<String> sentinels, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        this.pool = new JedisSentinelPool(master, sentinels, conf, timeout, password);
-
-        this.indexName = indexName;
-        this.commands = new Commands.SingleNodeCommands();
+    public Client(String indexName, String masterName, Set<String> sentinels, int timeout, int poolSize, String password) {
+        this(indexName, new JedisSentinelPool(masterName, sentinels, initPoolConfig(poolSize), timeout, password));
     }
 
     /**
@@ -179,11 +171,11 @@ public class Client implements io.redisearch.Client {
      * <p>The Client is initialized with following default values for {@link JedisSentinelPool}
      * <ul><li> password - NULL, no authentication required to connect to Redis Server</li></ul>
      *
-     * @param indexName the name of the index we are connecting to or creating
+     * @param indexName  the name of the index we are connecting to or creating
      * @param masterName the masterName to connect from list of masters monitored by sentinels
-     * @param sentinels the set of sentinels monitoring the cluster
-     * @param timeout the timeout in milliseconds
-     * @param poolSize the poolSize of JedisSentinelPool
+     * @param sentinels  the set of sentinels monitoring the cluster
+     * @param timeout    the timeout in milliseconds
+     * @param poolSize   the poolSize of JedisSentinelPool
      */
     public Client(String indexName, String masterName, Set<String> sentinels, int timeout, int poolSize) {
         this(indexName, masterName, sentinels, timeout, poolSize, null);
@@ -199,20 +191,26 @@ public class Client implements io.redisearch.Client {
      * <li> poolSize - 100 connections</li>
      * <li> password - NULL, no authentication required to connect to Redis Server</li></ul>
      *
-     *
-     * @param indexName the name of the index we are connecting to or creating
+     * @param indexName  the name of the index we are connecting to or creating
      * @param masterName the masterName to connect from list of masters monitored by sentinels
-     * @param sentinels the set of sentinels monitoring the cluster
+     * @param sentinels  the set of sentinels monitoring the cluster
      */
     public Client(String indexName, String masterName, Set<String> sentinels) {
         this(indexName, masterName, sentinels, 500, 100);
     }
 
-    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String ...args) {
+    public Client(String indexName, Pool<Jedis> pool) {
+        this.pool = pool;
+        this.indexName = indexName;
+        this.commands = new Commands.SingleNodeCommands();
+    }
+
+    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String... args) {
         BinaryClient client = conn.getClient();
         client.sendCommand(provider, args);
         return client;
     }
+
     private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, byte[][] args) {
         BinaryClient client = conn.getClient();
         client.sendCommand(provider, args);
@@ -225,7 +223,7 @@ public class Client implements io.redisearch.Client {
      * @param poolSize size of the JedisPool
      * @return {@link JedisPoolConfig} object with a few default settings
      */
-    private JedisPoolConfig initPoolConfig(int poolSize) {
+    private static JedisPoolConfig initPoolConfig(int poolSize) {
         JedisPoolConfig conf = new JedisPoolConfig();
         conf.setMaxTotal(poolSize);
         conf.setTestOnBorrow(false);
@@ -242,7 +240,8 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Create the index definition in redis
-     * @param schema a schema definition, see {@link Schema}
+     *
+     * @param schema  a schema definition, see {@link Schema}
      * @param options index option flags, see {@link IndexOptions}
      * @return true if successful
      */
@@ -261,7 +260,7 @@ public class Client implements io.redisearch.Client {
         }
 
         try (Jedis conn = _conn()) {
-            String rep =  sendCommand(conn, commands.getCreateCommand(), args.toArray(new String[args.size()]))
+            String rep = sendCommand(conn, commands.getCreateCommand(), args.toArray(new String[args.size()]))
                     .getStatusCodeReply();
             return rep.equals("OK");
         }
@@ -269,6 +268,7 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Search the index
+     *
      * @param q a {@link Query} object with the query string and optional parameters
      * @return a {@link SearchResult} object with the results
      */
@@ -299,6 +299,7 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Generate an explanatory textual query tree for this query string
+     *
      * @param q The query to explain
      * @return A string describing this query
      */
@@ -314,13 +315,13 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Add a single document to the query
-     * @param docId the id of the document. It cannot belong to a document already in the index unless replace is set
-     * @param score the document's score, floating point number between 0 and 1
-     * @param fields a map of the document's fields
-     * @param noSave if set, we only index the document and do not save its contents. This allows fetching just doc ids
+     *
+     * @param docId   the id of the document. It cannot belong to a document already in the index unless replace is set
+     * @param score   the document's score, floating point number between 0 and 1
+     * @param fields  a map of the document's fields
+     * @param noSave  if set, we only index the document and do not save its contents. This allows fetching just doc ids
      * @param replace if set, and the document already exists, we reindex and update it
      * @param payload if set, we can save a payload in the index to be retrieved or evaluated by scoring functions on the server
-     *
      * @return true on success
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
@@ -341,12 +342,10 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Add a document to the index
-     * @param doc The document to add
-     * @param options Options for the operation
-     * @return true if the operation succeeded, false otherwise. Note that if the operation fails, an exception
-     *  will be thrown
      *
-     *  @return true on success
+     * @param doc     The document to add
+     * @param options Options for the operation
+     * @return true on success
      */
     public boolean addDocument(Document doc, AddOptions options) {
         ArrayList<byte[]> args = new ArrayList<>(
@@ -393,11 +392,10 @@ public class Client implements io.redisearch.Client {
      * @param docId
      * @param score
      * @param fields
-     *
      * @return true on success
      */
-    public boolean replaceDocument(String docId, double score, Map<String, Object> fields ) {
-        return addDocument( docId, score, fields,false, true, null);
+    public boolean replaceDocument(String docId, double score, Map<String, Object> fields) {
+        return addDocument(docId, score, fields, false, true, null);
     }
 
     /**
@@ -405,29 +403,34 @@ public class Client implements io.redisearch.Client {
      * are not erased, but retained. This avoids reindexing the entire document if the new values are not
      * indexed (though a reindex will happen
      *
-     * @param docId the id of the document. It cannot belong to a document already in the index unless replace is set
-     * @param score the document's score, floating point number between 0 and 1
+     * @param docId  the id of the document. It cannot belong to a document already in the index unless replace is set
+     * @param score  the document's score, floating point number between 0 and 1
      * @param fields a map of the document's fields
-     *
      * @return true on success
      */
     public boolean updateDocument(String docId, double score, Map<String, Object> fields) {
         return doAddDocument(docId, score, fields, false, true, true, null);
     }
 
-    /** See above */
+    /**
+     * See above
+     */
     public boolean addDocument(String docId, double score, Map<String, Object> fields) {
         return this.addDocument(docId, score, fields, false, false, null);
     }
-    /** See above */
+
+    /**
+     * See above
+     */
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
     }
 
-    /** Index a document already in redis as a HASH key.
+    /**
+     * Index a document already in redis as a HASH key.
      *
-     * @param docId the id of the document in redis. This must match an existing, unindexed HASH key
-     * @param score the document's index score, between 0 and 1
+     * @param docId   the id of the document in redis. This must match an existing, unindexed HASH key
+     * @param score   the document's index score, between 0 and 1
      * @param replace if set, and the document already exists, we reindex and update it
      * @return true on success
      */
@@ -451,8 +454,8 @@ public class Client implements io.redisearch.Client {
 
     private static void handleListMapping(List<Object> items, KVHandler handler) {
         for (int i = 0; i < items.size(); i += 2) {
-            String key = new String((byte[])items.get(i));
-            Object val = items.get(i+1);
+            String key = new String((byte[]) items.get(i));
+            Object val = items.get(i + 1);
             if (val.getClass().equals((new byte[]{}).getClass())) {
                 val = new String((byte[]) val);
             }
@@ -460,8 +463,10 @@ public class Client implements io.redisearch.Client {
         }
     }
 
-    /** Get the index info, including memory consumption and other statistics.
+    /**
+     * Get the index info, including memory consumption and other statistics.
      * TODO: Make a class for easier access to the index properties
+     *
      * @return a map of key/value pairs
      */
     public Map<String, Object> getInfo() {
@@ -477,6 +482,7 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Delete a document from the index.
+     *
      * @param docId the document's id
      * @return true if it has been deleted, false if it did not exist
      */
@@ -489,6 +495,7 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Get a document from the index
+     *
      * @param docId The document ID to retrieve
      * @return The document as stored in the index. If the document does not exist, null is returned.
      */
@@ -506,6 +513,7 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Drop the index and all associated keys, including documents
+     *
      * @return true on success
      */
     public boolean dropIndex() {
@@ -514,6 +522,7 @@ public class Client implements io.redisearch.Client {
 
     /**
      * Drop the index and associated keys, including documents
+     *
      * @param missingOk If the index does not exist, don't throw an exception, but return false instead
      * @return True if the index was dropped, false if it did not exist (or some other error occurred).
      */

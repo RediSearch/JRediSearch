@@ -463,55 +463,80 @@ public class Client implements io.redisearch.Client {
             args.addAll(Arrays.asList(with.getFlags()));
         });
 
+        if (suggestionOptions.getWith().isPresent()) {
+            switch (suggestionOptions.getWith().get()) {
+                case PAYLOAD_AND_SCORES: {
+                    return getSuggestionsWithPayloadAndScores(args);
+                }
+                case PAYLOAD: {
+                    return getSuggestionsWithPayload(args);
+                }
+                default: {
+                    return getSuggestionsWithScores(args);
+                }
+            }
+        } else {
+            return getSuggestions(args);
+        }
+    }
+
+    private List<Suggestion> getSuggestions(ArrayList<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
-            if (result != null) {
-                if (suggestionOptions.getWith().isPresent()) {
-                    suggestionOptions.getWith().ifPresent(with -> {
-                        int objFieldReturnCount = 2;
-                        switch (with) {
-                            case PAYLOAD_AND_SCORES: {
-                                objFieldReturnCount = 3;
-                                break;
-                            }
-                        }
+            result.forEach(str -> list.add(Suggestion.builder().str(str).build()));
+        }
+        return list;
+    }
 
-                        for (int i = 1; i < result.size() + 1; i++) {
-                            if (i % objFieldReturnCount == 0) {
-                                Suggestion.Builder builder = Suggestion.builder();
-                                builder.str(result.get(i - objFieldReturnCount));
-                                switch (with) {
-                                    case PAYLOAD_AND_SCORES: {
-                                        builder.payload(result.get(i - 1));
-                                        builder.score(Double.parseDouble(result.get(i - 2)));
-                                        break;
-                                    }
-                                    case PAYLOAD: {
-                                        builder.payload(result.get(i - 1));
-                                        break;
-                                    }
-                                    default: {
-                                        builder.score(Double.parseDouble(result.get(i - 1)));
-                                        break;
-                                    }
-                                }
-                                // added all the fields depending on properties add suggestion to list
-                                list.add(builder.build());
-                            }
-                        }
-                    });
-                } else {
-                    // no extra header no additional fields to be retrieved
-                    result.forEach(str -> {
-                        list.add(Suggestion.builder().str(str).build());
-                    });
+    private List<Suggestion> getSuggestionsWithScores(ArrayList<String> args) {
+        final List<Suggestion> list = new ArrayList<>();
+        try (Jedis conn = _conn()) {
+            final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 2 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    builder.str(result.get(i - 2));
+                    builder.score(Double.parseDouble(result.get(i - 1)));
+                    list.add(builder.build());
                 }
             }
         }
         return list;
     }
 
+    private List<Suggestion> getSuggestionsWithPayload(ArrayList<String> args) {
+        final List<Suggestion> list = new ArrayList<>();
+        try (Jedis conn = _conn()) {
+            final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 2 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    builder.str(result.get(i - 2));
+                    builder.payload(result.get(i - 1));
+                    list.add(builder.build());
+                }
+            }
+        }
+        return list;
+    }
+
+    private List<Suggestion> getSuggestionsWithPayloadAndScores(ArrayList<String> args) {
+        final List<Suggestion> list = new ArrayList<>();
+        try (Jedis conn = _conn()) {
+            final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
+            for (int i = 1; i < result.size() + 1; i++) {
+                if (i % 3 == 0) {
+                    Suggestion.Builder builder = Suggestion.builder();
+                    builder.str(result.get(i - 3));
+                    builder.score(Double.parseDouble(result.get(i - 2)));
+                    builder.payload(result.get(i - 1));
+                    list.add(builder.build());
+                }
+            }
+        }
+        return list;
+    }
 
     @FunctionalInterface
     private interface KVHandler {

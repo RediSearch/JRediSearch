@@ -3,7 +3,8 @@ package io.redisearch.client;
 import java.util.Optional;
 
 public class SuggestionOptions {
-
+    private static final String WITHPAYLOADS_FLAG = "WITHPAYLOADS";
+    private static final String WITHSCORES_FLAG = "WITHSCORES";
     private With with;
     private boolean fuzzy;
     private int max;
@@ -35,9 +36,9 @@ public class SuggestionOptions {
     }
 
     public enum With {
-        PAYLOAD(Client.WITHPAYLOADS_FLAG),
-        SCORES(Client.WITHSCORES_FLAG),
-        PAYLOAD_AND_SCORES(Client.WITHPAYLOADS_FLAG, Client.WITHSCORES_FLAG);
+        PAYLOAD(WITHPAYLOADS_FLAG),
+        SCORES(WITHSCORES_FLAG),
+        PAYLOAD_AND_SCORES(WITHPAYLOADS_FLAG, WITHSCORES_FLAG);
         final String[] flags;
 
         With(String... flags) {

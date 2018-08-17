@@ -11,10 +11,8 @@ public interface Client {
 
     String INCREMENT_FLAG = "INCR";
     String PAYLOAD_FLAG = "PAYLOAD";
-    String WITHPAYLOADS_FLAG = "WITHPAYLOADS";
     String MAX_FLAG = "MAX";
     String FUZZY_FLAG = "FUZZY";
-    String WITHSCORES_FLAG = "WITHSCORES";
 
     boolean createIndex(Schema schema, io.redisearch.client.Client.IndexOptions options);
 
@@ -24,19 +22,11 @@ public interface Client {
 
     String explain(Query q);
 
-    boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload);
-
     boolean addDocument(Document doc, AddOptions options);
-
-    boolean addDocument(Document doc);
 
     boolean replaceDocument(String docId, double score, Map<String, Object> fields);
 
     boolean updateDocument(String docId, double score, Map<String, Object> fields);
-
-    boolean addDocument(String docId, double score, Map<String, Object> fields);
-
-    boolean addDocument(String docId, Map<String, Object> fields);
 
     boolean addHash(String docId, double score, boolean replace);
 
@@ -45,8 +35,6 @@ public interface Client {
     boolean deleteDocument(String docId);
 
     Document getDocument(String docId);
-
-    boolean dropIndex();
 
     boolean dropIndex(boolean missingOk);
 

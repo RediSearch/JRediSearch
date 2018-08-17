@@ -46,7 +46,7 @@ public class QueryTest {
 //        assertTrue(args.contains("xx".getBytes()));
 //        assertTrue(args.contains("NOSTOPWORDS".getBytes()));
 //        assertTrue(args.contains("VERBATIM".getBytes()));
-//        assertTrue(args.contains("WITHPAYLOADS".getBytes()));
+//        assertTrue(args.contains("PAYLOADS".getBytes()));
 //        assertTrue(args.contains("WITHSCORES".getBytes()));
     }
 

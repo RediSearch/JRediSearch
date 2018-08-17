@@ -1,6 +1,8 @@
 package io.redisearch.client
 
 import io.redisearch.Suggestion
+import io.redisearch.api.IndexClient
+import io.redisearch.api.SuggestionClient
 import redis.clients.jedis.Jedis
 import redis.clients.jedis.util.Pool
 import spock.lang.Specification
@@ -19,7 +21,7 @@ class ClientSpec extends Specification {
 
     def "getInfo with success of mapping different objects takes place"() {
         when:
-        Client client = new Client("testIndex", pool)
+        IndexClient client = new Client("testIndex", pool)
         Map result = client.getInfo()
 
         then:
@@ -36,7 +38,7 @@ class ClientSpec extends Specification {
     def "addSuggestion with a valid Suggestion with no increment"() {
 
         when:
-        Client client = new Client("testIndex", pool)
+        SuggestionClient client = new Client("testIndex", pool)
         Suggestion suggestion = Suggestion.builder().str("suggestion string").score(1.0).build()
         Long i = client.addSuggestion(suggestion, false)
 
@@ -46,5 +48,35 @@ class ClientSpec extends Specification {
         i == 1
 
     }
+
+    def "getSuggestion with a valid set of options"() {
+        SuggestionOptions suggestionOptions = SuggestionOptions.builder().build()
+        List<String> values = ["word", "wording", "wording simulation only"]
+        when:
+        SuggestionClient client = new Client("testIndex", pool)
+        List<Suggestion> result = client.getSuggestion("wor", suggestionOptions)
+
+        then:
+        1 * binaryClient.getMultiBulkReply() >> values
+        1 * binaryClient.sendCommand(AutoCompleter.Command.SUGGET, _)
+        result.get(0).getString() == values.get(0)
+
+    }
+
+    def "getSuggestion with Payload to be returned"() {
+        SuggestionOptions suggestionOptions = SuggestionOptions.builder().with(SuggestionOptions.With.PAYLOAD).build()
+        List<String> values = ["word", "Word up I am a payoald", "wording", "wording it up payload"]
+        when:
+        SuggestionClient client = new Client("testIndex", pool)
+        List<Suggestion> result = client.getSuggestion("wo", suggestionOptions)
+
+        then:
+        1 * binaryClient.getMultiBulkReply() >> values
+        1 * binaryClient.sendCommand(AutoCompleter.Command.SUGGET, _)
+        result.get(0).getString() == values.get(0)
+        result.get(1).getPayload() == values.get(3)
+
+    }
+
 
 }

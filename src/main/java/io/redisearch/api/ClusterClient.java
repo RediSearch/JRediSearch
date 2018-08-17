@@ -1,8 +1,8 @@
-package io.redisearch;
+package io.redisearch.api;
 
 import java.util.List;
 
-public interface ClusterClient extends Client {
+public interface ClusterClient {
 
     List<Object> broadcast(String... args);
 }

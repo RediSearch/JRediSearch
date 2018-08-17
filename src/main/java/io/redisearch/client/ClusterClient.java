@@ -10,7 +10,7 @@ import java.util.Set;
 /**
  * Created by dvirvolk on 12/04/2017.
  */
-public class ClusterClient extends Client implements io.redisearch.ClusterClient {
+public class ClusterClient extends Client implements io.redisearch.api.ClusterClient {
 
     /**
      * Create a new client to a RediSearch index

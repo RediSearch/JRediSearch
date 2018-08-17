@@ -2,6 +2,10 @@ package io.redisearch.client;
 
 import io.redisearch.*;
 import io.redisearch.aggregation.AggregationRequest;
+import io.redisearch.api.DocumentClient;
+import io.redisearch.api.IndexClient;
+import io.redisearch.api.SearchClient;
+import io.redisearch.api.SuggestionClient;
 import redis.clients.jedis.*;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
@@ -12,7 +16,7 @@ import java.util.*;
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
  */
-public class Client implements io.redisearch.Client {
+public class Client implements SearchClient, SuggestionClient, DocumentClient, IndexClient {
 
     private final String indexName;
     protected Commands.CommandProvider commands;
@@ -50,8 +54,8 @@ public class Client implements io.redisearch.Client {
      * @param poolSize   the poolSize of JedisSentinelPool
      * @param password   the password for authentication in a password protected Redis server
      */
-    public Client(String indexName, String master, Set<String> sentinels, int timeout, int poolSize, String password) {
-        this(indexName, new JedisSentinelPool(master, sentinels, initPoolConfig(poolSize), timeout, password));
+    public Client(String indexName, String masterName, Set<String> sentinels, int timeout, int poolSize, String password) {
+        this(indexName, new JedisSentinelPool(masterName, sentinels, initPoolConfig(poolSize), timeout, password));
         this.commands = new Commands.SingleNodeCommands();
     }
 
@@ -95,7 +99,7 @@ public class Client implements io.redisearch.Client {
      * Create a new client to a RediSearch index with JediSentinelPool implementation that the caller passes in.
      *
      * @param indexName the name of the index we are connecting to or creating
-     * @param pool the pool for Jedis that the caller wants to use
+     * @param pool      the pool for Jedis that the caller wants to use
      */
     public Client(String indexName, Pool<Jedis> pool) {
         this.pool = pool;
@@ -112,22 +116,6 @@ public class Client implements io.redisearch.Client {
             }
             handler.apply(key, val);
         }
-    }
-
-    Jedis _conn() {
-        return pool.getResource();
-    }
-
-    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String... args) {
-        BinaryClient client = conn.getClient();
-        client.sendCommand(provider, args);
-        return client;
-    }
-
-    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, byte[][] args) {
-        BinaryClient client = conn.getClient();
-        client.sendCommand(provider, args);
-        return client;
     }
 
     /**
@@ -149,6 +137,22 @@ public class Client implements io.redisearch.Client {
         conf.setFairness(true);
 
         return conf;
+    }
+
+    Jedis _conn() {
+        return pool.getResource();
+    }
+
+    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String... args) {
+        BinaryClient client = conn.getClient();
+        client.sendCommand(provider, args);
+        return client;
+    }
+
+    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, byte[][] args) {
+        BinaryClient client = conn.getClient();
+        client.sendCommand(provider, args);
+        return client;
     }
 
     /**

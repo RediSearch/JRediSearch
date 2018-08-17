@@ -30,11 +30,7 @@ public class Client implements io.redisearch.Client {
     }
 
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        pool = new JedisPool(conf, host, port, timeout, password);
-
-        this.indexName = indexName;
+        this(indexName, new JedisPool(initPoolConfig(poolSize), host, port, timeout, password));
         this.commands = new Commands.SingleNodeCommands();
     }
 
@@ -55,11 +51,7 @@ public class Client implements io.redisearch.Client {
      * @param password   the password for authentication in a password protected Redis server
      */
     public Client(String indexName, String master, Set<String> sentinels, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        this.pool = new JedisSentinelPool(master, sentinels, conf, timeout, password);
-
-        this.indexName = indexName;
+        this(indexName, new JedisSentinelPool(master, sentinels, initPoolConfig(poolSize), timeout, password));
         this.commands = new Commands.SingleNodeCommands();
     }
 
@@ -99,6 +91,18 @@ public class Client implements io.redisearch.Client {
         this(indexName, masterName, sentinels, 500, 100);
     }
 
+    /**
+     * Create a new client to a RediSearch index with JediSentinelPool implementation that the caller passes in.
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param pool the pool for Jedis that the caller wants to use
+     */
+    public Client(String indexName, Pool<Jedis> pool) {
+        this.pool = pool;
+        this.indexName = indexName;
+        this.commands = new Commands.SingleNodeCommands();
+    }
+
     private static void handleListMapping(List<Object> items, KVHandler handler) {
         for (int i = 0; i < items.size(); i += 2) {
             String key = new String((byte[]) items.get(i));
@@ -132,7 +136,7 @@ public class Client implements io.redisearch.Client {
      * @param poolSize size of the JedisPool
      * @return {@link JedisPoolConfig} object with a few default settings
      */
-    private JedisPoolConfig initPoolConfig(int poolSize) {
+    private static JedisPoolConfig initPoolConfig(int poolSize) {
         JedisPoolConfig conf = new JedisPoolConfig();
         conf.setMaxTotal(poolSize);
         conf.setTestOnBorrow(false);

@@ -3,8 +3,8 @@ package io.redisearch.client;
 import io.redisearch.*;
 import org.junit.Before;
 import org.junit.Test;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.rdbc.Connection;
 
 import java.util.HashMap;
 import java.util.List;
@@ -299,7 +299,7 @@ public class ClientTest {
     @Test
     public void testAddHash() throws Exception {
         Client cl = getClient();
-        Jedis conn = cl._conn();
+        Connection conn = cl._conn();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
         HashMap hm = new HashMap();
@@ -331,7 +331,7 @@ public class ClientTest {
 
         assertTrue(cl.dropIndex());
 
-        Jedis conn = cl._conn();
+        Connection conn = cl._conn();
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());

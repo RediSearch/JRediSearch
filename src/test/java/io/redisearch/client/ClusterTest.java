@@ -7,12 +7,11 @@ import io.redisearch.SearchResult;
 import org.junit.Assume;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisConnectionException;
+import redis.clients.rdbc.Connection;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static junit.framework.TestCase.*;
 
@@ -50,7 +49,7 @@ public class ClusterTest {
     public void getClusterClientWithPasswordTest(){
         ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, PROTECTD_CLUSTER_PASSWORD);
         
-        try ( Jedis conn = clusterClient._conn()){
+        try ( Connection conn = clusterClient._conn()){
             assertEquals("SUCCESS", conn.ping("SUCCESS"));
         }
     }
@@ -59,7 +58,7 @@ public class ClusterTest {
     public void getClusterClientWithWrongPasswordTest(){
         ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, WRONG_PASSWORD);
         
-        try ( Jedis conn = clusterClient._conn()){
+        try ( Connection conn = clusterClient._conn()){
             fail("Should throw JedisConnectionException as password is incorrect.");
         }
     }

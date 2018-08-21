@@ -3,15 +3,16 @@ package io.redisearch.client
 import io.redisearch.Suggestion
 import io.redisearch.api.IndexClient
 import io.redisearch.api.SuggestionClient
-import redis.clients.jedis.Jedis
-import redis.clients.jedis.util.Pool
+import redis.clients.rdbc.BinaryClient
+import redis.clients.rdbc.Connection
+import redis.clients.rdbc.Pool
 import spock.lang.Specification
 
 class ClientSpec extends Specification {
 
-    Pool<Jedis> pool = Mock(Pool)
-    Jedis jedis = Mock(Jedis)
-    redis.clients.jedis.Client binaryClient = Mock(redis.clients.jedis.Client)
+    Pool<Connection> pool = Mock(Pool)
+    Connection jedis = Mock(Connection)
+    BinaryClient binaryClient = Mock(BinaryClient)
 
 
     def setup() {

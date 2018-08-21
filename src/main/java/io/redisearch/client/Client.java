@@ -6,11 +6,13 @@ import io.redisearch.api.DocumentClient;
 import io.redisearch.api.IndexClient;
 import io.redisearch.api.SearchClient;
 import io.redisearch.api.SuggestionClient;
+import io.redisearch.rdbc.JedisPoolWrapper;
 import redis.clients.jedis.*;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
-import redis.clients.jedis.util.Pool;
-
+import redis.clients.rdbc.Pool;
+import redis.clients.rdbc.Connection;
+import redis.clients.rdbc.BinaryClient;
 import java.util.*;
 
 /**
@@ -20,7 +22,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
 
     private final String indexName;
     protected Commands.CommandProvider commands;
-    private Pool<Jedis> pool;
+    private Pool<Connection> pool;
 
     /**
      * Create a new client to a RediSearch index
@@ -34,7 +36,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
     }
 
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
-        this(indexName, new JedisPool(initPoolConfig(poolSize), host, port, timeout, password));
+        this(indexName, new JedisPoolWrapper(new JedisPool(initPoolConfig(poolSize), host, port, timeout, password)));
         this.commands = new Commands.SingleNodeCommands();
     }
 
@@ -55,7 +57,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
      * @param password   the password for authentication in a password protected Redis server
      */
     public Client(String indexName, String masterName, Set<String> sentinels, int timeout, int poolSize, String password) {
-        this(indexName, new JedisSentinelPool(masterName, sentinels, initPoolConfig(poolSize), timeout, password));
+        this(indexName, new JedisPoolWrapper(new JedisSentinelPool(masterName, sentinels, initPoolConfig(poolSize), timeout, password)));
         this.commands = new Commands.SingleNodeCommands();
     }
 
@@ -101,7 +103,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
      * @param indexName the name of the index we are connecting to or creating
      * @param pool      the pool for Jedis that the caller wants to use
      */
-    public Client(String indexName, Pool<Jedis> pool) {
+    public Client(String indexName, Pool<Connection> pool) {
         this.pool = pool;
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();
@@ -139,17 +141,17 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
         return conf;
     }
 
-    Jedis _conn() {
+    Connection _conn() {
         return pool.getResource();
     }
 
-    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String... args) {
+    private BinaryClient sendCommand(Connection conn, ProtocolCommand provider, String... args) {
         BinaryClient client = conn.getClient();
         client.sendCommand(provider, args);
         return client;
     }
 
-    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, byte[][] args) {
+    private BinaryClient sendCommand(Connection conn, ProtocolCommand provider, byte[][] args) {
         BinaryClient client = conn.getClient();
         client.sendCommand(provider, args);
         return client;
@@ -176,7 +178,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
             f.serializeRedisArgs(args);
         }
 
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             String rep = sendCommand(conn, commands.getCreateCommand(), args.toArray(new String[args.size()]))
                     .getStatusCodeReply();
             return rep.equals("OK");
@@ -194,7 +196,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             List<Object> resp =
                     sendCommand(conn, commands.getSearchCommand(),
                             args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
@@ -207,7 +209,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             List<Object> resp = sendCommand(conn, commands.getAggregateCommand(), args.toArray(new byte[args.size()][]))
                     .getObjectMultiBulkReply();
             return new AggregationResult(resp);
@@ -225,7 +227,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             return sendCommand(conn, commands.getExplainCommand(), args.toArray(new byte[args.size()][])).getStatusCodeReply();
         }
     }
@@ -292,7 +294,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
             args.add(ent.getValue().toString().getBytes());
         }
 
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             String resp = sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][]))
                     .getStatusCodeReply();
             return resp.equals("OK");
@@ -358,7 +360,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
             args.add("REPLACE");
         }
 
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             String resp = sendCommand(conn, commands.getAddHashCommand(), args.toArray(new String[args.size()])).getStatusCodeReply();
             return resp.equals("OK");
         }
@@ -372,7 +374,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
      */
     public Map<String, Object> getInfo() {
         List<Object> res;
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             res = sendCommand(conn, commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
         }
 
@@ -388,7 +390,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
      * @return true if it has been deleted, false if it did not exist
      */
     public boolean deleteDocument(String docId) {
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             Long r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
             return r == 1;
         }
@@ -402,7 +404,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
      */
     public Document getDocument(String docId) {
         Document d = new Document(docId);
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             List<Object> res = sendCommand(conn, commands.getGetCommand(), indexName, docId).getObjectMultiBulkReply();
             if (res == null) {
                 return null;
@@ -429,7 +431,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
      */
     public boolean dropIndex(boolean missingOk) {
         String r;
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             r = sendCommand(conn, commands.getDropCommand(), this.indexName).getStatusCodeReply();
         } catch (JedisDataException ex) {
             if (missingOk && ex.getMessage().toLowerCase().contains("unknown")) {
@@ -454,7 +456,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
             args.add(suggestion.getPayload());
         }
 
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             return sendCommand(conn, AutoCompleter.Command.SUGADD, args.toArray(new String[args.size()])).getIntegerReply();
         }
     }
@@ -490,7 +492,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
 
     private List<Suggestion> getSuggestions(ArrayList<String> args) {
         final List<Suggestion> list = new ArrayList<>();
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
             result.forEach(str -> list.add(Suggestion.builder().str(str).build()));
         }
@@ -499,7 +501,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
 
     private List<Suggestion> getSuggestionsWithScores(ArrayList<String> args) {
         final List<Suggestion> list = new ArrayList<>();
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
             for (int i = 1; i < result.size() + 1; i++) {
                 if (i % 2 == 0) {
@@ -515,7 +517,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
 
     private List<Suggestion> getSuggestionsWithPayload(ArrayList<String> args) {
         final List<Suggestion> list = new ArrayList<>();
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
             for (int i = 1; i < result.size() + 1; i++) {
                 if (i % 2 == 0) {
@@ -531,7 +533,7 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
 
     private List<Suggestion> getSuggestionsWithPayloadAndScores(ArrayList<String> args) {
         final List<Suggestion> list = new ArrayList<>();
-        try (Jedis conn = _conn()) {
+        try (Connection conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
             for (int i = 1; i < result.size() + 1; i++) {
                 if (i % 3 == 0) {

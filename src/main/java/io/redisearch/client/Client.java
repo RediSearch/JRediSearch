@@ -284,7 +284,6 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
         }
         if (doc.getPayload() != null) {
             args.add("PAYLOAD".getBytes());
-            // TODO: Fix this
             args.add(doc.getPayload());
         }
 

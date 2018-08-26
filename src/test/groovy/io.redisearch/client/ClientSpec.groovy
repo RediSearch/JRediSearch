@@ -1,7 +1,6 @@
 package io.redisearch.client
 
 import io.redisearch.Suggestion
-import io.redisearch.api.IndexClient
 import io.redisearch.api.SuggestionClient
 import redis.clients.rdbc.BinaryClient
 import redis.clients.rdbc.Connection
@@ -20,21 +19,19 @@ class ClientSpec extends Specification {
         jedis.getClient() >> binaryClient
     }
 
-    def "getInfo with success of mapping different objects takes place"() {
+    def "dropIndex() not interfacing but public make sure false is not ok"() {
         when:
-        IndexClient client = new Client("testIndex", pool)
-        Map result = client.getInfo()
+        Client client = new Client("testIndex", pool)
+        boolean result = client.dropIndex()
 
         then:
-        1 * binaryClient.getObjectMultiBulkReply() >> [new String("key_here").getBytes(), new ArrayList()
-                                                       , new String("another_key").getBytes()
-                                                       , new Integer(2), new String("string_key").getBytes()
-                                                       , new String("I am a string value").getBytes()]
-        1 * binaryClient.sendCommand(Commands.Command.INFO, _)
-        result.get("string_key") == "I am a string value"
-        result.get("another_key") == 2
+        1 * binaryClient.getStatusCodeReply() >> "OK"
 
+        1 * binaryClient.sendCommand(Commands.Command.DROP, "testIndex")
+
+        result
     }
+
 
     def "addSuggestion with a valid Suggestion with no increment"() {
 

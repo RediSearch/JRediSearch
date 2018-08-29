@@ -1,7 +1,12 @@
 package io.redisearch.client
 
+import io.redisearch.AggregationResult
 import io.redisearch.Query
+import io.redisearch.Schema
 import io.redisearch.SearchResult
+import io.redisearch.aggregation.AggregationRequest
+import io.redisearch.aggregation.Row
+import io.redisearch.api.IndexClient
 import io.redisearch.api.SearchClient
 
 class SearchClientSpec extends ClientSpec {
@@ -96,6 +101,35 @@ class SearchClientSpec extends ClientSpec {
         result.docs.get(0).getId() == id
         result.docs.get(0).getPayload() == payload.getBytes()
         result.docs.get(0).getScore() == Double.parseDouble(score)
+    }
+
+    def "basic aggregation test"() {
+
+        def result = ["key1".getBytes(), "value1".getBytes(),"key2".getBytes(), "1".getBytes()]
+
+        when:
+        AggregationRequest aggregationRequest = new AggregationRequest("a term")
+        SearchClient client = new Client(indexName, pool)
+        AggregationResult resultAnswer = client.aggregate(aggregationRequest)
+
+        then:
+        1 * binaryClient.getObjectMultiBulkReply() >> [1L, result]
+        1 * binaryClient.sendCommand(Commands.Command.AGGREGATE, _)
+        resultAnswer.getResults().size() == 1
+        Row row = resultAnswer.getRow(0)
+        row.getString("key1") == "value1"
+    }
+
+
+    def "Test out the flags being set in IndexOptions with the default which needs to be passed in"() {
+        List list = new ArrayList()
+        when:
+        new Client.IndexOptions(0x0).serializeRedisArgs(list)
+
+        then:
+        noExceptionThrown()
+        list.size() == 3
+
     }
 
 }

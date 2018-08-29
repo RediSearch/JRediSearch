@@ -1,6 +1,6 @@
 package io.redisearch.client
 
-
+import io.redisearch.Schema
 import io.redisearch.api.IndexClient
 import redis.clients.jedis.exceptions.JedisDataException
 
@@ -90,6 +90,53 @@ class IndexClientSpec extends ClientSpec {
         1 * binaryClient.sendCommand(Commands.Command.DROP, "testIndex")
 
         thrown(JedisDataException)
+    }
+
+    def "createIndex "() {
+        Schema schema = new Schema()
+        schema.addField(new Schema.TextField("thename", 0.3))
+
+        when:
+        IndexClient client = new Client("testIndex", pool)
+        boolean result = client.createIndex(schema, Client.IndexOptions.Default())
+
+        then:
+        1 * binaryClient.getStatusCodeReply() >> "OK"
+        1 * binaryClient.sendCommand(Commands.Command.CREATE, _)
+        result
+
+    }
+
+    def "createIndex with StopWords then remove them"() {
+        Schema schema = new Schema()
+        schema.addField(new Schema.TextField("thename", 0.3))
+
+        when:
+        IndexClient client = new Client("testIndex", pool)
+        boolean result = client.createIndex(schema, Client.IndexOptions.Default()
+                .SetStopwords("one word", "another word").SetNoStopwords())
+
+        then:
+        1 * binaryClient.getStatusCodeReply() >> "OK"
+        1 * binaryClient.sendCommand(Commands.Command.CREATE, _)
+        result
+
+    }
+
+    def "createIndex with StopWords"() {
+        Schema schema = new Schema()
+        schema.addField(new Schema.TextField("thename", 0.3))
+
+        when:
+        IndexClient client = new Client("testIndex", pool)
+        boolean result = client.createIndex(schema, Client.IndexOptions.Default()
+                .SetStopwords("one word", "another word"))
+
+        then:
+        1 * binaryClient.getStatusCodeReply() >> "OK"
+        1 * binaryClient.sendCommand(Commands.Command.CREATE, _)
+        result
+
     }
 
 

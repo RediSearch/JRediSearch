@@ -2,7 +2,7 @@ package io.redisearch;
 
 import java.util.Objects;
 
-public class Suggestion {
+public final class Suggestion {
 
     private String string;
     private double score;

@@ -67,6 +67,21 @@ class SuggestionClientSpec extends ClientSpec {
 
     }
 
+    def "getSuggestion with no results returned"() {
+        SuggestionOptions suggestionOptions = SuggestionOptions.builder().build()
+
+        when:
+        SuggestionClient client = new Client("testIndex", pool)
+        List<Suggestion> result = client.getSuggestion("wor", suggestionOptions)
+
+        then:
+        1 * binaryClient.getMultiBulkReply() >> null
+        1 * binaryClient.sendCommand(AutoCompleter.Command.SUGGET, _)
+        result.size() == 0
+
+    }
+
+
     def "getSuggestion with fuzzy set "() {
         SuggestionOptions suggestionOptions = SuggestionOptions.builder().fuzzy().build()
         List<String> values = ["word", "wording", "wording simulation only"]

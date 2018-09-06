@@ -1,19 +1,32 @@
 package io.redisearch.client;
 
-import io.redisearch.*;
+import io.redisearch.AggregationResult;
+import io.redisearch.Document;
+import io.redisearch.Query;
+import io.redisearch.Schema;
+import io.redisearch.SearchResult;
+import io.redisearch.Suggestion;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.api.DocumentClient;
 import io.redisearch.api.IndexClient;
 import io.redisearch.api.SearchClient;
 import io.redisearch.api.SuggestionClient;
 import io.redisearch.rdbc.JedisPoolWrapper;
-import redis.clients.jedis.*;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.JedisSentinelPool;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
-import redis.clients.rdbc.Pool;
-import redis.clients.rdbc.Connection;
 import redis.clients.rdbc.BinaryClient;
-import java.util.*;
+import redis.clients.rdbc.Connection;
+import redis.clients.rdbc.Pool;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
@@ -493,7 +506,9 @@ public class Client implements SearchClient, SuggestionClient, DocumentClient, I
         final List<Suggestion> list = new ArrayList<>();
         try (Connection conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
-            result.forEach(str -> list.add(Suggestion.builder().str(str).build()));
+            if (result != null) {
+                result.forEach(str -> list.add(Suggestion.builder().str(str).build()));
+            }
         }
         return list;
     }

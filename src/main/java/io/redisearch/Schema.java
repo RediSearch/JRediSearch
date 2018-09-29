@@ -10,6 +10,7 @@ import java.util.List;
 public class Schema {
 
     public enum FieldType {
+        Tag("TAG"),
         FullText("TEXT"),
         Geo("GEO"),
         Numeric("NUMERIC"),;
@@ -102,6 +103,28 @@ public class Schema {
         }
     }
 
+    public static class TagField extends Field {
+        String separator = ",";
+
+        public TagField(String name) {
+            super(name, FieldType.Tag, false);
+        }
+
+        public TagField(String name, String separator) {
+            this(name);
+            this.separator = separator;
+        }
+
+        @Override
+        public void serializeRedisArgs(List<String> args) {
+            args.add(name);
+            args.add(type.str);
+            if (!separator.equals(",")) {
+                args.add("SEPARATOR");
+                args.add(separator);
+            }
+        }
+    }
 
     public List<Field> fields;
 
@@ -155,6 +178,16 @@ public class Schema {
     /* Add a numeric field that can be sorted on */
     public Schema addSortableNumericField(String name) {
         fields.add( new Field(name, FieldType.Numeric, true));
+        return this;
+    }
+
+    public Schema addTagField(String name) {
+        fields.add(new TagField(name));
+        return this;
+    }
+
+    public Schema addTagField(String name, String separator) {
+        fields.add(new TagField(name, separator));
         return this;
     }
 

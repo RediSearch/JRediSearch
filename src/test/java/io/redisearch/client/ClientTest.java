@@ -626,4 +626,51 @@ public class ClientTest {
 
     }
 
+    @Test
+    public void testGetTagField() {
+        Client cl = getClient();
+        Schema sc = new Schema()
+                .addTextField("title", 1.0)
+                .addTagField("category");
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        Map<String, Object> fields1 = new HashMap<>();
+        fields1.put("title", "hello world");
+        fields1.put("category", "red");
+        assertTrue(cl.addDocument("foo", fields1));
+        Map<String, Object> fields2 = new HashMap<>();
+        fields2.put("title", "hello world");
+        fields2.put("category", "blue");
+        assertTrue(cl.addDocument("bar", fields2));
+
+        assertEquals(1, cl.search(new Query("@category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{blue}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
+        assertEquals(2, cl.search(new Query("hello")).totalResults);
+    }
+
+    @Test
+    public void testGetTagFieldWithNonDefaultSeparator() {
+        Client cl = getClient();
+        Schema sc = new Schema()
+                .addTextField("title", 1.0)
+                .addTagField("category", ";");
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        Map<String, Object> fields1 = new HashMap<>();
+        fields1.put("title", "hello world");
+        fields1.put("category", "red");
+        assertTrue(cl.addDocument("foo", fields1));
+        Map<String, Object> fields2 = new HashMap<>();
+        fields2.put("title", "hello world");
+        fields2.put("category", "blue");
+        assertTrue(cl.addDocument("bar", fields2));
+
+        assertEquals(1, cl.search(new Query("@category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{blue}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
+        assertEquals(2, cl.search(new Query("hello")).totalResults);
+    }
 }

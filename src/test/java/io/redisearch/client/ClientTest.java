@@ -657,6 +657,7 @@ public class ClientTest {
         assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
         assertEquals(1, cl.search(new Query("@category:{yellow}")).totalResults);
         assertEquals(0, cl.search(new Query("@category:{purple}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{orange\\;purple}")).totalResults);
         assertEquals(4, cl.search(new Query("hello")).totalResults);
     }
 
@@ -691,6 +692,7 @@ public class ClientTest {
         assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
         assertEquals(1, cl.search(new Query("hello @category:{yellow}")).totalResults);
         assertEquals(0, cl.search(new Query("@category:{purple}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{orange\\,purple}")).totalResults);
         assertEquals(4, cl.search(new Query("hello")).totalResults);
     }
 }

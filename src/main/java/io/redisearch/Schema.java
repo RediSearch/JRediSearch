@@ -8,7 +8,6 @@ import java.util.List;
  * Documents can contain fields not mentioned in the schema, but the index will only index pre-defined fields
  */
 public class Schema {
-
     public enum FieldType {
         Tag("TAG"),
         FullText("TEXT"),
@@ -103,14 +102,15 @@ public class Schema {
         }
     }
 
-    public static class TagField extends Field {
-        String separator = ",";
+    private static class TagField extends Field {
+        private static final String DEFAULT_SEPARATOR = ",";
+        String separator = DEFAULT_SEPARATOR;
 
-        public TagField(String name) {
+        private TagField(String name) {
             super(name, FieldType.Tag, false);
         }
 
-        public TagField(String name, String separator) {
+        private TagField(String name, String separator) {
             this(name);
             this.separator = separator;
         }
@@ -119,7 +119,7 @@ public class Schema {
         public void serializeRedisArgs(List<String> args) {
             args.add(name);
             args.add(type.str);
-            if (!separator.equals(",")) {
+            if (!separator.equals(DEFAULT_SEPARATOR)) {
                 args.add("SEPARATOR");
                 args.add(separator);
             }

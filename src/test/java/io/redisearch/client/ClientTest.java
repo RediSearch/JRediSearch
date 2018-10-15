@@ -642,12 +642,22 @@ public class ClientTest {
         fields2.put("title", "hello world");
         fields2.put("category", "blue");
         assertTrue(cl.addDocument("bar", fields2));
+        Map<String, Object> fields3 = new HashMap<>();
+        fields3.put("title", "hello world");
+        fields3.put("category", "green,yellow");
+        assertTrue(cl.addDocument("baz", fields3));
+        Map<String, Object> fields4 = new HashMap<>();
+        fields4.put("title", "hello world");
+        fields4.put("category", "orange;purple");
+        assertTrue(cl.addDocument("qux", fields4));
 
         assertEquals(1, cl.search(new Query("@category:{red}")).totalResults);
         assertEquals(1, cl.search(new Query("@category:{blue}")).totalResults);
         assertEquals(1, cl.search(new Query("hello @category:{red}")).totalResults);
         assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
-        assertEquals(2, cl.search(new Query("hello")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{yellow}")).totalResults);
+        assertEquals(0, cl.search(new Query("@category:{purple}")).totalResults);
+        assertEquals(4, cl.search(new Query("hello")).totalResults);
     }
 
     @Test
@@ -666,11 +676,21 @@ public class ClientTest {
         fields2.put("title", "hello world");
         fields2.put("category", "blue");
         assertTrue(cl.addDocument("bar", fields2));
+        Map<String, Object> fields3 = new HashMap<>();
+        fields3.put("title", "hello world");
+        fields3.put("category", "green;yellow");
+        assertTrue(cl.addDocument("baz", fields3));
+        Map<String, Object> fields4 = new HashMap<>();
+        fields4.put("title", "hello world");
+        fields4.put("category", "orange,purple");
+        assertTrue(cl.addDocument("qux", fields4));
 
         assertEquals(1, cl.search(new Query("@category:{red}")).totalResults);
         assertEquals(1, cl.search(new Query("@category:{blue}")).totalResults);
         assertEquals(1, cl.search(new Query("hello @category:{red}")).totalResults);
         assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
-        assertEquals(2, cl.search(new Query("hello")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{yellow}")).totalResults);
+        assertEquals(0, cl.search(new Query("@category:{purple}")).totalResults);
+        assertEquals(4, cl.search(new Query("hello")).totalResults);
     }
 }

@@ -48,8 +48,8 @@
         </dependency>
         <dependency>
             <groupId>com.redislabs</groupId>
-            <artifactId>jredisearch-jedis</artifactId>
-            <version>3.0.0-20180508</version>
+            <artifactId>jedis</artifactId>
+            <version>3.0.0-m1</version>
         </dependency>
         <dependency>
             <groupId>org.spockframework</groupId>

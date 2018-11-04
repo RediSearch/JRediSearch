@@ -6,6 +6,7 @@ import redis.clients.jedis.*;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.Pool;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
 
@@ -248,6 +249,16 @@ public class Client implements io.redisearch.Client {
         }
         return addDocument(doc, options);
     }
+    
+    /**
+     * Add a document to the index
+     * 
+     * @param doc The document to add
+     * @return true on success
+     */
+    public boolean addDocument(Document doc) {
+        return addDocument(doc, new AddOptions());
+    }
 
     /**
      * Add a document to the index
@@ -257,6 +268,40 @@ public class Client implements io.redisearch.Client {
      * @return true on success
      */
     public boolean addDocument(Document doc, AddOptions options) {
+        try (Jedis conn = _conn()) {
+            return addDocument(doc, options, conn).getStatusCodeReply().equals("OK");
+        }
+    }
+    
+    /**
+     * see {@link #addDocuments(AddOptions, Document...)}
+     */
+    public boolean[] addDocuments(Document... docs){
+    	return addDocuments(new AddOptions(), docs);
+    }
+    
+    /**
+     * Add a batch of documents to the index
+     * @param options Options for the operation
+     * @param docs The documents to add
+     * @return true on success for each document 
+     */
+    public boolean[] addDocuments(AddOptions options, Document... docs){
+    	try (Jedis conn = _conn()) {
+	    	for(Document doc : docs) {
+	    		addDocument(doc, options, conn);
+	    	}
+	    	List<Object> objects = conn.getClient().getMany(docs.length);
+	    	boolean[] results = new boolean[docs.length];
+	    	int i=0;
+	    	for(Object obj : objects) {
+	    		results[i++] = SafeEncoder.encode((byte[]) obj).equals("OK");
+	    	}
+	    	return results;
+    	}
+    }
+    
+    private BinaryClient addDocument(Document doc, AddOptions options, Jedis conn) {
         ArrayList<byte[]> args = new ArrayList<>(
                 Arrays.asList(indexName.getBytes(), doc.getId().getBytes(), Double.toString(doc.getScore()).getBytes()));
         if (options.getNosave()) {
@@ -284,15 +329,7 @@ public class Client implements io.redisearch.Client {
             args.add(ent.getValue().toString().getBytes());
         }
 
-        try (Jedis conn = _conn()) {
-            String resp = sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][]))
-                    .getStatusCodeReply();
-            return resp.equals("OK");
-        }
-    }
-
-    public boolean addDocument(Document doc) {
-        return addDocument(doc, new AddOptions());
+        return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 
     }
 
     /**
@@ -322,14 +359,14 @@ public class Client implements io.redisearch.Client {
     }
 
     /**
-     * See above
+     * See {@link #updateDocument(String, double, Map)}
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields) {
         return this.addDocument(docId, score, fields, false, false, null);
     }
 
     /**
-     * See above
+     * See {@link #updateDocument(String, double, Map)}
      */
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);

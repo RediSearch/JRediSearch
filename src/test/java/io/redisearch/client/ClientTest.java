@@ -1,6 +1,8 @@
 package io.redisearch.client;
 
 import io.redisearch.*;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
@@ -694,5 +696,23 @@ public class ClientTest {
         assertEquals(0, cl.search(new Query("@category:{purple}")).totalResults);
         assertEquals(1, cl.search(new Query("@category:{orange\\,purple}")).totalResults);
         assertEquals(4, cl.search(new Query("hello")).totalResults);
+    }
+    
+    @Test
+    public void testAddDocuments() {
+    	 Client cl = getClient();
+         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
+         
+         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+         
+         Map<String, Object> fields = new HashMap<>();
+         fields.put("title", "hello world");
+         fields.put("body", "lorem ipsum");
+
+         boolean[] results = cl.addDocuments(new Document("doc1",fields), new Document("doc2",fields), new Document("doc3",fields));
+         
+         Assert.assertArrayEquals(new boolean[]{true, true, true}, results);   
+         
+         assertEquals(3, cl.search(new Query("hello world")).totalResults);
     }
 }

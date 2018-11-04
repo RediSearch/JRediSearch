@@ -5,8 +5,8 @@ import java.util.List;
 
 /**
  * SearchResult encapsulates the returned result from a search query.
- * It contains publically accessible fields for the total number of results, and an array of {@link Document}
- * objects conatining the actual returned documents.
+ * It contains publicly accessible fields for the total number of results, and an array of {@link Document}
+ * objects containing the actual returned documents.
  */
 public class SearchResult {
     public long totalResults;

@@ -18,7 +18,8 @@ public class GeoValue extends Value {
         public String toString() {
             return unit;
         }
-    };
+    }
+    
     private final String unit;
     private final double lon;
     private final double lat;

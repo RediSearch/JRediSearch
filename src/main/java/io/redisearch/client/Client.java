@@ -183,7 +183,7 @@ public class Client implements io.redisearch.Client {
      * @return a {@link SearchResult} object with the results
      */
     public SearchResult search(Query q) {
-        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
+        ArrayList<byte[]> args = new ArrayList<>(4);
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
@@ -214,7 +214,7 @@ public class Client implements io.redisearch.Client {
      * @return A string describing this query
      */
     public String explain(Query q) {
-        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
+        ArrayList<byte[]> args = new ArrayList<>(4);
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
@@ -502,15 +502,12 @@ public class Client implements io.redisearch.Client {
 
         if (suggestionOptions.getWith().isPresent()) {
             switch (suggestionOptions.getWith().get()) {
-                case PAYLOAD_AND_SCORES: {
+                case PAYLOAD_AND_SCORES:
                     return getSuggestionsWithPayloadAndScores(args);
-                }
-                case PAYLOAD: {
+                case PAYLOAD: 
                     return getSuggestionsWithPayload(args);
-                }
-                default: {
+                default: 
                     return getSuggestionsWithScores(args);
-                }
             }
         } else {
             return getSuggestions(args);
@@ -662,7 +659,7 @@ public class Client implements io.redisearch.Client {
 
                 args.add("STOPWORDS");
                 args.add(String.format("%d", stopwords.size()));
-                if (stopwords.size() > 0) {
+                if (!stopwords.isEmpty()) {
                     args.addAll(stopwords);
                 }
 

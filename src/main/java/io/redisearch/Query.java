@@ -224,7 +224,7 @@ public class Query {
             ));
         }
 
-        if (_filters != null && _filters.size() > 0) {
+        if (_filters != null && !_filters.isEmpty()) {
             for (Filter f : _filters) {
                 f.serializeRedisArgs(args);
             }

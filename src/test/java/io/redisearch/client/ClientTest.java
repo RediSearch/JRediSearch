@@ -38,7 +38,7 @@ public class ClientTest {
     public void setUp() {
         getClient()._conn().flushDB();
     }
-
+    
     @Test
     public void search() throws Exception {
         Client cl = getClient();
@@ -209,13 +209,12 @@ public class ClientTest {
         fields.put("title", "hello world");
         String payload = "foo bar";
         assertTrue(cl.addDocument("doc1", 1.0, fields, false, false, payload.getBytes()));
-        /** TODO: THIS TEST IS BROKEN
-         SearchResult res = cl.search(new Query("hello world").setWithPaload());
-         assertEquals(1, res.totalResults);
-         assertEquals(1, res.docs.size());
 
-         assertEquals(payload, new String(res.docs.get(0).getPayload()));
-         **/
+        SearchResult res = cl.search(new Query("hello world").setWithPaload());
+        assertEquals(1, res.totalResults);
+        assertEquals(1, res.docs.size());
+
+        assertEquals(payload, new String(res.docs.get(0).getPayload()));
     }
 
     @Test

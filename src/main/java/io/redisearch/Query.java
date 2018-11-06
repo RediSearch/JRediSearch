@@ -191,7 +191,7 @@ public class Query {
             args.add("WITHSCORES".getBytes());
         }
         if (_withPayloads) {
-            args.add("PAYLOADS".getBytes());
+            args.add("WITHPAYLOADS".getBytes());
         }
         if (_language != null) {
             args.add("LANGUAGE".getBytes());

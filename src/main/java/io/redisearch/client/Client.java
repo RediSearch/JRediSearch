@@ -295,7 +295,8 @@ public class Client implements io.redisearch.Client {
 	    	boolean[] results = new boolean[docs.length];
 	    	int i=0;
 	    	for(Object obj : objects) {
-	    		results[i++] = SafeEncoder.encode((byte[]) obj).equals("OK");
+	    		results[i++] = !(obj instanceof JedisDataException) && 
+	    		SafeEncoder.encode((byte[]) obj).equals("OK");
 	    	}
 	    	return results;
     	}

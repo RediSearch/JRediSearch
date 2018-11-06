@@ -713,5 +713,8 @@ public class ClientTest {
          Assert.assertArrayEquals(new boolean[]{true, true, true}, results);   
          
          assertEquals(3, cl.search(new Query("hello world")).totalResults);
+         
+         results = cl.addDocuments(new Document("doc4",fields), new Document("doc2",fields), new Document("doc5",fields));
+         Assert.assertArrayEquals(new boolean[]{true, false, true}, results);   
     }
 }

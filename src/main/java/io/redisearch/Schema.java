@@ -90,11 +90,11 @@ public class Schema {
                 args.add("WEIGHT");
                 args.add(Double.toString(weight));
             }
-            if (sortable) {
-                args.add("SORTABLE");
-            }
             if (nostem) {
                 args.add("NOSTEM");
+            }
+            if (sortable) {
+                args.add("SORTABLE");
             }
             if (noindex) {
                 args.add("NOINDEX");

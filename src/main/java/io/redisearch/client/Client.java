@@ -16,9 +16,14 @@ import java.util.*;
 public class Client implements io.redisearch.Client {
 
     private final String indexName;
-    protected Commands.CommandProvider commands;
-    private Pool<Jedis> pool;
+    private final Pool<Jedis> pool;
 
+    protected Commands.CommandProvider commands;
+    
+    public Client(String indexName, String host, int port) {
+        this(indexName, host, port, 500, 100);
+    }
+    
     /**
      * Create a new client to a RediSearch index
      *
@@ -33,14 +38,9 @@ public class Client implements io.redisearch.Client {
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
         JedisPoolConfig conf = initPoolConfig(poolSize);
 
-        pool = new JedisPool(conf, host, port, timeout, password);
-
+        this.pool = new JedisPool(conf, host, port, timeout, password);
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();
-    }
-
-    public Client(String indexName, String host, int port) {
-        this(indexName, host, port, 500, 100);
     }
 
     /**
@@ -59,7 +59,6 @@ public class Client implements io.redisearch.Client {
         JedisPoolConfig conf = initPoolConfig(poolSize);
 
         this.pool = new JedisSentinelPool(master, sentinels, conf, timeout, password);
-
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();
     }

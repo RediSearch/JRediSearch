@@ -10,8 +10,8 @@ import java.util.List;
  * This class is normally received via one of the subclasses or via Reducers
  */
 public abstract class Reducer {
-    private String alias = null;
-    private String field = null;
+    private String alias;
+    private final String field;
 
     protected Reducer(String field) {
         this.field = field;

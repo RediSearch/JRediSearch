@@ -45,12 +45,12 @@ public class Document implements Serializable {
     }
 
 
-    public static Document load(String id, Double score, byte[] payload, List fields) {
+    public static Document load(String id, Double score, byte[] payload, List<byte[]> fields) {
         Document ret = new Document(id, score);
         ret.payload = payload;
         if (fields != null) {
             for (int i = 0; i < fields.size(); i += 2) {
-                ret.set(new String((byte[])fields.get(i)), new String((byte[])fields.get(i + 1)));
+                ret.set(new String(fields.get(i)), new String(fields.get(i + 1)));
             }
         }
         return ret;

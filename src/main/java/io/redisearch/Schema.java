@@ -21,19 +21,19 @@ public class Schema {
     }
 
     public static class Field {
-        public String name;
-        public FieldType type;
-        public boolean sortable;
-        public boolean noindex;
+        public final String name;
+        public final FieldType type;
+        public final boolean sortable;
+        public final boolean noindex;
 
         public Field(String name, FieldType type, boolean sortable) {
-            this.name = name;
-            this.type = type;
-            this.sortable = sortable;
+        	this(name, type, sortable, false);
         }
 
         public Field(String name, FieldType type, boolean sortable, boolean noindex) {
-            this(name, type, sortable);
+            this.name = name;
+            this.type = type;
+            this.sortable = sortable;
             this.noindex = noindex;
         }
 
@@ -54,32 +54,29 @@ public class Schema {
      */
     public static class TextField extends Field {
 
-        double weight = 1.0;
-        boolean nostem = false;
+    	private final double weight;
+        private final boolean nostem;
 
-
+        public TextField(String name) {
+            this(name, 1.0);
+        }
+        
         public TextField(String name, double weight) {
-            super(name, FieldType.FullText, false);
-            this.weight = weight;
+            this(name, weight, false);
         }
 
         public TextField(String name, double weight, boolean sortable) {
-            super(name, FieldType.FullText, sortable);
-            this.weight = weight;
+            this(name, weight, sortable, false);
         }
 
         public TextField(String name, double weight, boolean sortable, boolean nostem) {
-            this(name, weight, sortable);
-            this.nostem = nostem;
+            this(name, weight, sortable, nostem, false);
         }
 
         public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex) {
-            this(name, weight, sortable, nostem);
-            this.noindex = noindex;
-        }
-
-        public TextField(String name) {
-            super(name, FieldType.FullText, false);
+        	super(name, FieldType.FullText, sortable, noindex);
+            this.weight = weight;
+            this.nostem = nostem;
         }
 
         @Override
@@ -104,14 +101,15 @@ public class Schema {
 
     private static class TagField extends Field {
         private static final String DEFAULT_SEPARATOR = ",";
-        String separator = DEFAULT_SEPARATOR;
+        
+        private final String separator;
 
         private TagField(String name) {
-            super(name, FieldType.Tag, false);
+        	this(name, DEFAULT_SEPARATOR);
         }
 
         private TagField(String name, String separator) {
-            this(name);
+        	super(name, FieldType.Tag, false);
             this.separator = separator;
         }
 
@@ -126,11 +124,10 @@ public class Schema {
         }
     }
 
-    public List<Field> fields;
+    public final List<Field> fields;
 
     public Schema() {
         this.fields = new ArrayList<>();
-
     }
 
     /**

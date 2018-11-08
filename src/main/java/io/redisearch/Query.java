@@ -13,9 +13,9 @@ public class Query {
     /**
      * Filter represents a filtering rules in a query
      */
-    private static abstract class Filter {
+	private abstract static class Filter {
 
-        public String property;
+        public final String property;
 
         public abstract void serializeRedisArgs(List<byte[]> args);
 
@@ -31,9 +31,9 @@ public class Query {
     public static class NumericFilter extends Filter {
 
         private final double min;
-        boolean exclusiveMin;
+        private final boolean exclusiveMin;
         private final double max;
-        boolean exclusiveMax;
+        private final boolean exclusiveMax;
 
         public NumericFilter(String property, double min, boolean exclusiveMin, double max, boolean exclusiveMax) {
             super(property);
@@ -121,33 +121,20 @@ public class Query {
     /**
      * The query's filter list. We only support AND operation on all those filters
      */
-    protected List<Filter> _filters = new LinkedList<>();
+    protected final List<Filter> _filters = new LinkedList<>();
 
 
     /**
      * The textual part of the query
      */
-    protected String _queryString;
+    protected final String _queryString;
 
     /**
      * The sorting parameters
      */
-    protected Paging _paging = new Paging(0, 10);
+    protected final Paging _paging = new Paging(0, 10);
 
     protected boolean _verbatim = false;
-
-    public boolean getNoContent() {
-        return _noContent;
-    }
-
-    public boolean getWithScores() {
-        return _withScores;
-    }
-
-    public boolean getWithPayloads() {
-        return _withPayloads;
-    }
-
     protected boolean _noContent = false;
     protected boolean _noStopwords = false;
     protected boolean _withScores = false;
@@ -308,6 +295,10 @@ public class Query {
         return this;
     }
 
+    public boolean getNoContent() {
+        return _noContent;
+    }
+    
     /**
      * Set the query not to return the contents of documents, and rather just return the ids
      * @return the query itself
@@ -326,6 +317,10 @@ public class Query {
         return this;
     }
 
+    public boolean getWithScores() {
+        return _withScores;
+    }
+    
     /**
      * Set the query to return a factored score for each results. This is useful to merge results from multiple queries.
      * @return the query object itself
@@ -335,6 +330,11 @@ public class Query {
         return this;
     }
 
+
+    public boolean getWithPayloads() {
+        return _withPayloads;
+    }
+    
     /**
      * Set the query to return object payloads, if any were given
      * 

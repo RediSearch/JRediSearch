@@ -4,10 +4,9 @@ import java.util.Objects;
 
 public class Suggestion {
 
-    private String string;
-    private double score;
-    private String payload;
-
+    private final String string;
+    private final double score;
+    private final String payload;
 
     private Suggestion(Builder b) {
         this.string = b.string;

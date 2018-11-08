@@ -8,7 +8,9 @@ import java.util.Map;
  * Row in aggregation result-set
  */
 public class Row {
+	
     private final Map<String, Object> fields;
+    
     public Row(Map<String, Object> fields) {
         this.fields = fields;
     }

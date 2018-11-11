@@ -62,7 +62,7 @@ public class ClientTest {
             //System.out.println(d);
         }
 
-        assertTrue(cl.deleteDocument("doc0"));
+        assertTrue(cl.deleteDocument("doc0", true));
         assertFalse(cl.deleteDocument("doc0"));
 
         res = cl.search(new Query("hello world"));

@@ -13,6 +13,7 @@ public interface Client {
     String PAYLOAD_FLAG = "PAYLOAD";
     String MAX_FLAG = "MAX";
     String FUZZY_FLAG = "FUZZY";
+    String DELETE_DOCUMENT = "DD";
 
     boolean createIndex(Schema schema, io.redisearch.client.Client.IndexOptions options);
 

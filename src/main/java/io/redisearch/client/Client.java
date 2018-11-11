@@ -411,14 +411,32 @@ public class Client implements io.redisearch.Client {
     }
 
     /**
-     * Delete a document from the index.
+     * Delete a document from the index (doesn't delete the document).
      *
      * @param docId the document's id
      * @return true if it has been deleted, false if it did not exist
+     * 
+     * @see #deleteDocument(String, boolean) 
      */
     public boolean deleteDocument(String docId) {
+    	return deleteDocument(docId, false);
+    }
+    
+    /**
+     * Delete a document from the index.
+     *
+     * @param docId the document's id
+     * @param deleteDocument if <code>true</code> also deletes the actual document if it is in the index
+     * @return true if it has been deleted, false if it did not exist
+     */
+    public boolean deleteDocument(String docId, boolean deleteDocument) {
         try (Jedis conn = _conn()) {
-            Long r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
+        	Long r;
+        	if(deleteDocument) {
+        		 r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId, DELETE_DOCUMENT).getIntegerReply();
+        	} else {
+        		r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
+        	}
             return r == 1;
         }
     }

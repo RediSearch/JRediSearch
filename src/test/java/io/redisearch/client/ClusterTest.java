@@ -12,7 +12,6 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import static junit.framework.TestCase.*;
 

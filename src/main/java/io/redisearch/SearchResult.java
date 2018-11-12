@@ -9,7 +9,7 @@ import java.util.List;
  * objects containing the actual returned documents.
  */
 public class SearchResult {
-    public long totalResults;
+    public final long totalResults;
     public final List<Document> docs;
 
 

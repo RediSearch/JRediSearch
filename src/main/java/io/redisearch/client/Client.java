@@ -2,6 +2,7 @@ package io.redisearch.client;
 
 import io.redisearch.*;
 import io.redisearch.aggregation.AggregationRequest;
+import io.redisearch.client.SuggestionOptions.With;
 import redis.clients.jedis.*;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
@@ -490,7 +491,7 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public Long addSuggestion(Suggestion suggestion, boolean increment) {
-        ArrayList<String> args = new ArrayList(
+        List<String> args = new ArrayList<>(
                 Arrays.asList(this.indexName, suggestion.getString(), Double.toString(suggestion.getScore())));
 
         if (increment) {
@@ -508,31 +509,30 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public List<Suggestion> getSuggestion(String prefix, SuggestionOptions suggestionOptions) {
-        ArrayList<String> args = new ArrayList(
-                Arrays.asList(this.indexName, prefix, MAX_FLAG, Integer.toString(suggestionOptions.getMax())));
+        ArrayList<String> args = new ArrayList<>(Arrays.asList(this.indexName, prefix, MAX_FLAG, Integer.toString(suggestionOptions.getMax())));
 
         if (suggestionOptions.isFuzzy()) {
             args.add(FUZZY_FLAG);
         }
-        suggestionOptions.getWith().ifPresent(with -> {
-            args.addAll(Arrays.asList(with.getFlags()));
-        });
-
-        if (suggestionOptions.getWith().isPresent()) {
-            switch (suggestionOptions.getWith().get()) {
-                case PAYLOAD_AND_SCORES:
-                    return getSuggestionsWithPayloadAndScores(args);
-                case PAYLOAD: 
-                    return getSuggestionsWithPayload(args);
-                default: 
-                    return getSuggestionsWithScores(args);
-            }
-        } else {
-            return getSuggestions(args);
+                
+        Optional<With> options = suggestionOptions.getWith();
+        if (!options.isPresent()) {
+        	return getSuggestions(args);
+        }
+        
+        With with = options.get();
+        args.addAll(Arrays.asList(with.getFlags()));
+        switch (with) {
+            case PAYLOAD_AND_SCORES:
+                return getSuggestionsWithPayloadAndScores(args);
+            case PAYLOAD: 
+                return getSuggestionsWithPayload(args);
+            default: 
+                return getSuggestionsWithScores(args);
         }
     }
 
-    private List<Suggestion> getSuggestions(ArrayList<String> args) {
+    private List<Suggestion> getSuggestions(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -541,7 +541,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithScores(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithScores(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -557,7 +557,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithPayload(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithPayload(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -573,7 +573,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithPayloadAndScores(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithPayloadAndScores(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -613,7 +613,7 @@ public class Client implements io.redisearch.Client {
 
         /**
          * With each document:term record, store how often the term appears within the document. This can be used
-         * for sorting documents by their relevancy to the given term.
+         * for sorting documents by their relevance to the given term.
          */
         public static final int KEEP_TERM_FREQUENCIES = 0x08;
 

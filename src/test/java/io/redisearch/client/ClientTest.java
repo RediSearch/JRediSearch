@@ -303,7 +303,7 @@ public class ClientTest {
         Jedis conn = cl._conn();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
-        HashMap hm = new HashMap();
+        HashMap<String, String> hm = new HashMap<>();
         hm.put("title", "hello world");
         conn.hmset("foo", hm);
 

@@ -619,9 +619,9 @@ public class Client implements io.redisearch.Client {
 
         public static final int DEFAULT_FLAGS = USE_TERM_OFFSETS | KEEP_FIELD_FLAGS | KEEP_TERM_FREQUENCIES;
 
-        int flags = 0x0;
+        private int flags = 0x0;
 
-        List<String> stopwords = null;
+        private List<String> stopwords = null;
 
         /**
          * Default constructor

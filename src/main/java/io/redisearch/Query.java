@@ -123,7 +123,6 @@ public class Query {
      */
     protected final List<Filter> _filters = new LinkedList<>();
 
-
     /**
      * The textual part of the query
      */
@@ -141,6 +140,7 @@ public class Query {
     protected boolean _withPayloads = false;
     protected String _language = null;
     protected String[] _fields = null;
+    protected String[] _returnFields = null;
     protected String[] highlightFields = null;
     protected String[] summarizeFields = null;
     protected String[] highlightTags = null;
@@ -190,7 +190,6 @@ public class Query {
             for (String f : _fields) {
                 args.add(f.getBytes());
             }
-
         }
 
         if (_sortBy != null) {
@@ -254,6 +253,14 @@ public class Query {
                 args.add("SEPARATOR".getBytes());
                 args.add(summarizeSeparator.getBytes());
             }
+        }
+        
+        if (_returnFields != null) {
+          args.add("RETURN".getBytes());
+          args.add(String.format("%d", _returnFields.length).getBytes());
+          for (String f : _returnFields) {
+              args.add(f.getBytes());
+          }
         }
     }
 
@@ -336,11 +343,19 @@ public class Query {
     }
     
     /**
+     * @deprecated {@link #setWithPayload()}
+     */
+    @Deprecated
+    public Query setWithPaload() {
+      return this.setWithPaload();
+    }
+    
+    /**
      * Set the query to return object payloads, if any were given
      * 
      * @return the query object itself
      * */
-    public Query setWithPaload() {
+    public Query setWithPayload() {
         this._withPayloads = true;
         return this;
     }
@@ -365,6 +380,17 @@ public class Query {
         this._fields = fields;
         return this;
     }
+    
+    /**
+     * Result's projection - the fields to return by the query
+     * @param fields a list of TEXT fields in the schemas
+     * @return the query object itself
+     */
+    public Query returnFields(String... fields) {
+        this._returnFields = fields;
+        return this;
+    }
+
 
     public Query highlightFields(HighlightTags tags, String... fields) {
         if (fields == null || fields.length > 0) {

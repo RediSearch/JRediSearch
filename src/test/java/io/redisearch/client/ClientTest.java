@@ -210,7 +210,7 @@ public class ClientTest {
         String payload = "foo bar";
         assertTrue(cl.addDocument("doc1", 1.0, fields, false, false, payload.getBytes()));
 
-        SearchResult res = cl.search(new Query("hello world").setWithPaload());
+        SearchResult res = cl.search(new Query("hello world").setWithPayload());
         assertEquals(1, res.totalResults);
         assertEquals(1, res.docs.size());
 
@@ -720,4 +720,26 @@ public class ClientTest {
          results = cl.deleteDocuments(true, "doc1", "doc2", "doc36");
          Assert.assertArrayEquals(new boolean[]{true, true, false}, results);   
     }
+    
+    @Test
+    public void testReturnFields() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+        Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+
+
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field1", "value1");
+        doc.put("field2", "value2");
+        // Store it
+        assertTrue(cl.addDocument("doc", doc));
+
+        // Query
+        SearchResult res = cl.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res.totalResults);
+        assertEquals("value1", res.docs.get(0).get("field1"));
+        assertEquals(null, res.docs.get(0).get("field2"));
+    }
+
 }

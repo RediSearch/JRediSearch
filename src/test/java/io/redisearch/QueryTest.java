@@ -36,7 +36,7 @@ public class QueryTest {
 
     @Test
     public void serializeRedisArgs() throws Exception {
-        query.setNoContent().setLanguage("xx").setNoStopwords().setVerbatim().setWithPaload().setWithScores();
+        query.setNoContent().setLanguage("xx").setNoStopwords().setVerbatim().setWithPayload().setWithScores();
 
         ArrayList<byte[]> args = new ArrayList<>(1);
         query.serializeRedisArgs(args);
@@ -94,11 +94,16 @@ public class QueryTest {
 
     @Test
     public void limitFields() throws Exception {
-
         assertEquals( null, query._fields);
         assertEquals(query, query.limitFields("foo", "bar"));
         assertEquals(2, query._fields.length);
-
+    }
+    
+    @Test
+    public void returnFields() throws Exception {
+        assertEquals( null, query._returnFields);
+        assertEquals(query, query.returnFields("foo", "bar"));
+        assertEquals(2, query._returnFields.length);
     }
 
     @Test

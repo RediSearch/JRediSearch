@@ -698,7 +698,7 @@ public class ClientTest {
     }
     
     @Test
-    public void testAddDocuments() {
+    public void testMultiDocuments() {
     	 Client cl = getClient();
          Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
          
@@ -716,5 +716,8 @@ public class ClientTest {
          
          results = cl.addDocuments(new Document("doc4",fields), new Document("doc2",fields), new Document("doc5",fields));
          Assert.assertArrayEquals(new boolean[]{true, false, true}, results);   
+         
+         results = cl.deleteDocuments(true, "doc1", "doc2", "doc36");
+         Assert.assertArrayEquals(new boolean[]{true, true, false}, results);   
     }
 }

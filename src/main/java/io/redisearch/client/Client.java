@@ -410,7 +410,29 @@ public class Client implements io.redisearch.Client {
         handleListMapping(res, info::put);
         return info;
     }
-
+    /**
+     * Delete a documents from the index
+     *
+     * @param deleteDocuments  if <code>true</code> also deletes the actual document ifs it is in the index
+     * @param docIds the document's ids
+     * @return true on success for each document if it has been deleted, false if it did not exist
+     */
+    public boolean[] deleteDocuments(boolean deleteDocuments, String... docIds) {
+    	try (Jedis conn = _conn()) {
+	    	for(String docId : docIds) {
+	    		deleteDocument(docId, deleteDocuments, conn);
+	    	}
+	    	List<Object> objects = conn.getClient().getMany(docIds.length);
+	    	boolean[] results = new boolean[docIds.length];
+	    	int i=0;
+	    	for(Object obj : objects) {
+	    		results[i++] = !(obj instanceof JedisDataException) && 
+	    		((Long) obj) == 1L;
+	    	}
+	    	return results;
+    	}
+    }
+    
     /**
      * Delete a document from the index (doesn't delete the document).
      *
@@ -431,15 +453,26 @@ public class Client implements io.redisearch.Client {
      * @return true if it has been deleted, false if it did not exist
      */
     public boolean deleteDocument(String docId, boolean deleteDocument) {
-        try (Jedis conn = _conn()) {
-        	Long r;
-        	if(deleteDocument) {
-        		 r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId, DELETE_DOCUMENT).getIntegerReply();
-        	} else {
-        		r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
-        	}
-            return r == 1;
+        try (Jedis conn = _conn()) {        	
+        	return deleteDocument(docId, deleteDocument, conn).getIntegerReply() == 1;
         }
+    }
+    
+    
+    /**
+     * Delete a document from the index.
+     *
+     * @param docId the document's id
+     * @param deleteDocument if <code>true</code> also deletes the actual document if it is in the index
+     * @param conn client connection to be used
+     * @return reference to the {@link BinaryClient} too allow chaining 
+     */
+    private BinaryClient deleteDocument(String docId, boolean deleteDocument, Jedis conn) {
+    	if(deleteDocument) {
+    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId, DELETE_DOCUMENT);
+    	} else {
+    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId);
+    	}
     }
 
     /**

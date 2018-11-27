@@ -110,8 +110,8 @@ public class Query {
     }
 
     public static class HighlightTags {
-        String open;
-        String close;
+        private final String open;
+        private final String close;
         public HighlightTags(String open, String close) {
             this.open = open;
             this.close = close;
@@ -228,7 +228,7 @@ public class Query {
             if (highlightTags != null) {
                 args.add("TAGS".getBytes());
                 for (String t : highlightTags) {
-                    args.add(toString().getBytes());
+                    args.add(t.getBytes());
                 }
             }
         }

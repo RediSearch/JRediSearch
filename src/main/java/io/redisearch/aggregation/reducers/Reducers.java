@@ -1,8 +1,6 @@
 package io.redisearch.aggregation.reducers;
 
 import io.redisearch.aggregation.SortedField;
-import io.redisearch.querybuilder.IntersectNode;
-
 import java.util.List;
 
 /**

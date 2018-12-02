@@ -5,11 +5,11 @@ import java.util.List;
 
 /**
  * SearchResult encapsulates the returned result from a search query.
- * It contains publically accessible fields for the total number of results, and an array of {@link Document}
- * objects conatining the actual returned documents.
+ * It contains publicly accessible fields for the total number of results, and an array of {@link Document}
+ * objects containing the actual returned documents.
  */
 public class SearchResult {
-    public long totalResults;
+    public final long totalResults;
     public final List<Document> docs;
 
 
@@ -40,22 +40,12 @@ public class SearchResult {
         docs = new ArrayList<>(resp.size() - 1);
 
         for (int i = 1; i < resp.size(); i += step) {
-
+        	
+            Double score = hasScores ? Double.valueOf(new String((byte[]) resp.get(i + scoreOffset))) : 1.0;           
+            byte[] payload = hasPayloads ? (byte[]) resp.get(i + payloadOffset) : null;
+            List<byte[]> fields = hasContent ? (List<byte[]>) resp.get(i + contentOffset) : null; 
             String id = new String((byte[]) resp.get(i));
-            Double score = 1.0;
-            byte[] payload = null;
-            List fields = null;
-            if (hasScores) {
-                score = Double.valueOf(new String((byte[]) resp.get(i + scoreOffset)));
-            }
-            if (hasPayloads) {
-                payload = (byte[]) resp.get(i + payloadOffset);
-            }
-
-            if (hasContent) {
-                fields = (List) resp.get(i + contentOffset);
-            }
-
+            
             docs.add(Document.load(id, score, payload, fields));
         }
 

@@ -8,8 +8,8 @@ import java.util.List;
  * Created by mnunberg on 2/22/18.
  */
 public class Limit {
-    private int offset;
-    private int count;
+    private final int offset;
+    private final int count;
 
     public Limit(int offset, int count) {
         this.offset = offset;

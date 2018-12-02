@@ -11,7 +11,9 @@ import java.util.Map;
  * Created by mnunberg on 2/22/18.
  */
 public class AggregationResult {
+	
     private final List<Map<String, Object>> results = new ArrayList<>();
+    
     public AggregationResult(List<Object> resp) {
         for (int i = 1; i < resp.size(); i++) {
             Object o = resp.get(i);

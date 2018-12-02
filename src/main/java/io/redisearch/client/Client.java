@@ -2,10 +2,12 @@ package io.redisearch.client;
 
 import io.redisearch.*;
 import io.redisearch.aggregation.AggregationRequest;
+import io.redisearch.client.SuggestionOptions.With;
 import redis.clients.jedis.*;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.Pool;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
 
@@ -15,9 +17,32 @@ import java.util.*;
 public class Client implements io.redisearch.Client {
 
     private final String indexName;
-    protected Commands.CommandProvider commands;
-    private Pool<Jedis> pool;
+    private final Pool<Jedis> pool;
 
+    protected Commands.CommandProvider commands;
+    
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param pool jedis connection pool to be used
+     */
+    public Client(String indexName, Pool<Jedis> pool) {
+      this.indexName = indexName;
+      this.pool = pool;
+    }
+    
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param host      the redis host
+     * @param port      the redis pot
+     */
+    public Client(String indexName, String host, int port) {
+        this(indexName, host, port, 500, 100);
+    }
+    
     /**
      * Create a new client to a RediSearch index
      *
@@ -29,17 +54,20 @@ public class Client implements io.redisearch.Client {
         this(indexName, host, port, timeout, poolSize, null);
     }
 
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param host      the redis host
+     * @param port      the redis pot
+     * @param password  the password for authentication in a password protected Redis server
+     */
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
         JedisPoolConfig conf = initPoolConfig(poolSize);
 
-        pool = new JedisPool(conf, host, port, timeout, password);
-
+        this.pool = new JedisPool(conf, host, port, timeout, password);
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();
-    }
-
-    public Client(String indexName, String host, int port) {
-        this(indexName, host, port, 500, 100);
     }
 
     /**
@@ -58,7 +86,6 @@ public class Client implements io.redisearch.Client {
         JedisPoolConfig conf = initPoolConfig(poolSize);
 
         this.pool = new JedisSentinelPool(master, sentinels, conf, timeout, password);
-
         this.indexName = indexName;
         this.commands = new Commands.SingleNodeCommands();
     }
@@ -182,7 +209,7 @@ public class Client implements io.redisearch.Client {
      * @return a {@link SearchResult} object with the results
      */
     public SearchResult search(Query q) {
-        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
+        ArrayList<byte[]> args = new ArrayList<>(4);
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
@@ -213,7 +240,7 @@ public class Client implements io.redisearch.Client {
      * @return A string describing this query
      */
     public String explain(Query q) {
-        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
+        ArrayList<byte[]> args = new ArrayList<>(4);
         args.add(indexName.getBytes());
         q.serializeRedisArgs(args);
 
@@ -248,6 +275,16 @@ public class Client implements io.redisearch.Client {
         }
         return addDocument(doc, options);
     }
+    
+    /**
+     * Add a document to the index
+     * 
+     * @param doc The document to add
+     * @return true on success
+     */
+    public boolean addDocument(Document doc) {
+        return addDocument(doc, new AddOptions());
+    }
 
     /**
      * Add a document to the index
@@ -257,6 +294,41 @@ public class Client implements io.redisearch.Client {
      * @return true on success
      */
     public boolean addDocument(Document doc, AddOptions options) {
+        try (Jedis conn = _conn()) {
+            return addDocument(doc, options, conn).getStatusCodeReply().equals("OK");
+        }
+    }
+    
+    /**
+     * see {@link #addDocuments(AddOptions, Document...)}
+     */
+    public boolean[] addDocuments(Document... docs){
+    	return addDocuments(new AddOptions(), docs);
+    }
+    
+    /**
+     * Add a batch of documents to the index
+     * @param options Options for the operation
+     * @param docs The documents to add
+     * @return true on success for each document 
+     */
+    public boolean[] addDocuments(AddOptions options, Document... docs){
+    	try (Jedis conn = _conn()) {
+	    	for(Document doc : docs) {
+	    		addDocument(doc, options, conn);
+	    	}
+	    	List<Object> objects = conn.getClient().getMany(docs.length);
+	    	boolean[] results = new boolean[docs.length];
+	    	int i=0;
+	    	for(Object obj : objects) {
+	    		results[i++] = !(obj instanceof JedisDataException) && 
+	    		SafeEncoder.encode((byte[]) obj).equals("OK");
+	    	}
+	    	return results;
+    	}
+    }
+    
+    private BinaryClient addDocument(Document doc, AddOptions options, Jedis conn) {
         ArrayList<byte[]> args = new ArrayList<>(
                 Arrays.asList(indexName.getBytes(), doc.getId().getBytes(), Double.toString(doc.getScore()).getBytes()));
         if (options.getNosave()) {
@@ -284,15 +356,7 @@ public class Client implements io.redisearch.Client {
             args.add(ent.getValue().toString().getBytes());
         }
 
-        try (Jedis conn = _conn()) {
-            String resp = sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][]))
-                    .getStatusCodeReply();
-            return resp.equals("OK");
-        }
-    }
-
-    public boolean addDocument(Document doc) {
-        return addDocument(doc, new AddOptions());
+        return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 
     }
 
     /**
@@ -322,14 +386,14 @@ public class Client implements io.redisearch.Client {
     }
 
     /**
-     * See above
+     * See {@link #updateDocument(String, double, Map)}
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields) {
         return this.addDocument(docId, score, fields, false, false, null);
     }
 
     /**
-     * See above
+     * See {@link #updateDocument(String, double, Map)}
      */
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
@@ -372,18 +436,69 @@ public class Client implements io.redisearch.Client {
         handleListMapping(res, info::put);
         return info;
     }
-
+    /**
+     * Delete a documents from the index
+     *
+     * @param deleteDocuments  if <code>true</code> also deletes the actual document ifs it is in the index
+     * @param docIds the document's ids
+     * @return true on success for each document if it has been deleted, false if it did not exist
+     */
+    public boolean[] deleteDocuments(boolean deleteDocuments, String... docIds) {
+    	try (Jedis conn = _conn()) {
+	    	for(String docId : docIds) {
+	    		deleteDocument(docId, deleteDocuments, conn);
+	    	}
+	    	List<Object> objects = conn.getClient().getMany(docIds.length);
+	    	boolean[] results = new boolean[docIds.length];
+	    	int i=0;
+	    	for(Object obj : objects) {
+	    		results[i++] = !(obj instanceof JedisDataException) && 
+	    		((Long) obj) == 1L;
+	    	}
+	    	return results;
+    	}
+    }
+    
+    /**
+     * Delete a document from the index (doesn't delete the document).
+     *
+     * @param docId the document's id
+     * @return true if it has been deleted, false if it did not exist
+     * 
+     * @see #deleteDocument(String, boolean) 
+     */
+    public boolean deleteDocument(String docId) {
+    	return deleteDocument(docId, false);
+    }
+    
     /**
      * Delete a document from the index.
      *
      * @param docId the document's id
+     * @param deleteDocument if <code>true</code> also deletes the actual document if it is in the index
      * @return true if it has been deleted, false if it did not exist
      */
-    public boolean deleteDocument(String docId) {
-        try (Jedis conn = _conn()) {
-            Long r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
-            return r == 1;
+    public boolean deleteDocument(String docId, boolean deleteDocument) {
+        try (Jedis conn = _conn()) {        	
+        	return deleteDocument(docId, deleteDocument, conn).getIntegerReply() == 1;
         }
+    }
+    
+    
+    /**
+     * Delete a document from the index.
+     *
+     * @param docId the document's id
+     * @param deleteDocument if <code>true</code> also deletes the actual document if it is in the index
+     * @param conn client connection to be used
+     * @return reference to the {@link BinaryClient} too allow chaining 
+     */
+    private BinaryClient deleteDocument(String docId, boolean deleteDocument, Jedis conn) {
+    	if(deleteDocument) {
+    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId, DELETE_DOCUMENT);
+    	} else {
+    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId);
+    	}
     }
 
     /**
@@ -435,7 +550,7 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public Long addSuggestion(Suggestion suggestion, boolean increment) {
-        ArrayList<String> args = new ArrayList(
+        List<String> args = new ArrayList<>(
                 Arrays.asList(this.indexName, suggestion.getString(), Double.toString(suggestion.getScore())));
 
         if (increment) {
@@ -453,34 +568,30 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public List<Suggestion> getSuggestion(String prefix, SuggestionOptions suggestionOptions) {
-        ArrayList<String> args = new ArrayList(
-                Arrays.asList(this.indexName, prefix, MAX_FLAG, Integer.toString(suggestionOptions.getMax())));
+        ArrayList<String> args = new ArrayList<>(Arrays.asList(this.indexName, prefix, MAX_FLAG, Integer.toString(suggestionOptions.getMax())));
 
         if (suggestionOptions.isFuzzy()) {
             args.add(FUZZY_FLAG);
         }
-        suggestionOptions.getWith().ifPresent(with -> {
-            args.addAll(Arrays.asList(with.getFlags()));
-        });
-
-        if (suggestionOptions.getWith().isPresent()) {
-            switch (suggestionOptions.getWith().get()) {
-                case PAYLOAD_AND_SCORES: {
-                    return getSuggestionsWithPayloadAndScores(args);
-                }
-                case PAYLOAD: {
-                    return getSuggestionsWithPayload(args);
-                }
-                default: {
-                    return getSuggestionsWithScores(args);
-                }
-            }
-        } else {
-            return getSuggestions(args);
+                
+        Optional<With> options = suggestionOptions.getWith();
+        if (!options.isPresent()) {
+        	return getSuggestions(args);
+        }
+        
+        With with = options.get();
+        args.addAll(Arrays.asList(with.getFlags()));
+        switch (with) {
+            case PAYLOAD_AND_SCORES:
+                return getSuggestionsWithPayloadAndScores(args);
+            case PAYLOAD: 
+                return getSuggestionsWithPayload(args);
+            default: 
+                return getSuggestionsWithScores(args);
         }
     }
 
-    private List<Suggestion> getSuggestions(ArrayList<String> args) {
+    private List<Suggestion> getSuggestions(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -489,7 +600,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithScores(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithScores(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -505,7 +616,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithPayload(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithPayload(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -521,7 +632,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithPayloadAndScores(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithPayloadAndScores(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -561,15 +672,15 @@ public class Client implements io.redisearch.Client {
 
         /**
          * With each document:term record, store how often the term appears within the document. This can be used
-         * for sorting documents by their relevancy to the given term.
+         * for sorting documents by their relevance to the given term.
          */
         public static final int KEEP_TERM_FREQUENCIES = 0x08;
 
         public static final int DEFAULT_FLAGS = USE_TERM_OFFSETS | KEEP_FIELD_FLAGS | KEEP_TERM_FREQUENCIES;
 
-        int flags = 0x0;
+        private int flags = 0x0;
 
-        List<String> stopwords = null;
+        private List<String> stopwords = null;
 
         /**
          * Default constructor
@@ -625,7 +736,7 @@ public class Client implements io.redisearch.Client {
 
                 args.add("STOPWORDS");
                 args.add(String.format("%d", stopwords.size()));
-                if (stopwords.size() > 0) {
+                if (!stopwords.isEmpty()) {
                     args.addAll(stopwords);
                 }
 

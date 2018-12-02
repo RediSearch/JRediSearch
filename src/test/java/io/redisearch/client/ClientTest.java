@@ -1,6 +1,8 @@
 package io.redisearch.client;
 
 import io.redisearch.*;
+
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
@@ -36,7 +38,7 @@ public class ClientTest {
     public void setUp() {
         getClient()._conn().flushDB();
     }
-
+    
     @Test
     public void search() throws Exception {
         Client cl = getClient();
@@ -60,7 +62,7 @@ public class ClientTest {
             //System.out.println(d);
         }
 
-        assertTrue(cl.deleteDocument("doc0"));
+        assertTrue(cl.deleteDocument("doc0", true));
         assertFalse(cl.deleteDocument("doc0"));
 
         res = cl.search(new Query("hello world"));
@@ -207,13 +209,12 @@ public class ClientTest {
         fields.put("title", "hello world");
         String payload = "foo bar";
         assertTrue(cl.addDocument("doc1", 1.0, fields, false, false, payload.getBytes()));
-        /** TODO: THIS TEST IS BROKEN
-         SearchResult res = cl.search(new Query("hello world").setWithPaload());
-         assertEquals(1, res.totalResults);
-         assertEquals(1, res.docs.size());
 
-         assertEquals(payload, new String(res.docs.get(0).getPayload()));
-         **/
+        SearchResult res = cl.search(new Query("hello world").setWithPayload());
+        assertEquals(1, res.totalResults);
+        assertEquals(1, res.docs.size());
+
+        assertEquals(payload, new String(res.docs.get(0).getPayload()));
     }
 
     @Test
@@ -302,7 +303,7 @@ public class ClientTest {
         Jedis conn = cl._conn();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
-        HashMap hm = new HashMap();
+        HashMap<String, String> hm = new HashMap<>();
         hm.put("title", "hello world");
         conn.hmset("foo", hm);
 
@@ -471,6 +472,13 @@ public class ClientTest {
 
         assertEquals("is often referred as a <b>data</b> structures server. What this means is that Redis provides... What this means is that Redis provides access to mutable <b>data</b> structures via a set of commands, which are sent using a... So different processes can query and modify the same <b>data</b> structures in a shared... ",
                 res.docs.get(0).get("text"));
+        
+        q = new Query("data").highlightFields(new Query.HighlightTags("<u>", "</u>")).summarizeFields();
+        res = cl.search(q);
+
+        assertEquals("is often referred as a <u>data</u> structures server. What this means is that Redis provides... What this means is that Redis provides access to mutable <u>data</u> structures via a set of commands, which are sent using a... So different processes can query and modify the same <u>data</u> structures in a shared... ",
+            res.docs.get(0).get("text"));
+
     }
 
     @Test
@@ -624,6 +632,121 @@ public class ClientTest {
         List<Suggestion> none = cl.getSuggestion("DIF", SuggestionOptions.builder().max(3).with(SuggestionOptions.With.SCORES).build());
         assertEquals("Empty list not hit in index for partial word", 0, none.size());
 
+    }
+
+    @Test
+    public void testGetTagField() {
+        Client cl = getClient();
+        Schema sc = new Schema()
+                .addTextField("title", 1.0)
+                .addTagField("category");
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        Map<String, Object> fields1 = new HashMap<>();
+        fields1.put("title", "hello world");
+        fields1.put("category", "red");
+        assertTrue(cl.addDocument("foo", fields1));
+        Map<String, Object> fields2 = new HashMap<>();
+        fields2.put("title", "hello world");
+        fields2.put("category", "blue");
+        assertTrue(cl.addDocument("bar", fields2));
+        Map<String, Object> fields3 = new HashMap<>();
+        fields3.put("title", "hello world");
+        fields3.put("category", "green,yellow");
+        assertTrue(cl.addDocument("baz", fields3));
+        Map<String, Object> fields4 = new HashMap<>();
+        fields4.put("title", "hello world");
+        fields4.put("category", "orange;purple");
+        assertTrue(cl.addDocument("qux", fields4));
+
+        assertEquals(1, cl.search(new Query("@category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{blue}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{yellow}")).totalResults);
+        assertEquals(0, cl.search(new Query("@category:{purple}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{orange\\;purple}")).totalResults);
+        assertEquals(4, cl.search(new Query("hello")).totalResults);
+    }
+
+    @Test
+    public void testGetTagFieldWithNonDefaultSeparator() {
+        Client cl = getClient();
+        Schema sc = new Schema()
+                .addTextField("title", 1.0)
+                .addTagField("category", ";");
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        Map<String, Object> fields1 = new HashMap<>();
+        fields1.put("title", "hello world");
+        fields1.put("category", "red");
+        assertTrue(cl.addDocument("foo", fields1));
+        Map<String, Object> fields2 = new HashMap<>();
+        fields2.put("title", "hello world");
+        fields2.put("category", "blue");
+        assertTrue(cl.addDocument("bar", fields2));
+        Map<String, Object> fields3 = new HashMap<>();
+        fields3.put("title", "hello world");
+        fields3.put("category", "green;yellow");
+        assertTrue(cl.addDocument("baz", fields3));
+        Map<String, Object> fields4 = new HashMap<>();
+        fields4.put("title", "hello world");
+        fields4.put("category", "orange,purple");
+        assertTrue(cl.addDocument("qux", fields4));
+
+        assertEquals(1, cl.search(new Query("@category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{blue}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{red}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{blue}")).totalResults);
+        assertEquals(1, cl.search(new Query("hello @category:{yellow}")).totalResults);
+        assertEquals(0, cl.search(new Query("@category:{purple}")).totalResults);
+        assertEquals(1, cl.search(new Query("@category:{orange\\,purple}")).totalResults);
+        assertEquals(4, cl.search(new Query("hello")).totalResults);
+    }
+    
+    @Test
+    public void testMultiDocuments() {
+    	 Client cl = getClient();
+         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
+         
+         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+         
+         Map<String, Object> fields = new HashMap<>();
+         fields.put("title", "hello world");
+         fields.put("body", "lorem ipsum");
+
+         boolean[] results = cl.addDocuments(new Document("doc1",fields), new Document("doc2",fields), new Document("doc3",fields));
+         
+         Assert.assertArrayEquals(new boolean[]{true, true, true}, results);   
+         
+         assertEquals(3, cl.search(new Query("hello world")).totalResults);
+         
+         results = cl.addDocuments(new Document("doc4",fields), new Document("doc2",fields), new Document("doc5",fields));
+         Assert.assertArrayEquals(new boolean[]{true, false, true}, results);   
+         
+         results = cl.deleteDocuments(true, "doc1", "doc2", "doc36");
+         Assert.assertArrayEquals(new boolean[]{true, true, false}, results);   
+    }
+    
+    @Test
+    public void testReturnFields() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+        Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+
+
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field1", "value1");
+        doc.put("field2", "value2");
+        // Store it
+        assertTrue(cl.addDocument("doc", doc));
+
+        // Query
+        SearchResult res = cl.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res.totalResults);
+        assertEquals("value1", res.docs.get(0).get("field1"));
+        assertEquals(null, res.docs.get(0).get("field2"));
     }
 
 }

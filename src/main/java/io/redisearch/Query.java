@@ -13,9 +13,9 @@ public class Query {
     /**
      * Filter represents a filtering rules in a query
      */
-    private static abstract class Filter {
+	private abstract static class Filter {
 
-        public String property;
+        public final String property;
 
         public abstract void serializeRedisArgs(List<byte[]> args);
 
@@ -31,9 +31,9 @@ public class Query {
     public static class NumericFilter extends Filter {
 
         private final double min;
-        boolean exclusiveMin;
+        private final boolean exclusiveMin;
         private final double max;
-        boolean exclusiveMax;
+        private final boolean exclusiveMax;
 
         public NumericFilter(String property, double min, boolean exclusiveMin, double max, boolean exclusiveMax) {
             super(property);
@@ -110,8 +110,8 @@ public class Query {
     }
 
     public static class HighlightTags {
-        String open;
-        String close;
+        private final String open;
+        private final String close;
         public HighlightTags(String open, String close) {
             this.open = open;
             this.close = close;
@@ -121,33 +121,19 @@ public class Query {
     /**
      * The query's filter list. We only support AND operation on all those filters
      */
-    protected List<Filter> _filters = new LinkedList<>();
-
+    protected final List<Filter> _filters = new LinkedList<>();
 
     /**
      * The textual part of the query
      */
-    protected String _queryString;
+    protected final String _queryString;
 
     /**
      * The sorting parameters
      */
-    protected Paging _paging = new Paging(0, 10);
+    protected final Paging _paging = new Paging(0, 10);
 
     protected boolean _verbatim = false;
-
-    public boolean getNoContent() {
-        return _noContent;
-    }
-
-    public boolean getWithScores() {
-        return _withScores;
-    }
-
-    public boolean getWithPayloads() {
-        return _withPayloads;
-    }
-
     protected boolean _noContent = false;
     protected boolean _noStopwords = false;
     protected boolean _withScores = false;
@@ -193,7 +179,7 @@ public class Query {
             args.add("WITHSCORES".getBytes());
         }
         if (_withPayloads) {
-            args.add("PAYLOADS".getBytes());
+            args.add("WITHPAYLOADS".getBytes());
         }
         if (_language != null) {
             args.add("LANGUAGE".getBytes());
@@ -239,7 +225,7 @@ public class Query {
             ));
         }
 
-        if (_filters != null && _filters.size() > 0) {
+        if (_filters != null && !_filters.isEmpty()) {
             for (Filter f : _filters) {
                 f.serializeRedisArgs(args);
             }
@@ -257,7 +243,7 @@ public class Query {
             if (highlightTags != null) {
                 args.add("TAGS".getBytes());
                 for (String t : highlightTags) {
-                    args.add(toString().getBytes());
+                    args.add(t.getBytes());
                 }
             }
         }
@@ -282,6 +268,14 @@ public class Query {
                 args.add("SEPARATOR".getBytes());
                 args.add(summarizeSeparator.getBytes());
             }
+        }
+        
+        if (_returnFields != null) {
+          args.add("RETURN".getBytes());
+          args.add(String.format("%d", _returnFields.length).getBytes());
+          for (String f : _returnFields) {
+              args.add(f.getBytes());
+          }
         }
     }
 
@@ -323,6 +317,10 @@ public class Query {
         return this;
     }
 
+    public boolean getNoContent() {
+        return _noContent;
+    }
+    
     /**
      * Set the query not to return the contents of documents, and rather just return the ids
      * @return the query itself
@@ -341,6 +339,10 @@ public class Query {
         return this;
     }
 
+    public boolean getWithScores() {
+        return _withScores;
+    }
+    
     /**
      * Set the query to return a factored score for each results. This is useful to merge results from multiple queries.
      * @return the query object itself
@@ -350,12 +352,25 @@ public class Query {
         return this;
     }
 
+
+    public boolean getWithPayloads() {
+        return _withPayloads;
+    }
+    
+    /**
+     * @deprecated {@link #setWithPayload()}
+     */
+    @Deprecated
+    public Query setWithPaload() {
+      return this.setWithPaload();
+    }
+    
     /**
      * Set the query to return object payloads, if any were given
      * 
      * @return the query object itself
      * */
-    public Query setWithPaload() {
+    public Query setWithPayload() {
         this._withPayloads = true;
         return this;
     }
@@ -380,8 +395,8 @@ public class Query {
         this._fields = fields;
         return this;
     }
-   
-    /**
+
+   /**
      * Limit the query to results that are limited to a specific set of keys
      * @param fields a list of TEXT fields in the schemas
      * @return the query object itself
@@ -390,9 +405,9 @@ public class Query {
         this._keys = keys;
         return this;
     }
-    
-    /**
-     * Limit which fields from the document are returned
+
+   /**
+     * Result's projection - the fields to return by the query
      * @param fields a list of TEXT fields in the schemas
      * @return the query object itself
      */

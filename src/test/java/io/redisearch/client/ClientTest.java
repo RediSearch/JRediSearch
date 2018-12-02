@@ -748,5 +748,28 @@ public class ClientTest {
         assertEquals("value1", res.docs.get(0).get("field1"));
         assertEquals(null, res.docs.get(0).get("field2"));
     }
+    
+    @Test
+    public void testInKeys() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+        Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field1", "value");
+        doc.put("field2", "not");
+        
+        // Store it
+        assertTrue(cl.addDocument("doc1", doc));
+        assertTrue(cl.addDocument("doc2", doc));
+        
+        // Query
+        SearchResult res = cl.search(new Query("value").limitKeys("doc1"));
+        assertEquals(1, res.totalResults);
+        assertEquals("doc1", res.docs.get(0).getId());
+        assertEquals("value", res.docs.get(0).get("field1"));
+        assertEquals(null, res.docs.get(0).get("value"));
+    }
 
 }

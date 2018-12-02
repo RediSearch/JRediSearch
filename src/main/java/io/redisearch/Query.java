@@ -140,6 +140,7 @@ public class Query {
     protected boolean _withPayloads = false;
     protected String _language = null;
     protected String[] _fields = null;
+    protected String[] _keys = null;
     protected String[] _returnFields = null;
     protected String[] highlightFields = null;
     protected String[] summarizeFields = null;
@@ -255,7 +256,15 @@ public class Query {
             }
         }
         
-        if (_returnFields != null) {
+        if (_keys != null && _keys.length > 0) {
+          args.add("INKEYS".getBytes());
+          args.add(String.format("%d", _keys.length).getBytes());
+          for (String f : _keys) {
+              args.add(f.getBytes());
+          }
+        }
+        
+        if (_returnFields != null && _returnFields.length > 0) {
           args.add("RETURN".getBytes());
           args.add(String.format("%d", _returnFields.length).getBytes());
           for (String f : _returnFields) {
@@ -378,6 +387,16 @@ public class Query {
      */
     public Query limitFields(String... fields) {
         this._fields = fields;
+        return this;
+    }
+    
+    /**
+     * Limit the query to results that are limited to a specific set of keys
+     * @param fields a list of TEXT fields in the schemas
+     * @return the query object itself
+     */
+    public Query limitKeys(String... keys) {
+        this._keys = keys;
         return this;
     }
     

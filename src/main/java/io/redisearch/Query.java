@@ -270,7 +270,15 @@ public class Query {
             }
         }
         
-        if (_returnFields != null) {
+        if (_keys != null && _keys.length > 0) {
+          args.add("INKEYS".getBytes());
+          args.add(String.format("%d", _keys.length).getBytes());
+          for (String f : _keys) {
+              args.add(f.getBytes());
+          }
+        }
+        
+        if (_returnFields != null && _returnFields.length > 0) {
           args.add("RETURN".getBytes());
           args.add(String.format("%d", _returnFields.length).getBytes());
           for (String f : _returnFields) {
@@ -395,8 +403,8 @@ public class Query {
         this._fields = fields;
         return this;
     }
-
-   /**
+    
+    /**
      * Limit the query to results that are limited to a specific set of keys
      * @param fields a list of TEXT fields in the schemas
      * @return the query object itself
@@ -405,8 +413,8 @@ public class Query {
         this._keys = keys;
         return this;
     }
-
-   /**
+    
+    /**
      * Result's projection - the fields to return by the query
      * @param fields a list of TEXT fields in the schemas
      * @return the query object itself

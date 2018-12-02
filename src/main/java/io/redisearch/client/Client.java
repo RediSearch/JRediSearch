@@ -21,6 +21,24 @@ public class Client implements io.redisearch.Client {
 
     protected Commands.CommandProvider commands;
     
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param pool jedis connection pool to be used
+     */
+    public Client(String indexName, Pool<Jedis> pool) {
+      this.indexName = indexName;
+      this.pool = pool;
+    }
+    
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param host      the redis host
+     * @param port      the redis pot
+     */
     public Client(String indexName, String host, int port) {
         this(indexName, host, port, 500, 100);
     }
@@ -36,6 +54,14 @@ public class Client implements io.redisearch.Client {
         this(indexName, host, port, timeout, poolSize, null);
     }
 
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param host      the redis host
+     * @param port      the redis pot
+     * @param password  the password for authentication in a password protected Redis server
+     */
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
         JedisPoolConfig conf = initPoolConfig(poolSize);
 

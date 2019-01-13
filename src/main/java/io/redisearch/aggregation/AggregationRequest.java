@@ -1,6 +1,7 @@
 package io.redisearch.aggregation;
 
 import io.redisearch.aggregation.reducers.Reducer;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
 
@@ -145,7 +146,7 @@ public class AggregationRequest {
 
     public void serializeRedisArgs(List<byte[]> redisArgs) {
         for (String s : getArgs()) {
-            redisArgs.add(s.getBytes());
+            redisArgs.add(SafeEncoder.encode(s));
         }
     }
 

@@ -30,6 +30,7 @@ public class Client implements io.redisearch.Client {
     public Client(String indexName, Pool<Jedis> pool) {
       this.indexName = indexName;
       this.pool = pool;
+      this.commands = new Commands.SingleNodeCommands();
     }
     
     /**
@@ -63,11 +64,7 @@ public class Client implements io.redisearch.Client {
      * @param password  the password for authentication in a password protected Redis server
      */
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        this.pool = new JedisPool(conf, host, port, timeout, password);
-        this.indexName = indexName;
-        this.commands = new Commands.SingleNodeCommands();
+        this(indexName, new JedisPool(initPoolConfig(poolSize), host, port, timeout, password));
     }
 
     /**
@@ -83,11 +80,7 @@ public class Client implements io.redisearch.Client {
      * @param password   the password for authentication in a password protected Redis server
      */
     public Client(String indexName, String master, Set<String> sentinels, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        this.pool = new JedisSentinelPool(master, sentinels, conf, timeout, password);
-        this.indexName = indexName;
-        this.commands = new Commands.SingleNodeCommands();
+        this(indexName,new JedisSentinelPool(master, sentinels, initPoolConfig(poolSize), timeout, password));
     }
 
     /**
@@ -159,7 +152,7 @@ public class Client implements io.redisearch.Client {
      * @param poolSize size of the JedisPool
      * @return {@link JedisPoolConfig} object with a few default settings
      */
-    private JedisPoolConfig initPoolConfig(int poolSize) {
+    private static JedisPoolConfig initPoolConfig(int poolSize) {
         JedisPoolConfig conf = new JedisPoolConfig();
         conf.setMaxTotal(poolSize);
         conf.setTestOnBorrow(false);
@@ -210,7 +203,7 @@ public class Client implements io.redisearch.Client {
      */
     public SearchResult search(Query q) {
         ArrayList<byte[]> args = new ArrayList<>(4);
-        args.add(indexName.getBytes());
+        args.add(SafeEncoder.encode(indexName));
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -223,7 +216,7 @@ public class Client implements io.redisearch.Client {
 
     public AggregationResult aggregate(AggregationRequest q) {
         ArrayList<byte[]> args = new ArrayList<>();
-        args.add(indexName.getBytes());
+        args.add(SafeEncoder.encode(indexName));
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -241,7 +234,7 @@ public class Client implements io.redisearch.Client {
      */
     public String explain(Query q) {
         ArrayList<byte[]> args = new ArrayList<>(4);
-        args.add(indexName.getBytes());
+        args.add(SafeEncoder.encode(indexName));
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -329,31 +322,34 @@ public class Client implements io.redisearch.Client {
     }
     
     private BinaryClient addDocument(Document doc, AddOptions options, Jedis conn) {
-        ArrayList<byte[]> args = new ArrayList<>(
-                Arrays.asList(indexName.getBytes(), doc.getId().getBytes(), Double.toString(doc.getScore()).getBytes()));
+        ArrayList<byte[]> args = new ArrayList<>();
+        args.add(SafeEncoder.encode(indexName));
+        args.add(SafeEncoder.encode(doc.getId()));
+        args.add(Protocol.toByteArray(doc.getScore()));
+        
         if (options.getNosave()) {
-            args.add("NOSAVE".getBytes());
+            args.add(Keywords.NOSAVE.getRaw());
         }
         if (options.getReplacementPolicy() != AddOptions.ReplacementPolicy.NONE) {
-            args.add("REPLACE".getBytes());
+            args.add(Keywords.REPLACE.getRaw());
             if (options.getReplacementPolicy() == AddOptions.ReplacementPolicy.PARTIAL) {
-                args.add("PARTIAL".getBytes());
+                args.add(Keywords.PARTIAL.getRaw());
             }
         }
         if (options.getLanguage() != null && !options.getLanguage().isEmpty()) {
-            args.add("LANGUAGE".getBytes());
-            args.add(options.getLanguage().getBytes());
+            args.add(Keywords.LANGUAGE.getRaw());
+            args.add(SafeEncoder.encode(options.getLanguage()));
         }
         if (doc.getPayload() != null) {
-            args.add("PAYLOAD".getBytes());
+            args.add(Keywords.PAYLOAD.getRaw());
             // TODO: Fix this
             args.add(doc.getPayload());
         }
 
-        args.add("FIELDS".getBytes());
+        args.add(Keywords.FIELDS.getRaw());
         for (Map.Entry<String, Object> ent : doc.getProperties()) {
-            args.add(ent.getKey().getBytes());
-            args.add(ent.getValue().toString().getBytes());
+            args.add(SafeEncoder.encode(ent.getKey()));
+            args.add(SafeEncoder.encode(ent.getValue().toString()));
         }
 
         return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 
@@ -678,9 +674,9 @@ public class Client implements io.redisearch.Client {
 
         public static final int DEFAULT_FLAGS = USE_TERM_OFFSETS | KEEP_FIELD_FLAGS | KEEP_TERM_FREQUENCIES;
 
-        private int flags = 0x0;
-
-        private List<String> stopwords = null;
+        private final int flags;
+        private List<String> stopwords;
+        private long expire = 0L;
 
         /**
          * Default constructor
@@ -689,15 +685,24 @@ public class Client implements io.redisearch.Client {
          */
         public IndexOptions(int flags) {
             this.flags = flags;
-            stopwords = null;
         }
 
         /**
          * The default indexing options - use term offsets and keep fields flags
          */
-        public static IndexOptions Default() {
+        public static IndexOptions defaultOptions() {
             return new IndexOptions(DEFAULT_FLAGS);
         }
+        
+        /**
+         * The default indexing options - use term offsets and keep fields flags
+         * @deprecated use {@link #defaultOptions()} instead
+         */
+        @Deprecated
+        public static IndexOptions Default() {
+            return IndexOptions.defaultOptions();
+        }
+
 
         /**
          * Set a custom stopword list
@@ -705,9 +710,21 @@ public class Client implements io.redisearch.Client {
          * @param stopwords the list of stopwords
          * @return the options object itself, for builder-style construction
          */
-        public IndexOptions SetStopwords(String... stopwords) {
+        public IndexOptions setStopwords(String... stopwords) {
             this.stopwords = Arrays.asList(stopwords);
             return this;
+        }
+        
+        /**
+         * Set a custom stopword list
+         *
+         * @param stopwords the list of stopwords
+         * @return the options object itself, for builder-style construction
+         * @deprecated use {@link #setStopwords(String...)} instead
+         */
+        @Deprecated
+        public IndexOptions SetStopwords(String... stopwords) {
+            return this.setStopwords(stopwords);
         }
 
         /**
@@ -715,10 +732,32 @@ public class Client implements io.redisearch.Client {
          *
          * @return the options object itself, for builder-style constructions
          */
-        public IndexOptions SetNoStopwords() {
-            stopwords = new ArrayList<>(0);
-            return this;
+        public IndexOptions setNoStopwords() {
+          stopwords = new ArrayList<>(0);
+          return this;          
         }
+        
+        /**
+         * Set the index to contain no stopwords, overriding the default list
+         *
+         * @return the options object itself, for builder-style constructions
+         * @deprecated Use {@link #setNoStopwords()} instead 
+         */
+        @Deprecated
+        public IndexOptions SetNoStopwords() {
+            return this.setNoStopwords();
+        }
+        
+        /**
+         * Temporary
+         * @param expire
+         * @return
+         */
+        public IndexOptions setTemporary(long expire) {
+          this.expire = expire;
+          return this;
+        }
+        
 
         public void serializeRedisArgs(List<String> args) {
 
@@ -730,6 +769,10 @@ public class Client implements io.redisearch.Client {
             }
             if ((flags & KEEP_TERM_FREQUENCIES) == 0) {
                 args.add("NOFREQS");
+            }
+            if(expire > 0) {
+              args.add("TEMPORARY");
+              args.add(Long.toString(this.expire));
             }
 
             if (stopwords != null) {

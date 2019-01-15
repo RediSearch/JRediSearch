@@ -45,7 +45,7 @@ public class ClientTest {
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         fields.put("body", "lorem ipsum");
@@ -86,7 +86,7 @@ public class ClientTest {
 
         Schema sc = new Schema().addTextField("title", 1.0).addNumericField("price");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
 
@@ -144,7 +144,7 @@ public class ClientTest {
 
 
         assertTrue(cl.createIndex(sc,
-                Client.IndexOptions.Default().SetStopwords("foo", "bar", "baz")));
+                Client.IndexOptions.defaultOptions().setStopwords("foo", "bar", "baz")));
 
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world foo bar");
@@ -157,7 +157,7 @@ public class ClientTest {
         cl._conn().flushDB();
 
         assertTrue(cl.createIndex(sc,
-                Client.IndexOptions.Default().SetNoStopwords()));
+                Client.IndexOptions.defaultOptions().setNoStopwords()));
         fields.put("title", "hello world foo bar to be or not to be");
         assertTrue(cl.addDocument("doc1", fields));
 
@@ -173,7 +173,7 @@ public class ClientTest {
 
         Schema sc = new Schema().addTextField("title", 1.0).addGeoField("loc");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         fields.put("loc", "-0.441,51.458");
@@ -203,7 +203,7 @@ public class ClientTest {
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
@@ -223,7 +223,7 @@ public class ClientTest {
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
 
 
@@ -271,7 +271,7 @@ public class ClientTest {
         Client cl = getClient();
         Schema sc = new Schema().addSortableTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
 
         fields.put("title", "b title");
@@ -302,7 +302,7 @@ public class ClientTest {
         Client cl = getClient();
         Jedis conn = cl._conn();
         Schema sc = new Schema().addTextField("title", 1.0);
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         HashMap<String, String> hm = new HashMap<>();
         hm.put("title", "hello world");
         conn.hmset("foo", hm);
@@ -320,7 +320,7 @@ public class ClientTest {
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         for (int i = 0; i < 100; i++) {
@@ -343,7 +343,7 @@ public class ClientTest {
         Client cl = getClient();
         cl._conn().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> doc = new HashMap<>();
         doc.put("stemmed", "located");
@@ -364,7 +364,7 @@ public class ClientTest {
         Client cl = getClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
@@ -378,7 +378,7 @@ public class ClientTest {
         Schema sc = new Schema()
                 .addField(new Schema.TextField("f1", 1.0, true, false, true))
                 .addField(new Schema.TextField("f2", 1.0));
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
 
         Map<String, Object> mm = new HashMap<>();
 
@@ -419,7 +419,7 @@ public class ClientTest {
                 .addTextField("f1", 1.0)
                 .addTextField("f2", 1.0)
                 .addTextField("f3", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
 
         Map<String, Object> mm = new HashMap<>();
         mm.put("f1", "f1_val");
@@ -450,7 +450,7 @@ public class ClientTest {
                 .addTextField("f1", 1.0)
                 .addTextField("f2", 1.0)
                 .addTextField("f3", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
 
         String res = cl.explain(new Query("@f3:f3_val @f2:f2_val @f1:f1_val"));
         assertNotNull(res);
@@ -461,7 +461,7 @@ public class ClientTest {
     public void testHighlightSummarize() throws Exception {
         Client cl = getClient();
         Schema sc = new Schema().addTextField("text", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
 
         Map<String, Object> doc = new HashMap<>();
         doc.put("text", "Redis is often referred as a data structures server. What this means is that Redis provides access to mutable data structures via a set of commands, which are sent using a server-client model with TCP sockets and a simple protocol. So different processes can query and modify the same data structures in a shared way");
@@ -485,7 +485,7 @@ public class ClientTest {
     public void testLanguage() throws Exception {
         Client cl = getClient();
         Schema sc = new Schema().addTextField("text", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
 
         Document d = new Document("doc1").set("text", "hello");
         AddOptions options = new AddOptions().setLanguage("spanish");
@@ -519,7 +519,7 @@ public class ClientTest {
     @Test
     public void testGet() throws Exception {
         Client cl = getClient();
-        cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.Default());
+        cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.defaultOptions());
         cl.addDocument(new Document("doc1").set("txt1", "Hello World!"), new AddOptions());
         Document d = cl.getDocument("doc1");
         assertNotNull(d);
@@ -641,7 +641,7 @@ public class ClientTest {
                 .addTextField("title", 1.0)
                 .addTagField("category");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields1 = new HashMap<>();
         fields1.put("title", "hello world");
         fields1.put("category", "red");
@@ -676,7 +676,7 @@ public class ClientTest {
                 .addTextField("title", 1.0)
                 .addTagField("category", ";");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields1 = new HashMap<>();
         fields1.put("title", "hello world");
         fields1.put("category", "red");
@@ -709,7 +709,7 @@ public class ClientTest {
     	 Client cl = getClient();
          Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
          
-         assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
          
          Map<String, Object> fields = new HashMap<>();
          fields.put("title", "hello world");
@@ -733,7 +733,7 @@ public class ClientTest {
         Client cl = getClient();
         cl._conn().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
 
         Map<String, Object> doc = new HashMap<>();
@@ -754,7 +754,7 @@ public class ClientTest {
         Client cl = getClient();
         cl._conn().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> doc = new HashMap<>();
         doc.put("field1", "value");

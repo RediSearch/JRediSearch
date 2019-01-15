@@ -31,7 +31,7 @@ public class AggregationTest extends  ClientTest {
         Schema sc = new Schema();
         sc.addSortableTextField("name", 1.0);
         sc.addSortableNumericField("count");
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
         cl.addDocument(new Document("data1").set("name", "abc").set("count", 10));
         cl.addDocument(new Document("data2").set("name", "def").set("count", 5));
         cl.addDocument(new Document("data3").set("name", "def").set("count", 25));

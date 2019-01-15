@@ -70,7 +70,7 @@ public class ClusterTest {
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         fields.put("body", "lorem ipsum");
@@ -109,7 +109,7 @@ public class ClusterTest {
 
         Schema sc = new Schema().addTextField("title", 1.0).addNumericField("price");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
 
@@ -166,7 +166,7 @@ public class ClusterTest {
         cl.broadcast("FLUSHDB");
         Schema sc = new Schema().addTextField("title", 1.0).addGeoField("loc");
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         fields.put("loc", "-0.441,51.458");
@@ -196,13 +196,13 @@ public class ClusterTest {
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> fields = new HashMap<>();
         fields.put("title", "hello world");
         String payload = "foo bar";
         assertTrue(cl.addDocument("doc1", 1.0, fields, false, false, payload.getBytes()));
-        SearchResult res = cl.search(new Query("hello world").setWithPaload());
+        SearchResult res = cl.search(new Query("hello world").setWithPayload());
         assertEquals(1, res.totalResults);
         assertEquals(1, res.docs.size());
 
@@ -219,7 +219,7 @@ public class ClusterTest {
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         Map<String, Object> fields = new HashMap<>();
 
 

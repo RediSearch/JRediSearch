@@ -360,7 +360,7 @@ public class Query {
      */
     @Deprecated
     public Query setWithPaload() {
-      return this.setWithPaload();
+      return this.setWithPayload();
     }
     
     /**

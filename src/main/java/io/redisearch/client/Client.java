@@ -349,7 +349,8 @@ public class Client implements io.redisearch.Client {
         args.add(Keywords.FIELDS.getRaw());
         for (Map.Entry<String, Object> ent : doc.getProperties()) {
             args.add(SafeEncoder.encode(ent.getKey()));
-            args.add(SafeEncoder.encode(ent.getValue().toString()));
+            Object value = ent.getValue();
+            args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
         }
 
         return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 

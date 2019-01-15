@@ -50,22 +50,23 @@ public class Query {
             this(property, min, false, max, false);
         }
 
-        private String formatNum(double num, boolean exclude) {
+        private byte[] formatNum(double num, boolean exclude) {
             if (num == Double.POSITIVE_INFINITY) { 
-                return "+inf"; //TODO set as const
+                return Keywords.POSITIVE_INFINITY.getRaw();
             }
             if (num == Double.NEGATIVE_INFINITY) {
-                return "-inf"; //TODO set as const
+              return Keywords.NEGATIVE_INFINITY.getRaw();
             }
-            return String.format("%s%f", exclude ? "(" : "", num);
+            
+            return exclude ?  SafeEncoder.encode("(" + num)  : Protocol.toByteArray(num);
         }
 
         @Override
         public void serializeRedisArgs(List<byte[]> args) {
             args.add(Keywords.FILTER.getRaw());
             args.add(SafeEncoder.encode(property));
-            args.add(SafeEncoder.encode(formatNum(min, exclusiveMin)));
-            args.add(SafeEncoder.encode(formatNum(max, exclusiveMax)));
+            args.add(formatNum(min, exclusiveMin));
+            args.add(formatNum(max, exclusiveMax));
         }
     }
 
@@ -448,7 +449,7 @@ public class Query {
     }
 
     /**
-     * Set the query to be sorted by a sortable field defined in the schem
+     * Set the query to be sorted by a Sortable field defined in the schema
      * @param field the sorting field's name
      * @param ascending if set to true, the sorting order is ascending, else descending
      * @return the query object itself

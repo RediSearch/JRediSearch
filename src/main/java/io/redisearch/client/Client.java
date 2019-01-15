@@ -119,12 +119,12 @@ public class Client implements io.redisearch.Client {
         this(indexName, masterName, sentinels, 500, 100);
     }
 
-    private static void handleListMapping(List<Object> items, KVHandler handler) {
+    private static void handleListMapping(List<Object> items, KVHandler handler, boolean decode) {
         for (int i = 0; i < items.size(); i += 2) {
             String key = new String((byte[]) items.get(i));
             Object val = items.get(i + 1);
-            if (val.getClass().equals((new byte[]{}).getClass())) {
-                val = new String((byte[]) val);
+            if (decode && val instanceof byte[]) {
+                val = SafeEncoder.encode((byte[]) val);
             }
             handler.apply(key, val);
         }
@@ -202,6 +202,18 @@ public class Client implements io.redisearch.Client {
      * @return a {@link SearchResult} object with the results
      */
     public SearchResult search(Query q) {
+      return this.search(q, true);
+    }
+    
+    /**
+     * Search the index
+     *
+     * @param q a {@link Query} object with the query string and optional parameters
+     * @param decode <code>false</code> - keeps the fields value as byte[] 
+     * 
+     * @return a {@link SearchResult} object with the results
+     */
+    public SearchResult search(Query q, boolean decode) {
         ArrayList<byte[]> args = new ArrayList<>(4);
         args.add(SafeEncoder.encode(indexName));
         q.serializeRedisArgs(args);
@@ -210,7 +222,7 @@ public class Client implements io.redisearch.Client {
             List<Object> resp =
                     sendCommand(conn, commands.getSearchCommand(),
                             args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
-            return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
+            return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads(), decode);
         }
     }
 
@@ -342,7 +354,6 @@ public class Client implements io.redisearch.Client {
         }
         if (doc.getPayload() != null) {
             args.add(Keywords.PAYLOAD.getRaw());
-            // TODO: Fix this
             args.add(doc.getPayload());
         }
 
@@ -430,7 +441,7 @@ public class Client implements io.redisearch.Client {
         }
 
         Map<String, Object> info = new HashMap<>();
-        handleListMapping(res, info::put);
+        handleListMapping(res, info::put, true /*decode*/);
         return info;
     }
     /**
@@ -502,16 +513,31 @@ public class Client implements io.redisearch.Client {
      * Get a document from the index
      *
      * @param docId The document ID to retrieve
+     * 
      * @return The document as stored in the index. If the document does not exist, null is returned.
+     * Decode values by default as {@link String}
+     * 
+     * @see #getDocument(String, boolean)
      */
     public Document getDocument(String docId) {
+      return this.getDocument(docId, true);
+    }
+
+    /**
+     * Get a document from the index
+     *
+     * @param docId The document ID to retrieve
+     * @param decode <code>false</code> - keeps the fields value as byte[] 
+     * @return The document as stored in the index. If the document does not exist, null is returned.
+     */
+    public Document getDocument(String docId, boolean decode) {
         Document d = new Document(docId);
         try (Jedis conn = _conn()) {
             List<Object> res = sendCommand(conn, commands.getGetCommand(), indexName, docId).getObjectMultiBulkReply();
             if (res == null) {
                 return null;
             }
-            handleListMapping(res, d::set);
+            handleListMapping(res, d::set, decode);
             return d;
         }
     }
@@ -777,9 +803,8 @@ public class Client implements io.redisearch.Client {
             }
 
             if (stopwords != null) {
-
                 args.add("STOPWORDS");
-                args.add(String.format("%d", stopwords.size()));
+                args.add(Integer.toString(stopwords.size()));
                 if (!stopwords.isEmpty()) {
                     args.addAll(stopwords);
                 }

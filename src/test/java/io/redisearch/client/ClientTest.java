@@ -7,7 +7,9 @@ import org.junit.Before;
 import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
+import redis.clients.jedis.util.SafeEncoder;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -527,6 +529,11 @@ public class ClientTest {
 
         // Get something that does not exist. Shouldn't explode
         assertNull(cl.getDocument("nonexist"));
+        
+        // Test decode=false mode
+        d = cl.getDocument("doc1", false);
+        assertNotNull(d);
+        assertTrue(Arrays.equals( SafeEncoder.encode("Hello World!"), (byte[])d.get("txt1")));
     }
 
 
@@ -772,4 +779,27 @@ public class ClientTest {
         assertEquals(null, res.docs.get(0).get("value"));
     }
 
+    @Test
+    public void testBlobField() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+        Schema sc = new Schema().addTextField("field1", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        byte[] blob = new byte[] {1,2,3,4,5,6,7,8,9,10,11, 12};
+        
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field1", "value");
+        doc.put("field2", blob);
+        
+        // Store it
+        assertTrue(cl.addDocument("doc1", doc));
+        
+        // Query
+        SearchResult res = cl.search(new Query("value"), false);
+        assertEquals(1, res.totalResults);
+        assertEquals("doc1", res.docs.get(0).getId());
+        assertEquals("value", res.docs.get(0).getString("field1"));
+        assertTrue( Arrays.equals( blob, (byte[])res.docs.get(0).get("field2")));
+    }   
 }

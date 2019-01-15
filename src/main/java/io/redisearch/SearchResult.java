@@ -12,8 +12,11 @@ public class SearchResult {
     public final long totalResults;
     public final List<Document> docs;
 
-
     public SearchResult(List<Object> resp, boolean hasContent, boolean hasScores, boolean hasPayloads) {
+      this(resp, hasContent, hasScores, hasPayloads, true);
+    }
+    
+    public SearchResult(List<Object> resp, boolean hasContent, boolean hasScores, boolean hasPayloads, boolean decode) {
 
         // Calculate the step distance to walk over the results.
         // The order of results is id, score (if withScore), payLoad (if hasPayloads), fields
@@ -46,7 +49,7 @@ public class SearchResult {
             List<byte[]> fields = hasContent ? (List<byte[]>) resp.get(i + contentOffset) : null; 
             String id = new String((byte[]) resp.get(i));
             
-            docs.add(Document.load(id, score, payload, fields));
+            docs.add(Document.load(id, score, payload, fields, decode));
         }
 
 

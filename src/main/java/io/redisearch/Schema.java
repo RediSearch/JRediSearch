@@ -134,11 +134,22 @@ public class Schema {
      * Add a text field to the schema with a given weight
      * @param name the field's name
      * @param weight its weight, a positive floating point number
+     * @param sortable flag to handle if field will be sortable
+     * @return the schema object
+     */
+    public Schema addTextField(String name, double weight, boolean sortable) {
+        fields.add( new TextField( name, weight , sortable ) );
+        return this;
+    }
+
+    /**
+     * Add a text field to the schema with a given weight
+     * @param name the field's name
+     * @param weight its weight, a positive floating point number
      * @return the schema object
      */
     public Schema addTextField(String name, double weight) {
-        fields.add(new TextField(name, weight));
-        return this;
+        return addTextField( name , weight , false);
     }
 
     /**
@@ -148,8 +159,7 @@ public class Schema {
      * @return the schema object
      */
     public Schema addSortableTextField(String name, double weight) {
-        fields.add(new TextField(name, weight, true));
-        return this;
+        return addTextField( name , weight , true);
     }
 
     /**
@@ -164,18 +174,22 @@ public class Schema {
 
     /**
      * Add a numeric field to the schema
-     * @param name the fields's nam e
+     * @param name the fields's name
+     * @param sortable flag to handle if field will be sortable
      * @return the schema object
      */
-    public Schema addNumericField(String name) {
-        fields.add( new Field(name, FieldType.Numeric, false));
+    public Schema addNumericField(String name,boolean sortable) {
+        fields.add( new Field(name, FieldType.Numeric, sortable));
         return this;
+    }
+
+    public Schema addNumericField(String name) {
+        return addNumericField( name , false );
     }
 
     /* Add a numeric field that can be sorted on */
     public Schema addSortableNumericField(String name) {
-        fields.add( new Field(name, FieldType.Numeric, true));
-        return this;
+        return addNumericField( name , true );
     }
 
     public Schema addTagField(String name) {

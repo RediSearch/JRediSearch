@@ -17,7 +17,9 @@ jobs:
           paths:
             - ~/.m2
           key: jredisearch-{{ checksum "pom.xml" }}
-          
-      - run: mvn package -Dredis.port=6379
       
+      - run: mvn cobertura:cobertura
+          
+      - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}  
+                
       - run: mvn -s .circleci.settings.xml -DskipTests deploy

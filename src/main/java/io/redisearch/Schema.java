@@ -99,7 +99,7 @@ public class Schema {
         }
     }
 
-    private static class TagField extends Field {
+    public static class TagField extends Field {
         private static final String DEFAULT_SEPARATOR = ",";
         
         private final String separator;

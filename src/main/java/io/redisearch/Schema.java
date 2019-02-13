@@ -104,11 +104,11 @@ public class Schema {
         
         private final String separator;
 
-        private TagField(String name) {
+        public TagField(String name) {
         	this(name, DEFAULT_SEPARATOR);
         }
 
-        private TagField(String name, String separator) {
+        public TagField(String name, String separator) {
         	super(name, FieldType.Tag, false);
             this.separator = separator;
         }

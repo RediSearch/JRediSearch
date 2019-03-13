@@ -1,5 +1,10 @@
-[![CircleCI](https://circleci.com/gh/RedisLabs/JRediSearch/tree/master.svg?style=svg)](https://circleci.com/gh/RedisLabs/JRediSearch/tree/master)
+[![license](https://img.shields.io/github/license/RedisLabs/JRediSearch.svg)](https://github.com/RedisLabs/JRediSearch)
+[![CircleCI](https://circleci.com/gh/RediSearch/JRediSearch/tree/master.svg?style=svg)](https://circleci.com/gh/RediSearch/JRediSearch/tree/master)
+[![GitHub issues](https://img.shields.io/github/release/RedisLabs/JRediSearch.svg)](https://github.com/RedisLabs/JRediSearch/releases/latest)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch)
+[![Javadocs](https://www.javadoc.io/badge/com.redislabs/jredisearch.svg)](https://www.javadoc.io/doc/com.redislabs/jredisearch)
+[![Codecov](https://codecov.io/gh/RediSearch/JRediSearch/branch/master/graph/badge.svg)](https://codecov.io/gh/RediSearch/JRediSearch)
+
 
 
 # JRediSearch

@@ -99,16 +99,16 @@ public class Schema {
         }
     }
 
-    private static class TagField extends Field {
+    public static class TagField extends Field {
         private static final String DEFAULT_SEPARATOR = ",";
         
         private final String separator;
 
-        private TagField(String name) {
+        public TagField(String name) {
         	this(name, DEFAULT_SEPARATOR);
         }
 
-        private TagField(String name, String separator) {
+        public TagField(String name, String separator) {
         	super(name, FieldType.Tag, false);
             this.separator = separator;
         }

@@ -2,10 +2,12 @@ package io.redisearch.client;
 
 import io.redisearch.*;
 import io.redisearch.aggregation.AggregationRequest;
+import io.redisearch.client.SuggestionOptions.With;
 import redis.clients.jedis.*;
 import redis.clients.jedis.commands.ProtocolCommand;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.Pool;
+import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
 
@@ -15,9 +17,33 @@ import java.util.*;
 public class Client implements io.redisearch.Client {
 
     private final String indexName;
-    protected Commands.CommandProvider commands;
-    private Pool<Jedis> pool;
+    private final Pool<Jedis> pool;
 
+    protected Commands.CommandProvider commands;
+    
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param pool jedis connection pool to be used
+     */
+    public Client(String indexName, Pool<Jedis> pool) {
+      this.indexName = indexName;
+      this.pool = pool;
+      this.commands = new Commands.SingleNodeCommands();
+    }
+    
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param host      the redis host
+     * @param port      the redis pot
+     */
+    public Client(String indexName, String host, int port) {
+        this(indexName, host, port, 500, 100);
+    }
+    
     /**
      * Create a new client to a RediSearch index
      *
@@ -29,17 +55,16 @@ public class Client implements io.redisearch.Client {
         this(indexName, host, port, timeout, poolSize, null);
     }
 
+    /**
+     * Create a new client to a RediSearch index
+     *
+     * @param indexName the name of the index we are connecting to or creating
+     * @param host      the redis host
+     * @param port      the redis pot
+     * @param password  the password for authentication in a password protected Redis server
+     */
     public Client(String indexName, String host, int port, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        pool = new JedisPool(conf, host, port, timeout, password);
-
-        this.indexName = indexName;
-        this.commands = new Commands.SingleNodeCommands();
-    }
-
-    public Client(String indexName, String host, int port) {
-        this(indexName, host, port, 500, 100);
+        this(indexName, new JedisPool(initPoolConfig(poolSize), host, port, timeout, password));
     }
 
     /**
@@ -55,12 +80,7 @@ public class Client implements io.redisearch.Client {
      * @param password   the password for authentication in a password protected Redis server
      */
     public Client(String indexName, String master, Set<String> sentinels, int timeout, int poolSize, String password) {
-        JedisPoolConfig conf = initPoolConfig(poolSize);
-
-        this.pool = new JedisSentinelPool(master, sentinels, conf, timeout, password);
-
-        this.indexName = indexName;
-        this.commands = new Commands.SingleNodeCommands();
+        this(indexName,new JedisSentinelPool(master, sentinels, initPoolConfig(poolSize), timeout, password));
     }
 
     /**
@@ -99,12 +119,12 @@ public class Client implements io.redisearch.Client {
         this(indexName, masterName, sentinels, 500, 100);
     }
 
-    private static void handleListMapping(List<Object> items, KVHandler handler) {
+    private static void handleListMapping(List<Object> items, KVHandler handler, boolean decode) {
         for (int i = 0; i < items.size(); i += 2) {
             String key = new String((byte[]) items.get(i));
             Object val = items.get(i + 1);
-            if (val.getClass().equals((new byte[]{}).getClass())) {
-                val = new String((byte[]) val);
+            if (decode && val instanceof byte[]) {
+                val = SafeEncoder.encode((byte[]) val);
             }
             handler.apply(key, val);
         }
@@ -132,7 +152,7 @@ public class Client implements io.redisearch.Client {
      * @param poolSize size of the JedisPool
      * @return {@link JedisPoolConfig} object with a few default settings
      */
-    private JedisPoolConfig initPoolConfig(int poolSize) {
+    private static JedisPoolConfig initPoolConfig(int poolSize) {
         JedisPoolConfig conf = new JedisPoolConfig();
         conf.setMaxTotal(poolSize);
         conf.setTestOnBorrow(false);
@@ -182,21 +202,33 @@ public class Client implements io.redisearch.Client {
      * @return a {@link SearchResult} object with the results
      */
     public SearchResult search(Query q) {
-        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
-        args.add(indexName.getBytes());
+      return this.search(q, true);
+    }
+    
+    /**
+     * Search the index
+     *
+     * @param q a {@link Query} object with the query string and optional parameters
+     * @param decode <code>false</code> - keeps the fields value as byte[] 
+     * 
+     * @return a {@link SearchResult} object with the results
+     */
+    public SearchResult search(Query q, boolean decode) {
+        ArrayList<byte[]> args = new ArrayList<>(4);
+        args.add(SafeEncoder.encode(indexName));
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
             List<Object> resp =
                     sendCommand(conn, commands.getSearchCommand(),
                             args.toArray(new byte[args.size()][])).getObjectMultiBulkReply();
-            return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads());
+            return new SearchResult(resp, !q.getNoContent(), q.getWithScores(), q.getWithPayloads(), decode);
         }
     }
 
     public AggregationResult aggregate(AggregationRequest q) {
         ArrayList<byte[]> args = new ArrayList<>();
-        args.add(indexName.getBytes());
+        args.add(SafeEncoder.encode(indexName));
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -213,8 +245,8 @@ public class Client implements io.redisearch.Client {
      * @return A string describing this query
      */
     public String explain(Query q) {
-        ArrayList<byte[]> args = new ArrayList<byte[]>(4);
-        args.add(indexName.getBytes());
+        ArrayList<byte[]> args = new ArrayList<>(4);
+        args.add(SafeEncoder.encode(indexName));
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -248,6 +280,16 @@ public class Client implements io.redisearch.Client {
         }
         return addDocument(doc, options);
     }
+    
+    /**
+     * Add a document to the index
+     * 
+     * @param doc The document to add
+     * @return true on success
+     */
+    public boolean addDocument(Document doc) {
+        return addDocument(doc, new AddOptions());
+    }
 
     /**
      * Add a document to the index
@@ -257,42 +299,72 @@ public class Client implements io.redisearch.Client {
      * @return true on success
      */
     public boolean addDocument(Document doc, AddOptions options) {
-        ArrayList<byte[]> args = new ArrayList<>(
-                Arrays.asList(indexName.getBytes(), doc.getId().getBytes(), Double.toString(doc.getScore()).getBytes()));
+        try (Jedis conn = _conn()) {
+            return addDocument(doc, options, conn).getStatusCodeReply().equals("OK");
+        }
+    }
+    
+    /**
+     * see {@link #addDocuments(AddOptions, Document...)}
+     */
+    public boolean[] addDocuments(Document... docs){
+    	return addDocuments(new AddOptions(), docs);
+    }
+    
+    /**
+     * Add a batch of documents to the index
+     * @param options Options for the operation
+     * @param docs The documents to add
+     * @return true on success for each document 
+     */
+    public boolean[] addDocuments(AddOptions options, Document... docs){
+    	try (Jedis conn = _conn()) {
+	    	for(Document doc : docs) {
+	    		addDocument(doc, options, conn);
+	    	}
+	    	List<Object> objects = conn.getClient().getMany(docs.length);
+	    	boolean[] results = new boolean[docs.length];
+	    	int i=0;
+	    	for(Object obj : objects) {
+	    		results[i++] = !(obj instanceof JedisDataException) && 
+	    		SafeEncoder.encode((byte[]) obj).equals("OK");
+	    	}
+	    	return results;
+    	}
+    }
+    
+    private BinaryClient addDocument(Document doc, AddOptions options, Jedis conn) {
+        ArrayList<byte[]> args = new ArrayList<>();
+        args.add(SafeEncoder.encode(indexName));
+        args.add(SafeEncoder.encode(doc.getId()));
+        args.add(Protocol.toByteArray(doc.getScore()));
+        
         if (options.getNosave()) {
-            args.add("NOSAVE".getBytes());
+            args.add(Keywords.NOSAVE.getRaw());
         }
         if (options.getReplacementPolicy() != AddOptions.ReplacementPolicy.NONE) {
-            args.add("REPLACE".getBytes());
+            args.add(Keywords.REPLACE.getRaw());
             if (options.getReplacementPolicy() == AddOptions.ReplacementPolicy.PARTIAL) {
-                args.add("PARTIAL".getBytes());
+                args.add(Keywords.PARTIAL.getRaw());
             }
         }
         if (options.getLanguage() != null && !options.getLanguage().isEmpty()) {
-            args.add("LANGUAGE".getBytes());
-            args.add(options.getLanguage().getBytes());
+            args.add(Keywords.LANGUAGE.getRaw());
+            args.add(SafeEncoder.encode(options.getLanguage()));
         }
         if (doc.getPayload() != null) {
-            args.add("PAYLOAD".getBytes());
-            // TODO: Fix this
+            args.add(Keywords.PAYLOAD.getRaw());
             args.add(doc.getPayload());
         }
 
-        args.add("FIELDS".getBytes());
+        args.add(Keywords.FIELDS.getRaw());
         for (Map.Entry<String, Object> ent : doc.getProperties()) {
-            args.add(ent.getKey().getBytes());
-            args.add(ent.getValue().toString().getBytes());
+            args.add(SafeEncoder.encode(ent.getKey()));
+            Object value = ent.getValue();
+            args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
         }
 
-        try (Jedis conn = _conn()) {
-            String resp = sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][]))
-                    .getStatusCodeReply();
-            return resp.equals("OK");
-        }
-    }
-
-    public boolean addDocument(Document doc) {
-        return addDocument(doc, new AddOptions());
+        return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 
     }
 
     /**
@@ -322,14 +394,14 @@ public class Client implements io.redisearch.Client {
     }
 
     /**
-     * See above
+     * See {@link #updateDocument(String, double, Map)}
      */
     public boolean addDocument(String docId, double score, Map<String, Object> fields) {
         return this.addDocument(docId, score, fields, false, false, null);
     }
 
     /**
-     * See above
+     * See {@link #updateDocument(String, double, Map)}
      */
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
@@ -369,37 +441,103 @@ public class Client implements io.redisearch.Client {
         }
 
         Map<String, Object> info = new HashMap<>();
-        handleListMapping(res, info::put);
+        handleListMapping(res, info::put, true /*decode*/);
         return info;
     }
-
+    /**
+     * Delete a documents from the index
+     *
+     * @param deleteDocuments  if <code>true</code> also deletes the actual document ifs it is in the index
+     * @param docIds the document's ids
+     * @return true on success for each document if it has been deleted, false if it did not exist
+     */
+    public boolean[] deleteDocuments(boolean deleteDocuments, String... docIds) {
+    	try (Jedis conn = _conn()) {
+	    	for(String docId : docIds) {
+	    		deleteDocument(docId, deleteDocuments, conn);
+	    	}
+	    	List<Object> objects = conn.getClient().getMany(docIds.length);
+	    	boolean[] results = new boolean[docIds.length];
+	    	int i=0;
+	    	for(Object obj : objects) {
+	    		results[i++] = !(obj instanceof JedisDataException) && 
+	    		((Long) obj) == 1L;
+	    	}
+	    	return results;
+    	}
+    }
+    
+    /**
+     * Delete a document from the index (doesn't delete the document).
+     *
+     * @param docId the document's id
+     * @return true if it has been deleted, false if it did not exist
+     * 
+     * @see #deleteDocument(String, boolean) 
+     */
+    public boolean deleteDocument(String docId) {
+    	return deleteDocument(docId, false);
+    }
+    
     /**
      * Delete a document from the index.
      *
      * @param docId the document's id
+     * @param deleteDocument if <code>true</code> also deletes the actual document if it is in the index
      * @return true if it has been deleted, false if it did not exist
      */
-    public boolean deleteDocument(String docId) {
-        try (Jedis conn = _conn()) {
-            Long r = sendCommand(conn, commands.getDelCommand(), this.indexName, docId).getIntegerReply();
-            return r == 1;
+    public boolean deleteDocument(String docId, boolean deleteDocument) {
+        try (Jedis conn = _conn()) {        	
+        	return deleteDocument(docId, deleteDocument, conn).getIntegerReply() == 1;
         }
+    }
+    
+    
+    /**
+     * Delete a document from the index.
+     *
+     * @param docId the document's id
+     * @param deleteDocument if <code>true</code> also deletes the actual document if it is in the index
+     * @param conn client connection to be used
+     * @return reference to the {@link BinaryClient} too allow chaining 
+     */
+    private BinaryClient deleteDocument(String docId, boolean deleteDocument, Jedis conn) {
+    	if(deleteDocument) {
+    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId, DELETE_DOCUMENT);
+    	} else {
+    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId);
+    	}
     }
 
     /**
      * Get a document from the index
      *
      * @param docId The document ID to retrieve
+     * 
      * @return The document as stored in the index. If the document does not exist, null is returned.
+     * Decode values by default as {@link String}
+     * 
+     * @see #getDocument(String, boolean)
      */
     public Document getDocument(String docId) {
+      return this.getDocument(docId, true);
+    }
+
+    /**
+     * Get a document from the index
+     *
+     * @param docId The document ID to retrieve
+     * @param decode <code>false</code> - keeps the fields value as byte[] 
+     * @return The document as stored in the index. If the document does not exist, null is returned.
+     */
+    public Document getDocument(String docId, boolean decode) {
         Document d = new Document(docId);
         try (Jedis conn = _conn()) {
             List<Object> res = sendCommand(conn, commands.getGetCommand(), indexName, docId).getObjectMultiBulkReply();
             if (res == null) {
                 return null;
             }
-            handleListMapping(res, d::set);
+            handleListMapping(res, d::set, decode);
             return d;
         }
     }
@@ -435,7 +573,7 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public Long addSuggestion(Suggestion suggestion, boolean increment) {
-        ArrayList<String> args = new ArrayList(
+        List<String> args = new ArrayList<>(
                 Arrays.asList(this.indexName, suggestion.getString(), Double.toString(suggestion.getScore())));
 
         if (increment) {
@@ -453,34 +591,30 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public List<Suggestion> getSuggestion(String prefix, SuggestionOptions suggestionOptions) {
-        ArrayList<String> args = new ArrayList(
-                Arrays.asList(this.indexName, prefix, MAX_FLAG, Integer.toString(suggestionOptions.getMax())));
+        ArrayList<String> args = new ArrayList<>(Arrays.asList(this.indexName, prefix, MAX_FLAG, Integer.toString(suggestionOptions.getMax())));
 
         if (suggestionOptions.isFuzzy()) {
             args.add(FUZZY_FLAG);
         }
-        suggestionOptions.getWith().ifPresent(with -> {
-            args.addAll(Arrays.asList(with.getFlags()));
-        });
-
-        if (suggestionOptions.getWith().isPresent()) {
-            switch (suggestionOptions.getWith().get()) {
-                case PAYLOAD_AND_SCORES: {
-                    return getSuggestionsWithPayloadAndScores(args);
-                }
-                case PAYLOAD: {
-                    return getSuggestionsWithPayload(args);
-                }
-                default: {
-                    return getSuggestionsWithScores(args);
-                }
-            }
-        } else {
-            return getSuggestions(args);
+                
+        Optional<With> options = suggestionOptions.getWith();
+        if (!options.isPresent()) {
+        	return getSuggestions(args);
+        }
+        
+        With with = options.get();
+        args.addAll(Arrays.asList(with.getFlags()));
+        switch (with) {
+            case PAYLOAD_AND_SCORES:
+                return getSuggestionsWithPayloadAndScores(args);
+            case PAYLOAD: 
+                return getSuggestionsWithPayload(args);
+            default: 
+                return getSuggestionsWithScores(args);
         }
     }
 
-    private List<Suggestion> getSuggestions(ArrayList<String> args) {
+    private List<Suggestion> getSuggestions(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -489,7 +623,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithScores(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithScores(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -505,7 +639,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithPayload(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithPayload(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -521,7 +655,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
 
-    private List<Suggestion> getSuggestionsWithPayloadAndScores(ArrayList<String> args) {
+    private List<Suggestion> getSuggestionsWithPayloadAndScores(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = _conn()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
@@ -561,15 +695,15 @@ public class Client implements io.redisearch.Client {
 
         /**
          * With each document:term record, store how often the term appears within the document. This can be used
-         * for sorting documents by their relevancy to the given term.
+         * for sorting documents by their relevance to the given term.
          */
         public static final int KEEP_TERM_FREQUENCIES = 0x08;
 
         public static final int DEFAULT_FLAGS = USE_TERM_OFFSETS | KEEP_FIELD_FLAGS | KEEP_TERM_FREQUENCIES;
 
-        int flags = 0x0;
-
-        List<String> stopwords = null;
+        private final int flags;
+        private List<String> stopwords;
+        private long expire = 0L;
 
         /**
          * Default constructor
@@ -578,15 +712,24 @@ public class Client implements io.redisearch.Client {
          */
         public IndexOptions(int flags) {
             this.flags = flags;
-            stopwords = null;
         }
 
         /**
          * The default indexing options - use term offsets and keep fields flags
          */
-        public static IndexOptions Default() {
+        public static IndexOptions defaultOptions() {
             return new IndexOptions(DEFAULT_FLAGS);
         }
+        
+        /**
+         * The default indexing options - use term offsets and keep fields flags
+         * @deprecated use {@link #defaultOptions()} instead
+         */
+        @Deprecated
+        public static IndexOptions Default() {
+            return IndexOptions.defaultOptions();
+        }
+
 
         /**
          * Set a custom stopword list
@@ -594,9 +737,21 @@ public class Client implements io.redisearch.Client {
          * @param stopwords the list of stopwords
          * @return the options object itself, for builder-style construction
          */
-        public IndexOptions SetStopwords(String... stopwords) {
+        public IndexOptions setStopwords(String... stopwords) {
             this.stopwords = Arrays.asList(stopwords);
             return this;
+        }
+        
+        /**
+         * Set a custom stopword list
+         *
+         * @param stopwords the list of stopwords
+         * @return the options object itself, for builder-style construction
+         * @deprecated use {@link #setStopwords(String...)} instead
+         */
+        @Deprecated
+        public IndexOptions SetStopwords(String... stopwords) {
+            return this.setStopwords(stopwords);
         }
 
         /**
@@ -604,10 +759,32 @@ public class Client implements io.redisearch.Client {
          *
          * @return the options object itself, for builder-style constructions
          */
-        public IndexOptions SetNoStopwords() {
-            stopwords = new ArrayList<>(0);
-            return this;
+        public IndexOptions setNoStopwords() {
+          stopwords = new ArrayList<>(0);
+          return this;          
         }
+        
+        /**
+         * Set the index to contain no stopwords, overriding the default list
+         *
+         * @return the options object itself, for builder-style constructions
+         * @deprecated Use {@link #setNoStopwords()} instead 
+         */
+        @Deprecated
+        public IndexOptions SetNoStopwords() {
+            return this.setNoStopwords();
+        }
+        
+        /**
+         * Temporary
+         * @param expire
+         * @return
+         */
+        public IndexOptions setTemporary(long expire) {
+          this.expire = expire;
+          return this;
+        }
+        
 
         public void serializeRedisArgs(List<String> args) {
 
@@ -620,12 +797,15 @@ public class Client implements io.redisearch.Client {
             if ((flags & KEEP_TERM_FREQUENCIES) == 0) {
                 args.add("NOFREQS");
             }
+            if(expire > 0) {
+              args.add("TEMPORARY");
+              args.add(Long.toString(this.expire));
+            }
 
             if (stopwords != null) {
-
                 args.add("STOPWORDS");
-                args.add(String.format("%d", stopwords.size()));
-                if (stopwords.size() > 0) {
+                args.add(Integer.toString(stopwords.size()));
+                if (!stopwords.isEmpty()) {
                     args.addAll(stopwords);
                 }
 

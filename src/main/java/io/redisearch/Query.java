@@ -4,6 +4,9 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
+import redis.clients.jedis.Protocol;
+import redis.clients.jedis.util.SafeEncoder;
+
 /**
  * Query represents query parameters and filters to load results from the engine
  */
@@ -13,9 +16,9 @@ public class Query {
     /**
      * Filter represents a filtering rules in a query
      */
-    private static abstract class Filter {
+	private abstract static class Filter {
 
-        public String property;
+        public final String property;
 
         public abstract void serializeRedisArgs(List<byte[]> args);
 
@@ -31,9 +34,9 @@ public class Query {
     public static class NumericFilter extends Filter {
 
         private final double min;
-        boolean exclusiveMin;
+        private final boolean exclusiveMin;
         private final double max;
-        boolean exclusiveMax;
+        private final boolean exclusiveMax;
 
         public NumericFilter(String property, double min, boolean exclusiveMin, double max, boolean exclusiveMax) {
             super(property);
@@ -47,22 +50,23 @@ public class Query {
             this(property, min, false, max, false);
         }
 
-        private String formatNum(double num, boolean exclude) {
-            if (num == Double.POSITIVE_INFINITY) {
-                return "+inf";
+        private byte[] formatNum(double num, boolean exclude) {
+            if (num == Double.POSITIVE_INFINITY) { 
+                return Keywords.POSITIVE_INFINITY.getRaw();
             }
             if (num == Double.NEGATIVE_INFINITY) {
-                return "-inf";
+              return Keywords.NEGATIVE_INFINITY.getRaw();
             }
-            return String.format("%s%f", exclude ? "(" : "", num);
+            
+            return exclude ?  SafeEncoder.encode("(" + num)  : Protocol.toByteArray(num);
         }
 
         @Override
         public void serializeRedisArgs(List<byte[]> args) {
-            args.addAll(Arrays.asList("FILTER".getBytes(), property.getBytes(),
-                    formatNum(min, exclusiveMin).getBytes(),
-                    formatNum(max, exclusiveMax).getBytes()));
-
+            args.add(Keywords.FILTER.getRaw());
+            args.add(SafeEncoder.encode(property));
+            args.add(formatNum(min, exclusiveMin));
+            args.add(formatNum(max, exclusiveMax));
         }
     }
 
@@ -91,11 +95,12 @@ public class Query {
 
         @Override
         public void serializeRedisArgs(List<byte[]> args) {
-            args.addAll(Arrays.asList("GEOFILTER".getBytes(),
-                    property.getBytes(), Double.toString(lon).getBytes(),
-                    Double.toString(lat).getBytes(),
-                    Double.toString(radius).getBytes(),
-                    unit.getBytes()));
+            args.add(Keywords.GEOFILTER.getRaw());
+            args.add(SafeEncoder.encode(property));
+            args.add(Protocol.toByteArray(lon));
+            args.add(Protocol.toByteArray(lat));
+            args.add(Protocol.toByteArray(radius));
+            args.add(SafeEncoder.encode(unit));
         }
     }
 
@@ -110,8 +115,8 @@ public class Query {
     }
 
     public static class HighlightTags {
-        String open;
-        String close;
+        private final String open;
+        private final String close;
         public HighlightTags(String open, String close) {
             this.open = open;
             this.close = close;
@@ -121,39 +126,27 @@ public class Query {
     /**
      * The query's filter list. We only support AND operation on all those filters
      */
-    protected List<Filter> _filters = new LinkedList<>();
-
+    protected final List<Filter> _filters = new LinkedList<>();
 
     /**
      * The textual part of the query
      */
-    protected String _queryString;
+    protected final String _queryString;
 
     /**
      * The sorting parameters
      */
-    protected Paging _paging = new Paging(0, 10);
+    protected final Paging _paging = new Paging(0, 10);
 
     protected boolean _verbatim = false;
-
-    public boolean getNoContent() {
-        return _noContent;
-    }
-
-    public boolean getWithScores() {
-        return _withScores;
-    }
-
-    public boolean getWithPayloads() {
-        return _withPayloads;
-    }
-
     protected boolean _noContent = false;
     protected boolean _noStopwords = false;
     protected boolean _withScores = false;
     protected boolean _withPayloads = false;
     protected String _language = null;
     protected String[] _fields = null;
+    protected String[] _keys = null;
+    protected String[] _returnFields = null;
     protected String[] highlightFields = null;
     protected String[] summarizeFields = null;
     protected String[] highlightTags = null;
@@ -176,97 +169,112 @@ public class Query {
     }
 
     public void serializeRedisArgs(List<byte[]> args) {
-        args.add(_queryString.getBytes());
+        args.add(SafeEncoder.encode(_queryString));
 
         if (_verbatim) {
-            args.add("VERBATIM".getBytes());
+            args.add(Keywords.VERBATIM.getRaw());
         }
         if (_noContent) {
-            args.add("NOCONTENT".getBytes());
+            args.add(Keywords.NOCONTENT.getRaw());
         }
         if (_noStopwords) {
-            args.add("NOSTOPWORDS".getBytes());
+            args.add(Keywords.NOSTOPWORDS.getRaw());
         }
         if (_withScores) {
-            args.add("WITHSCORES".getBytes());
+            args.add(Keywords.WITHSCORES.getRaw());
         }
         if (_withPayloads) {
-            args.add("PAYLOADS".getBytes());
+            args.add(Keywords.WITHPAYLOADS.getRaw());
         }
         if (_language != null) {
-            args.add("LANGUAGE".getBytes());
-            args.add(_language.getBytes());
+            args.add(Keywords.LANGUAGE.getRaw());
+            args.add(SafeEncoder.encode(_language));
         }
         if (_fields != null && _fields.length > 0) {
-            args.add("INFIELDS".getBytes());
-            args.add(String.format("%d", _fields.length).getBytes());
+            args.add(Keywords.INFIELDS.getRaw());
+            args.add(Protocol.toByteArray(_fields.length));
             for (String f : _fields) {
-                args.add(f.getBytes());
+                args.add(SafeEncoder.encode(f));
             }
-
         }
 
         if (_sortBy != null) {
-            args.add("SORTBY".getBytes());
-            args.add(_sortBy.getBytes());
-            args.add((_sortAsc ? "ASC" : "DESC").getBytes());
+            args.add(Keywords.SORTBY.getRaw());
+            args.add(SafeEncoder.encode(_sortBy));
+            args.add((_sortAsc ? Keywords.ASC : Keywords.DESC).getRaw());
         }
 
         if (_payload != null) {
-            args.add("PAYLOAD".getBytes());
+            args.add(Keywords.PAYLOAD.getRaw());
             args.add(_payload);
         }
 
         if (_paging.offset != 0 || _paging.num != 10) {
-            args.addAll(Arrays.asList("LIMIT".getBytes(),
-                    Integer.toString(_paging.offset).getBytes(),
-                    Integer.toString(_paging.num).getBytes()
+            args.addAll(Arrays.asList(Keywords.LIMIT.getRaw(),
+                Protocol.toByteArray(_paging.offset),
+                Protocol.toByteArray(_paging.num)
             ));
         }
 
-        if (_filters != null && _filters.size() > 0) {
+        if (_filters != null && !_filters.isEmpty()) {
             for (Filter f : _filters) {
                 f.serializeRedisArgs(args);
             }
         }
 
         if (wantsHighlight) {
-            args.add("HIGHLIGHT".getBytes());
+            args.add(Keywords.HIGHLIGHT.getRaw());
             if (highlightFields != null) {
-                args.add("FIELDS".getBytes());
-                args.add(Integer.toString(highlightFields.length).getBytes());
+                args.add(Keywords.FIELDS.getRaw());
+                args.add(Protocol.toByteArray(highlightFields.length));
                 for (String s : highlightFields) {
-                    args.add(s.getBytes());
+                    args.add(SafeEncoder.encode(s));
                 }
             }
             if (highlightTags != null) {
-                args.add("TAGS".getBytes());
+                args.add(Keywords.TAGS.getRaw());
                 for (String t : highlightTags) {
-                    args.add(toString().getBytes());
+                    args.add(SafeEncoder.encode(t));
                 }
             }
         }
         if (wantsSummarize) {
-            args.add("SUMMARIZE".getBytes());
+            args.add(Keywords.SUMMARIZE.getRaw());
             if (summarizeFields != null) {
-                args.add("FIELDS".getBytes());
-                args.add(Integer.toString(summarizeFields.length).getBytes());
+                args.add(Keywords.FIELDS.getRaw());
+                args.add(Protocol.toByteArray(summarizeFields.length));
                 for (String s: summarizeFields) {
-                    args.add(s.getBytes());
+                    args.add(SafeEncoder.encode(s));
                 }
             }
             if (summarizeNumFragments != -1) {
-                args.add("FRAGS".getBytes());
-                args.add(Integer.toString(summarizeNumFragments).getBytes());
+                args.add(Keywords.FRAGS.getRaw());
+                args.add(Protocol.toByteArray(summarizeNumFragments));
             }
             if (summarizeFragmentLen != -1) {
-                args.add("LEN".getBytes());
-                args.add(Integer.toString(summarizeFragmentLen).getBytes());
+                args.add(Keywords.LEN.getRaw());
+                args.add(Protocol.toByteArray(summarizeFragmentLen));
             }
             if (summarizeSeparator != null) {
-                args.add("SEPARATOR".getBytes());
-                args.add(summarizeSeparator.getBytes());
+                args.add(Keywords.SEPARATOR.getRaw());
+                args.add(SafeEncoder.encode(summarizeSeparator));
             }
+        }
+        
+        if (_keys != null && _keys.length > 0) {
+          args.add(Keywords.INKEYS.getRaw());
+          args.add(Protocol.toByteArray(_keys.length));
+          for (String f : _keys) {
+              args.add(SafeEncoder.encode(f));
+          }
+        }
+        
+        if (_returnFields != null && _returnFields.length > 0) {
+          args.add(Keywords.RETURN.getRaw());
+          args.add(Protocol.toByteArray( _returnFields.length));
+          for (String f : _returnFields) {
+              args.add(SafeEncoder.encode(f));
+          }
         }
     }
 
@@ -308,6 +316,10 @@ public class Query {
         return this;
     }
 
+    public boolean getNoContent() {
+        return _noContent;
+    }
+    
     /**
      * Set the query not to return the contents of documents, and rather just return the ids
      * @return the query itself
@@ -326,6 +338,10 @@ public class Query {
         return this;
     }
 
+    public boolean getWithScores() {
+        return _withScores;
+    }
+    
     /**
      * Set the query to return a factored score for each results. This is useful to merge results from multiple queries.
      * @return the query object itself
@@ -335,12 +351,25 @@ public class Query {
         return this;
     }
 
+
+    public boolean getWithPayloads() {
+        return _withPayloads;
+    }
+    
+    /**
+     * @deprecated {@link #setWithPayload()}
+     */
+    @Deprecated
+    public Query setWithPaload() {
+      return this.setWithPayload();
+    }
+    
     /**
      * Set the query to return object payloads, if any were given
      * 
      * @return the query object itself
      * */
-    public Query setWithPaload() {
+    public Query setWithPayload() {
         this._withPayloads = true;
         return this;
     }
@@ -365,6 +394,27 @@ public class Query {
         this._fields = fields;
         return this;
     }
+    
+    /**
+     * Limit the query to results that are limited to a specific set of keys
+     * @param fields a list of TEXT fields in the schemas
+     * @return the query object itself
+     */
+    public Query limitKeys(String... keys) {
+        this._keys = keys;
+        return this;
+    }
+    
+    /**
+     * Result's projection - the fields to return by the query
+     * @param fields a list of TEXT fields in the schemas
+     * @return the query object itself
+     */
+    public Query returnFields(String... fields) {
+        this._returnFields = fields;
+        return this;
+    }
+
 
     public Query highlightFields(HighlightTags tags, String... fields) {
         if (fields == null || fields.length > 0) {
@@ -399,7 +449,7 @@ public class Query {
     }
 
     /**
-     * Set the query to be sorted by a sortable field defined in the schem
+     * Set the query to be sorted by a Sortable field defined in the schema
      * @param field the sorting field's name
      * @param ascending if set to true, the sorting order is ascending, else descending
      * @return the query object itself

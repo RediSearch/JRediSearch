@@ -8,8 +8,8 @@ import java.util.List;
  * Documents can contain fields not mentioned in the schema, but the index will only index pre-defined fields
  */
 public class Schema {
-
     public enum FieldType {
+        Tag("TAG"),
         FullText("TEXT"),
         Geo("GEO"),
         Numeric("NUMERIC"),;
@@ -21,19 +21,19 @@ public class Schema {
     }
 
     public static class Field {
-        public String name;
-        public FieldType type;
-        public boolean sortable;
-        public boolean noindex;
+        public final String name;
+        public final FieldType type;
+        public final boolean sortable;
+        public final boolean noindex;
 
         public Field(String name, FieldType type, boolean sortable) {
-            this.name = name;
-            this.type = type;
-            this.sortable = sortable;
+        	this(name, type, sortable, false);
         }
 
         public Field(String name, FieldType type, boolean sortable, boolean noindex) {
-            this(name, type, sortable);
+            this.name = name;
+            this.type = type;
+            this.sortable = sortable;
             this.noindex = noindex;
         }
 
@@ -54,32 +54,29 @@ public class Schema {
      */
     public static class TextField extends Field {
 
-        double weight = 1.0;
-        boolean nostem = false;
+    	private final double weight;
+        private final boolean nostem;
 
-
+        public TextField(String name) {
+            this(name, 1.0);
+        }
+        
         public TextField(String name, double weight) {
-            super(name, FieldType.FullText, false);
-            this.weight = weight;
+            this(name, weight, false);
         }
 
         public TextField(String name, double weight, boolean sortable) {
-            super(name, FieldType.FullText, sortable);
-            this.weight = weight;
+            this(name, weight, sortable, false);
         }
 
         public TextField(String name, double weight, boolean sortable, boolean nostem) {
-            this(name, weight, sortable);
-            this.nostem = nostem;
+            this(name, weight, sortable, nostem, false);
         }
 
         public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex) {
-            this(name, weight, sortable, nostem);
-            this.noindex = noindex;
-        }
-
-        public TextField(String name) {
-            super(name, FieldType.FullText, false);
+        	super(name, FieldType.FullText, sortable, noindex);
+            this.weight = weight;
+            this.nostem = nostem;
         }
 
         @Override
@@ -90,11 +87,11 @@ public class Schema {
                 args.add("WEIGHT");
                 args.add(Double.toString(weight));
             }
-            if (sortable) {
-                args.add("SORTABLE");
-            }
             if (nostem) {
                 args.add("NOSTEM");
+            }
+            if (sortable) {
+                args.add("SORTABLE");
             }
             if (noindex) {
                 args.add("NOINDEX");
@@ -102,12 +99,35 @@ public class Schema {
         }
     }
 
+    public static class TagField extends Field {
+        private static final String DEFAULT_SEPARATOR = ",";
+        
+        private final String separator;
 
-    public List<Field> fields;
+        public TagField(String name) {
+        	this(name, DEFAULT_SEPARATOR);
+        }
+
+        public TagField(String name, String separator) {
+        	super(name, FieldType.Tag, false);
+            this.separator = separator;
+        }
+
+        @Override
+        public void serializeRedisArgs(List<String> args) {
+            args.add(name);
+            args.add(type.str);
+            if (!separator.equals(DEFAULT_SEPARATOR)) {
+                args.add("SEPARATOR");
+                args.add(separator);
+            }
+        }
+    }
+
+    public final List<Field> fields;
 
     public Schema() {
         this.fields = new ArrayList<>();
-
     }
 
     /**
@@ -155,6 +175,16 @@ public class Schema {
     /* Add a numeric field that can be sorted on */
     public Schema addSortableNumericField(String name) {
         fields.add( new Field(name, FieldType.Numeric, true));
+        return this;
+    }
+
+    public Schema addTagField(String name) {
+        fields.add(new TagField(name));
+        return this;
+    }
+
+    public Schema addTagField(String name, String separator) {
+        fields.add(new TagField(name, separator));
         return this;
     }
 

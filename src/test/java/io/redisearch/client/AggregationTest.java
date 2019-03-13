@@ -3,15 +3,11 @@ package io.redisearch.client;
 import io.redisearch.AggregationResult;
 import io.redisearch.Document;
 import io.redisearch.Schema;
-import io.redisearch.SearchResult;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.aggregation.Row;
 import io.redisearch.aggregation.SortedField;
 import io.redisearch.aggregation.reducers.Reducers;
 import org.junit.Test;
-
-import java.util.List;
-import java.util.Map;
 
 import static junit.framework.TestCase.*;
 
@@ -35,7 +31,7 @@ public class AggregationTest extends  ClientTest {
         Schema sc = new Schema();
         sc.addSortableTextField("name", 1.0);
         sc.addSortableNumericField("count");
-        cl.createIndex(sc, Client.IndexOptions.Default());
+        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
         cl.addDocument(new Document("data1").set("name", "abc").set("count", 10));
         cl.addDocument(new Document("data2").set("name", "def").set("count", 5));
         cl.addDocument(new Document("data3").set("name", "def").set("count", 25));

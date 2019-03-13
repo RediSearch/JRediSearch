@@ -1,6 +1,6 @@
 version: 2
 jobs:
-  build:
+  build: # test with redisearch:latest
     docker:
       - image: circleci/openjdk:8-jdk-browsers
       - image: redislabs/redisearch:latest
@@ -18,6 +18,45 @@ jobs:
             - ~/.m2
           key: jredisearch-{{ checksum "pom.xml" }}
           
-      - run: mvn package -Dredis.port=6379
-      
+      - run: mvn integration-test 
+      - run: mvn cobertura:cobertura
+      - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}  
       - run: mvn -s .circleci.settings.xml -DskipTests deploy
+
+  build_nightly:  # test nightly with redisearch:edge 
+    docker:
+      - image: circleci/openjdk:8-jdk-browsers
+      - image: redislabs/redisearch:edge
+
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: jredisearch-{{ checksum "pom.xml" }}
+
+      - run: mvn dependency:go-offline
+
+      - save_cache:
+          paths:
+            - ~/.m2
+          key: jredisearch-{{ checksum "pom.xml" }}
+          
+      - run: mvn integration-test 
+      
+      #no need for codecov on nightly
+
+workflows:
+  version: 2
+  commit:
+    jobs:
+      - build
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - build_nightly

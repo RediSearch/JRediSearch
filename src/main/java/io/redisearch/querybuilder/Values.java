@@ -9,7 +9,7 @@ public class Values {
     private Values() {
     }
 
-    private static abstract class ScalableValue extends Value {
+    private abstract static class ScalableValue extends Value {
         @Override
         public boolean isCombinable() {
             return true;

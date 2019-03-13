@@ -3,7 +3,7 @@ package io.redisearch.querybuilder;
 import java.util.*;
 
 public abstract class QueryNode implements Node {
-    private List<Node> children = new ArrayList<>();
+    private final List<Node> children = new ArrayList<>();
     protected abstract String getJoinString();
 
     /**

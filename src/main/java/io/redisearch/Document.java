@@ -2,6 +2,8 @@ package io.redisearch;
 
 import com.google.gson.Gson;
 
+import redis.clients.jedis.util.SafeEncoder;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -12,9 +14,11 @@ import java.util.Map;
  */
 public class Document implements Serializable {
 
+    private static final Gson gson = new Gson();
+  
     private String id;
     private double score;
-    private byte[]payload;
+    private byte[] payload;
     private Map<String, Object> properties;
 
     public Document(String id, Double score) {
@@ -45,12 +49,16 @@ public class Document implements Serializable {
     }
 
 
-    public static Document load(String id, Double score, byte[] payload, List fields) {
+    public static Document load(String id, Double score, byte[] payload, List<byte[]> fields) {
+        return Document.load(id, score, payload, fields, true);
+    }
+    
+    public static Document load(String id, Double score, byte[] payload, List<byte[]> fields, boolean decode) {
         Document ret = new Document(id, score);
         ret.payload = payload;
         if (fields != null) {
             for (int i = 0; i < fields.size(); i += 2) {
-                ret.set(new String((byte[])fields.get(i)), new String((byte[])fields.get(i + 1)));
+                ret.set(SafeEncoder.encode(fields.get(i)), decode ? SafeEncoder.encode(fields.get(i + 1)) : fields.get(i + 1));
             }
         }
         return ret;
@@ -73,6 +81,21 @@ public class Document implements Serializable {
         return properties.get(key);
     }
 
+    /**
+     * return the property value inside a key
+     *
+     * @param key key of the property
+     * 
+     * @return the property value 
+     */
+    public String getString(String key) {
+        Object value = properties.get(key);
+        if(value instanceof String) {
+          return (String)value;
+        }
+        return value instanceof byte[] ? SafeEncoder.encode((byte[])value) : value.toString();
+    }
+    
 
     /**
      * @return the document's score
@@ -81,7 +104,7 @@ public class Document implements Serializable {
         return score;
     }
 
-    public byte[]getPayload() {
+    public byte[] getPayload() {
         return payload;
     }
 
@@ -102,8 +125,6 @@ public class Document implements Serializable {
     public String getId() {
         return id;
     }
-
-    private static Gson gson = new Gson();
 
     @Override
     public String toString() {

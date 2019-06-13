@@ -1,6 +1,8 @@
 package io.redisearch.querybuilder;
 
 import io.redisearch.aggregation.AggregationRequest;
+import io.redisearch.aggregation.Group;
+
 import org.junit.Test;
 
 import static io.redisearch.aggregation.SortedField.desc;
@@ -73,20 +75,31 @@ public class BuilderTest {
     @Test
     public void testAggregation() {
         assertEquals("*", new AggregationRequest().getArgsString());
-        AggregationRequest r = new AggregationRequest().
-                groupBy("@actor", count().as("cnt")).
-                sortBy(desc("@cnt"));
-        assertEquals("* GROUPBY 1 @actor REDUCE COUNT 0 AS cnt SORTBY 2 @cnt DESC", r.getArgsString());
-
-        r = new AggregationRequest().groupBy("@brand",
-                quantile("@price", 0.50).as("q50"),
-                quantile("@price", 0.90).as("q90"),
-                quantile("@price", 0.95).as("q95"),
-                avg("@price"),
-                count().as("count")).
-                sortByDesc("@count").
-                limit(10);
+        
+        AggregationRequest r1 = new AggregationRequest()
+            .groupBy("@actor", count().as("cnt"))
+            .sortBy(desc("@cnt"));
+        assertEquals("* GROUPBY 1 @actor REDUCE COUNT 0 AS cnt SORTBY 2 @cnt DESC", r1.getArgsString());
+        
+        Group group = new Group("@brand")
+            .reduce(quantile("@price", 0.50).as("q50"))
+            .reduce(quantile("@price", 0.90).as("q90"))
+            .reduce(quantile("@price", 0.95).as("q95"))
+            .reduce(avg("@price"))
+            .reduce(count().as("count"));
+        AggregationRequest r2 = new AggregationRequest()
+            .groupBy(group)
+            .sortByDesc("@count")
+            .limit(10);
         assertEquals("* GROUPBY 1 @brand REDUCE QUANTILE 2 @price 0.5 AS q50 REDUCE QUANTILE 2 @price 0.9 AS q90 REDUCE QUANTILE 2 @price 0.95 AS q95 REDUCE AVG 1 @price REDUCE COUNT 0 AS count LIMIT 0 10 SORTBY 2 @count DESC",
-                r.getArgsString());
+                r2.getArgsString());
+        
+        
+        AggregationRequest r3 = new AggregationRequest()
+            .load("@count")
+            .apply("@count%1000", "thousands")
+            .sortBy(desc("@count"))
+            .limit(0, 2);
+        assertEquals("* LOAD 1 @count APPLY @count%1000 AS thousands SORTBY 2 @count DESC LIMIT 0 2", r3.getArgsString());
     }
 }

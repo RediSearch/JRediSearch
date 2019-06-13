@@ -47,6 +47,13 @@ public class AggregationTest extends  ClientTest {
         assertNotNull(r1);
         assertEquals("def", r1.getString("name"));
         assertEquals(30, r1.getLong("sum"));
+        assertEquals(30., r1.getDouble("sum"));
+        
+        
+        assertEquals(0L, r1.getLong("nosuchcol"));
+        assertEquals(0.0, r1.getDouble("nosuchcol"));
+        assertEquals("", r1.getString("nosuchcol"));
+        
 
         Row r2 = res.getRow(1);
         assertNotNull(r2);

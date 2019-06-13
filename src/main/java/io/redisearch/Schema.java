@@ -105,7 +105,7 @@ public class Schema {
         private final String separator;
 
         public TagField(String name) {
-        	this(name, DEFAULT_SEPARATOR, false);
+        	this(name, DEFAULT_SEPARATOR);
         }
 
         public TagField(String name, String separator) {

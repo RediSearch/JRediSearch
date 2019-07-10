@@ -17,6 +17,7 @@ import java.util.*;
 public class Client implements io.redisearch.Client {
 
     private final String indexName;
+    private final byte[] endocdedIndexName;
     private final Pool<Jedis> pool;
 
     protected Commands.CommandProvider commands;
@@ -29,6 +30,7 @@ public class Client implements io.redisearch.Client {
      */
     public Client(String indexName, Pool<Jedis> pool) {
       this.indexName = indexName;
+      this.endocdedIndexName = SafeEncoder.encode(indexName);
       this.pool = pool;
       this.commands = new Commands.SingleNodeCommands();
     }
@@ -215,7 +217,7 @@ public class Client implements io.redisearch.Client {
      */
     public SearchResult search(Query q, boolean decode) {
         ArrayList<byte[]> args = new ArrayList<>(4);
-        args.add(SafeEncoder.encode(indexName));
+        args.add(this.endocdedIndexName);
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -228,7 +230,7 @@ public class Client implements io.redisearch.Client {
 
     public AggregationResult aggregate(AggregationRequest q) {
         ArrayList<byte[]> args = new ArrayList<>();
-        args.add(SafeEncoder.encode(indexName));
+        args.add(this.endocdedIndexName);
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -249,7 +251,7 @@ public class Client implements io.redisearch.Client {
      */
     public String explain(Query q) {
         ArrayList<byte[]> args = new ArrayList<>(4);
-        args.add(SafeEncoder.encode(indexName));
+        args.add(this.endocdedIndexName);
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {
@@ -338,7 +340,7 @@ public class Client implements io.redisearch.Client {
     
     private BinaryClient addDocument(Document doc, AddOptions options, Jedis conn) {
         ArrayList<byte[]> args = new ArrayList<>();
-        args.add(SafeEncoder.encode(indexName));
+        args.add(endocdedIndexName);
         args.add(SafeEncoder.encode(doc.getId()));
         args.add(Protocol.toByteArray(doc.getScore()));
         
@@ -419,7 +421,10 @@ public class Client implements io.redisearch.Client {
      * @return true on success
      */
     public boolean addHash(String docId, double score, boolean replace) {
-        ArrayList<String> args = new ArrayList<>(Arrays.asList(indexName, docId, Double.toString(score)));
+        ArrayList<String> args = new ArrayList<>(4);
+        args.add(indexName);
+        args.add(docId);
+        args.add(Double.toString(score));
 
         if (replace) {
             args.add("REPLACE");
@@ -440,7 +445,7 @@ public class Client implements io.redisearch.Client {
     public Map<String, Object> getInfo() {
         List<Object> res;
         try (Jedis conn = _conn()) {
-            res = sendCommand(conn, commands.getInfoCommand(), this.indexName).getObjectMultiBulkReply();
+            res = sendCommand(conn, commands.getInfoCommand(), this.endocdedIndexName).getObjectMultiBulkReply();
         }
 
         Map<String, Object> info = new HashMap<>();
@@ -506,10 +511,9 @@ public class Client implements io.redisearch.Client {
      */
     private BinaryClient deleteDocument(String docId, boolean deleteDocument, Jedis conn) {
     	if(deleteDocument) {
-    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId, Keywords.DD.name());
-    	} else {
-    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId);
+    		return sendCommand(conn, commands.getDelCommand(), this.endocdedIndexName, SafeEncoder.encode(docId), Keywords.DD.getRaw());
     	}
+    	return sendCommand(conn, commands.getDelCommand(), this.endocdedIndexName, SafeEncoder.encode(docId));
     }
 
     /**
@@ -561,23 +565,23 @@ public class Client implements io.redisearch.Client {
      * @return True if the index was dropped, false if it did not exist (or some other error occurred).
      */
     public boolean dropIndex(boolean missingOk) {
-        String r;
         try (Jedis conn = _conn()) {
-            r = sendCommand(conn, commands.getDropCommand(), this.indexName).getStatusCodeReply();
+          String res = sendCommand(conn, commands.getDropCommand(), this.endocdedIndexName).getStatusCodeReply();
+          return res.equals("OK");
         } catch (JedisDataException ex) {
             if (missingOk && ex.getMessage().toLowerCase().contains("unknown")) {
                 return false;
-            } else {
-                throw ex;
-            }
+            } 
+            throw ex;
         }
-        return r.equals("OK");
     }
 
     @Override
     public Long addSuggestion(Suggestion suggestion, boolean increment) {
-        List<String> args = new ArrayList<>(
-                Arrays.asList(this.indexName, suggestion.getString(), Double.toString(suggestion.getScore())));
+        List<String> args = new ArrayList<>();
+        args.add(this.indexName);
+        args.add(suggestion.getString());
+        args.add(Double.toString(suggestion.getScore()));
 
         if (increment) {
             args.add(Keywords.INCR.name());
@@ -594,7 +598,11 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public List<Suggestion> getSuggestion(String prefix, SuggestionOptions suggestionOptions) {
-        ArrayList<String> args = new ArrayList<>(Arrays.asList(this.indexName, prefix, Keywords.MAX.name(), Integer.toString(suggestionOptions.getMax())));
+        ArrayList<String> args = new ArrayList<>();
+        args.add(this.indexName);
+        args.add(prefix);
+        args.add(Keywords.MAX.name());
+        args.add(Integer.toString(suggestionOptions.getMax()));
 
         if (suggestionOptions.isFuzzy()) {
             args.add(Keywords.FUZZY.name());
@@ -621,7 +629,7 @@ public class Client implements io.redisearch.Client {
     public boolean cursorDelete(long cursorId) {
       try (Jedis conn = _conn()) {
         String rep = sendCommand(conn, commands.getCursorCommand(), Keywords.DELETE.getRaw(), 
-            SafeEncoder.encode(this.indexName), Protocol.toByteArray(cursorId)).getStatusCodeReply();
+            this.endocdedIndexName, Protocol.toByteArray(cursorId)).getStatusCodeReply();
         return rep.equals("OK");
       }
     }
@@ -629,7 +637,7 @@ public class Client implements io.redisearch.Client {
     @Override
     public AggregationResult cursorRead(long cursorId, int count) {
       try (Jedis conn = _conn()) {
-        List<Object> resp = sendCommand(conn, commands.getCursorCommand(), Keywords.READ.getRaw(), SafeEncoder.encode(this.indexName), 
+        List<Object> resp = sendCommand(conn, commands.getCursorCommand(), Keywords.READ.getRaw(), this.endocdedIndexName, 
             Protocol.toByteArray(cursorId), Keywords.COUNT.getRaw(), Protocol.toByteArray(count)).getObjectMultiBulkReply();
         
         return new AggregationResult((List<Object>)resp.get(0),(long)resp.get(1));  

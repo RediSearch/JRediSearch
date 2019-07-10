@@ -8,11 +8,35 @@ import java.util.List;
 import java.util.Map;
 
 public interface Client {
-
+  
+    /**
+     * @Deprecated use {@link Keywords#INCR} instead 
+     */
+    @Deprecated
     String INCREMENT_FLAG = "INCR";
+    
+    /**
+     * @Deprecated use {@link Keywords#PAYLOAD} instead 
+     */
+    @Deprecated
     String PAYLOAD_FLAG = "PAYLOAD";
+    
+    /**
+     * @Deprecated use {@link Keywords#MAX} instead 
+     */
+    @Deprecated
     String MAX_FLAG = "MAX";
+    
+    /**
+     * @Deprecated use {@link Keywords#FUZZY} instead 
+     */
+    @Deprecated
     String FUZZY_FLAG = "FUZZY";
+    
+    /**
+     * @Deprecated use {@link Keywords#DD} instead 
+     */
+    @Deprecated
     String DELETE_DOCUMENT = "DD";
 
     boolean createIndex(Schema schema, io.redisearch.client.Client.IndexOptions options);
@@ -20,6 +44,10 @@ public interface Client {
     SearchResult search(Query q);
 
     AggregationResult aggregate(AggregationRequest q);
+    
+    boolean cursorDelete(long cursorId);
+    
+    AggregationResult cursorRead(long cursorId, int count);
 
     String explain(Query q);
 

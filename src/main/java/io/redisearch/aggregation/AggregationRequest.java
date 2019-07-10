@@ -15,8 +15,11 @@ public class AggregationRequest {
     private final List<SortedField> sortby = new ArrayList<>();
     private final Map<String, String> projections = new HashMap<>();
 
-    private Limit limit = new Limit(0, 0);
+    private Limit limit = Limit.NO_LIMIT;
     private int sortbyMax = 0;
+    
+    private int cursorCount = 0;
+    private long cursorMaxIdle = Long.MAX_VALUE;
 
     public AggregationRequest(String query) {
         this.query = query;
@@ -92,6 +95,12 @@ public class AggregationRequest {
         groups.add(group);
         return this;
     }
+    
+    public AggregationRequest cursor(int count, long maxIdle) {
+      this.cursorCount = count;
+      this.cursorMaxIdle = maxIdle;
+      return this;
+    }
 
     private static void addCmdLen(List<String> list, String cmd, int len) {
         list.add(cmd);
@@ -141,6 +150,17 @@ public class AggregationRequest {
         }
 
         args.addAll(limit.getArgs());
+        
+        if(cursorCount > 0) {
+          args.add("WITHCURSOR");
+          args.add("COUNT");
+          args.add(Integer.toString(cursorCount));
+          if(cursorMaxIdle < Long.MAX_VALUE && cursorMaxIdle>=0) {
+            args.add("MAXIDLE");
+            args.add(Long.toString(cursorMaxIdle));
+          }
+        }
+        
         return args;
     }
 
@@ -156,5 +176,9 @@ public class AggregationRequest {
             sj.add(s);
         }
         return sj.toString();
+    }
+    
+    public boolean isWithCursor() {
+        return cursorCount > 0;
     }
 }

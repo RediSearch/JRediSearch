@@ -50,7 +50,7 @@ and
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>0.23.0-SNAPSHOT</version>
+      <version>1.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 ```

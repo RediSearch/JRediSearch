@@ -140,7 +140,7 @@ public class Client implements io.redisearch.Client {
         return client;
     }
 
-    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, byte[][] args) {
+    private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, byte[]... args) {
         BinaryClient client = conn.getClient();
         client.sendCommand(provider, args);
         return client;
@@ -234,7 +234,10 @@ public class Client implements io.redisearch.Client {
         try (Jedis conn = _conn()) {
             List<Object> resp = sendCommand(conn, commands.getAggregateCommand(), args.toArray(new byte[args.size()][]))
                     .getObjectMultiBulkReply();
-            return new AggregationResult(resp);
+            if(q.isWithCursor()) {
+              return new AggregationResult((List<Object>)resp.get(0), (long)resp.get(1));
+            } 
+            return new AggregationResult(resp);  
         }
     }
 
@@ -503,7 +506,7 @@ public class Client implements io.redisearch.Client {
      */
     private BinaryClient deleteDocument(String docId, boolean deleteDocument, Jedis conn) {
     	if(deleteDocument) {
-    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId, DELETE_DOCUMENT);
+    		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId, Keywords.DD.name());
     	} else {
     		return sendCommand(conn, commands.getDelCommand(), this.indexName, docId);
     	}
@@ -577,10 +580,10 @@ public class Client implements io.redisearch.Client {
                 Arrays.asList(this.indexName, suggestion.getString(), Double.toString(suggestion.getScore())));
 
         if (increment) {
-            args.add(INCREMENT_FLAG);
+            args.add(Keywords.INCR.name());
         }
         if (suggestion.getPayload() != null) {
-            args.add(PAYLOAD_FLAG);
+            args.add(Keywords.PAYLOAD.name());
             args.add(suggestion.getPayload());
         }
 
@@ -591,10 +594,10 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public List<Suggestion> getSuggestion(String prefix, SuggestionOptions suggestionOptions) {
-        ArrayList<String> args = new ArrayList<>(Arrays.asList(this.indexName, prefix, MAX_FLAG, Integer.toString(suggestionOptions.getMax())));
+        ArrayList<String> args = new ArrayList<>(Arrays.asList(this.indexName, prefix, Keywords.MAX.name(), Integer.toString(suggestionOptions.getMax())));
 
         if (suggestionOptions.isFuzzy()) {
-            args.add(FUZZY_FLAG);
+            args.add(Keywords.FUZZY.name());
         }
                 
         Optional<With> options = suggestionOptions.getWith();
@@ -613,6 +616,26 @@ public class Client implements io.redisearch.Client {
                 return getSuggestionsWithScores(args);
         }
     }
+    
+    @Override
+    public boolean cursorDelete(long cursorId) {
+      try (Jedis conn = _conn()) {
+        String rep = sendCommand(conn, commands.getCursorCommand(), Keywords.DELETE.getRaw(), 
+            SafeEncoder.encode(this.indexName), Protocol.toByteArray(cursorId)).getStatusCodeReply();
+        return rep.equals("OK");
+      }
+    }
+
+    @Override
+    public AggregationResult cursorRead(long cursorId, int count) {
+      try (Jedis conn = _conn()) {
+        List<Object> resp = sendCommand(conn, commands.getCursorCommand(), Keywords.READ.getRaw(), SafeEncoder.encode(this.indexName), 
+            Protocol.toByteArray(cursorId), Keywords.COUNT.getRaw(), Protocol.toByteArray(count)).getObjectMultiBulkReply();
+        
+        return new AggregationResult((List<Object>)resp.get(0),(long)resp.get(1));  
+      }
+    }
+
 
     private List<Suggestion> getSuggestions(List<String> args) {
         final List<Suggestion> list = new ArrayList<>();

@@ -14,6 +14,8 @@ public class AggregationRequest {
     private final List<Group> groups = new ArrayList<>();
     private final List<SortedField> sortby = new ArrayList<>();
     private final Map<String, String> projections = new HashMap<>();
+    private final Map<String, String> queryProjections = new HashMap<>();
+    private String filterQuery;
 
     private Limit limit = Limit.NO_LIMIT;
     private int sortbyMax = 0;
@@ -76,6 +78,15 @@ public class AggregationRequest {
         projections.put(alias, projection);
         return this;
     }
+    
+    public AggregationRequest apply(String projection, String alias,boolean applyProjectionOnQuery) {
+    	if(applyProjectionOnQuery) {
+    		queryProjections.put(alias, projection);
+    	}else {
+    		projections.put(alias, projection);
+    	}
+        return this;
+    }
 
     public AggregationRequest groupBy(Collection<String> fields, Collection<Reducer> reducers) {
         String[] fieldsArr = new String[fields.size()];
@@ -94,6 +105,15 @@ public class AggregationRequest {
     public AggregationRequest groupBy(Group group) {
         groups.add(group);
         return this;
+    }
+    
+    public AggregationRequest filter(String expression) {
+    	if(filterQuery!=null && filterQuery.trim().length()>0) {
+    		filterQuery=filterQuery+" && "+expression;
+    	}else {
+    		filterQuery=expression;
+    	}
+    	return this;
     }
     
     public AggregationRequest cursor(int count, long maxIdle) {
@@ -120,6 +140,15 @@ public class AggregationRequest {
             addCmdArgs(args, "LOAD", load);
         }
 
+        if (!queryProjections.isEmpty()) {
+            for (Map.Entry<String, String> e : queryProjections.entrySet()) {
+            	args.add("APPLY");
+                args.add(e.getValue());
+                args.add("AS");
+                args.add(e.getKey());
+            }
+        }
+        
         if (!groups.isEmpty()) {
             for (Group group : groups) {
                 args.add("GROUPBY");
@@ -128,14 +157,19 @@ public class AggregationRequest {
         }
 
         if (!projections.isEmpty()) {
-            args.add("APPLY");
             for (Map.Entry<String, String> e : projections.entrySet()) {
+            	args.add("APPLY");
                 args.add(e.getValue());
                 args.add("AS");
                 args.add(e.getKey());
             }
         }
 
+        if(filterQuery!=null) {
+        	args.add("FILTER");
+        	args.add(filterQuery);
+        }
+        
         if (!sortby.isEmpty()) {
             args.add("SORTBY");
             args.add(Integer.toString(sortby.size() * 2));

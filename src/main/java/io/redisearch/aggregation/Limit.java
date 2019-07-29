@@ -17,15 +17,22 @@ public class Limit {
         this.offset = offset;
         this.count = count;
     }
+    
+    public void addArgs(List<String> args) {
+      if (count == 0){
+          return;
+      }
+      args.add("LIMIT");
+      args.add(Integer.toString(offset));
+      args.add(Integer.toString(count));
+    }
 
     public List<String> getArgs() {
         if (count == 0){
             return Collections.emptyList();
         }
         List<String> ll = new ArrayList<>(3);
-        ll.add("LIMIT");
-        ll.add(Integer.toString(offset));
-        ll.add(Integer.toString(count));
+        addArgs(ll);
         return ll;
     }
 }

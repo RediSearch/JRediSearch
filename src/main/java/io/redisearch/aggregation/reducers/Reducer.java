@@ -23,13 +23,12 @@ public abstract class Reducer {
     }
 
     protected List<String> getOwnArgs() {
-        if (field != null) {
-            List<String> ret = new ArrayList<>();
-            ret.add(field);
-            return ret;
-        } else {
-            return Collections.emptyList();
+        if (field == null) {
+          return Collections.emptyList();
         }
+        List<String> ret = new ArrayList<>();
+        ret.add(field);
+        return ret;
     }
 
     /**
@@ -56,12 +55,16 @@ public abstract class Reducer {
         }
         return setAlias(field);
     }
+    
+    public void addArgs(List<String> args) {
+      List<String> ownArgs = getOwnArgs();
+      args.add(Integer.toString(ownArgs.size()));
+      args.addAll(ownArgs);
+    }
 
     public final List<String> getArgs() {
         List<String> args = new ArrayList<>();
-        List<String> ownArgs = getOwnArgs();
-        args.add(Integer.toString(ownArgs.size()));
-        args.addAll(ownArgs);
+        addArgs(args);
         return args;
     }
 }

@@ -152,7 +152,7 @@ public class AggregationRequest {
         if (!groups.isEmpty()) {
             for (Group group : groups) {
                 args.add("GROUPBY");
-                args.addAll(group.getArgs());
+                group.addArgs(args);
             }
         }
 
@@ -183,7 +183,7 @@ public class AggregationRequest {
             }
         }
 
-        args.addAll(limit.getArgs());
+        limit.addArgs(args);
         
         if(cursorCount > 0) {
           args.add("WITHCURSOR");

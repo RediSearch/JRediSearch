@@ -28,21 +28,25 @@ public class Group {
         return this;
     }
 
+    public void addArgs(List<String> args) {
+      args.add(Integer.toString(fields.size()));
+      args.addAll(fields);
+      for (Reducer r : reducers) {
+          args.add("REDUCE");
+          args.add(r.getName());
+          r.addArgs(args);
+          String alias = r.getAlias();
+          if (alias != null && !alias.isEmpty()) {
+              args.add("AS");
+              args.add(alias);
+          }
+      }
+      args.addAll(limit.getArgs());
+    }
+    
     public List<String> getArgs() {
         List<String> args = new ArrayList<>();
-        args.add(Integer.toString(fields.size()));
-        args.addAll(fields);
-        for (Reducer r : reducers) {
-            args.add("REDUCE");
-            args.add(r.getName());
-            args.addAll(r.getArgs());
-            String alias = r.getAlias();
-            if (alias != null && !alias.isEmpty()) {
-                args.add("AS");
-                args.add(alias);
-            }
-        }
-        args.addAll(limit.getArgs());
+        addArgs(args);
         return args;
     }
 }

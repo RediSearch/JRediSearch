@@ -95,9 +95,9 @@ public class AggregationTest extends ClientTest {
     cl.addDocument(new Document("data5").set("name", "def").set("subj1", 65).set("subj2", 45));
     cl.addDocument(new Document("data6").set("name", "ghi").set("subj1", 70).set("subj2", 70));
 
-    AggregationRequest r = new AggregationRequest().apply("(@subj1+@subj2)/2", "attemptavg", true)
-    		.groupBy("@name",Reducers.avg("@attemptavg").as("avgscore"))
-    		.filter("@avgscore>=50")
+    AggregationRequest r = new AggregationRequest().queryApply("(@subj1+@subj2)/2", "attemptavg")
+        .groupBy("@name",Reducers.avg("@attemptavg").as("avgscore"))
+        .filter("@avgscore>=50")
         .sortBy(SortedField.asc("@name"), 10);
 
 
@@ -171,7 +171,7 @@ public class AggregationTest extends ClientTest {
         .cursor(1, 1000);
 
     Thread.sleep(1000);
-    
+
     try {
       cl.cursorRead(res.getCursorId(), 1);
       assertTrue(false);

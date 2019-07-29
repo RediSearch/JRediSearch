@@ -73,18 +73,23 @@ public class AggregationRequest {
     public AggregationRequest sortByDesc(String field) {
         return sortBy(SortedField.desc(field));
     }
-
+    
+    /**
+     * @deprecated use {@link #groupApply(String, String)} instead
+     */
+    @Deprecated
     public AggregationRequest apply(String projection, String alias) {
+      groupApply(projection, alias);
+      return this;
+    }
+
+    public AggregationRequest groupApply(String projection, String alias) {
         projections.put(alias, projection);
         return this;
     }
     
-    public AggregationRequest apply(String projection, String alias,boolean applyProjectionOnQuery) {
-    	if(applyProjectionOnQuery) {
-    		queryProjections.put(alias, projection);
-    	}else {
-    		projections.put(alias, projection);
-    	}
+    public AggregationRequest queryApply(String projection, String alias) {
+    	queryProjections.put(alias, projection);
         return this;
     }
 
@@ -108,11 +113,7 @@ public class AggregationRequest {
     }
     
     public AggregationRequest filter(String expression) {
-    	if(filterQuery!=null && filterQuery.trim().length()>0) {
-    		filterQuery=filterQuery+" && "+expression;
-    	}else {
-    		filterQuery=expression;
-    	}
+   		filterQuery=expression;
     	return this;
     }
     

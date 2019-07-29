@@ -64,6 +64,57 @@ public class AggregationTest extends ClientTest {
   }
 
   @Test
+  public void testApplyAndFilterAggregations() {
+    /**
+         127.0.0.1:6379> FT.CREATE test_index SCHEMA name TEXT SORTABLE subj1 NUMERIC SORTABLE subj2 NUMERIC SORTABLE
+         OK
+         127.0.0.1:6379> FT.ADD test_index data1 1.0 FIELDS name abc subj1 20 subj2 70
+         OK
+         127.0.0.1:6379> FT.ADD test_index data2 1.0 FIELDS name def subj1 60 subj2 40
+         OK
+         127.0.0.1:6379> FT.ADD test_index data3 1.0 FIELDS name ghi subj1 50 subj2 80
+         OK
+         127.0.0.1:6379> FT.ADD test_index data1 1.0 FIELDS name abc subj1 30 subj2 20
+         OK
+         127.0.0.1:6379> FT.ADD test_index data2 1.0 FIELDS name def subj1 65 subj2 45
+         OK
+         127.0.0.1:6379> FT.ADD test_index data3 1.0 FIELDS name ghi subj1 70 subj2 70
+         OK
+     */
+
+    Client cl = getClient();
+    Schema sc = new Schema();
+    sc.addSortableTextField("name", 1.0);
+    sc.addSortableNumericField("subj1");
+    sc.addSortableNumericField("subj2");
+    cl.createIndex(sc, Client.IndexOptions.defaultOptions());
+    cl.addDocument(new Document("data1").set("name", "abc").set("subj1", 20).set("subj2", 70));
+    cl.addDocument(new Document("data2").set("name", "def").set("subj1", 60).set("subj2", 40));
+    cl.addDocument(new Document("data3").set("name", "ghi").set("subj1", 50).set("subj2", 80));
+    cl.addDocument(new Document("data4").set("name", "abc").set("subj1", 30).set("subj2", 20));
+    cl.addDocument(new Document("data5").set("name", "def").set("subj1", 65).set("subj2", 45));
+    cl.addDocument(new Document("data6").set("name", "ghi").set("subj1", 70).set("subj2", 70));
+
+    AggregationRequest r = new AggregationRequest().apply("(@subj1+@subj2)/2", "attemptavg", true)
+    		.groupBy("@name",Reducers.avg("@attemptavg").as("avgscore"))
+    		.filter("@avgscore>=50")
+        .sortBy(SortedField.asc("@name"), 10);
+
+
+    // actual search
+    AggregationResult res = cl.aggregate(r);
+    Row r1 = res.getRow(0);
+    assertNotNull(r1);
+    assertEquals("def", r1.getString("name"));
+    assertEquals(52.5, r1.getDouble("avgscore"));
+
+
+    Row r2 = res.getRow(1);
+    assertNotNull(r2);
+    assertEquals("ghi", r2.getString("name"));
+    assertEquals(67.5, r2.getDouble("avgscore"));
+  }
+  @Test
   public void testCursor() throws InterruptedException {
     /**
          127.0.0.1:6379> FT.CREATE test_index SCHEMA name TEXT SORTABLE count NUMERIC SORTABLE

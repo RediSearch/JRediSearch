@@ -7,16 +7,23 @@ import java.util.*;
 
 /**
  * Created by mnunberg on 2/22/18.
+ * @deprecated use {@link io.redisearch.aggregation.AggregationBuilder} instead
  */
+@Deprecated
 public class AggregationRequest {
     private String query;
     private final List<String> load = new ArrayList<>();
     private final List<Group> groups = new ArrayList<>();
     private final List<SortedField> sortby = new ArrayList<>();
     private final Map<String, String> projections = new HashMap<>();
+    private final Map<String, String> queryProjections = new HashMap<>();
+    private String filterQuery;
 
-    private Limit limit = new Limit(0, 0);
+    private Limit limit = Limit.NO_LIMIT;
     private int sortbyMax = 0;
+    
+    private int cursorCount = 0;
+    private long cursorMaxIdle = Long.MAX_VALUE;
 
     public AggregationRequest(String query) {
         this.query = query;
@@ -68,9 +75,23 @@ public class AggregationRequest {
     public AggregationRequest sortByDesc(String field) {
         return sortBy(SortedField.desc(field));
     }
-
+    
+    /**
+     * @deprecated use {@link #groupApply(String, String)} instead
+     */
+    @Deprecated
     public AggregationRequest apply(String projection, String alias) {
+      groupApply(projection, alias);
+      return this;
+    }
+
+    public AggregationRequest groupApply(String projection, String alias) {
         projections.put(alias, projection);
+        return this;
+    }
+    
+    public AggregationRequest queryApply(String projection, String alias) {
+    	queryProjections.put(alias, projection);
         return this;
     }
 
@@ -92,6 +113,17 @@ public class AggregationRequest {
         groups.add(group);
         return this;
     }
+    
+    public AggregationRequest filter(String expression) {
+   		filterQuery=expression;
+    	return this;
+    }
+    
+    public AggregationRequest cursor(int count, long maxIdle) {
+      this.cursorCount = count;
+      this.cursorMaxIdle = maxIdle;
+      return this;
+    }
 
     private static void addCmdLen(List<String> list, String cmd, int len) {
         list.add(cmd);
@@ -111,22 +143,36 @@ public class AggregationRequest {
             addCmdArgs(args, "LOAD", load);
         }
 
+        if (!queryProjections.isEmpty()) {
+            for (Map.Entry<String, String> e : queryProjections.entrySet()) {
+            	args.add("APPLY");
+                args.add(e.getValue());
+                args.add("AS");
+                args.add(e.getKey());
+            }
+        }
+        
         if (!groups.isEmpty()) {
             for (Group group : groups) {
                 args.add("GROUPBY");
-                args.addAll(group.getArgs());
+                group.addArgs(args);
             }
         }
 
         if (!projections.isEmpty()) {
-            args.add("APPLY");
             for (Map.Entry<String, String> e : projections.entrySet()) {
+            	args.add("APPLY");
                 args.add(e.getValue());
                 args.add("AS");
                 args.add(e.getKey());
             }
         }
 
+        if(filterQuery!=null) {
+        	args.add("FILTER");
+        	args.add(filterQuery);
+        }
+        
         if (!sortby.isEmpty()) {
             args.add("SORTBY");
             args.add(Integer.toString(sortby.size() * 2));
@@ -140,7 +186,18 @@ public class AggregationRequest {
             }
         }
 
-        args.addAll(limit.getArgs());
+        limit.addArgs(args);
+        
+        if(cursorCount > 0) {
+          args.add("WITHCURSOR");
+          args.add("COUNT");
+          args.add(Integer.toString(cursorCount));
+          if(cursorMaxIdle < Long.MAX_VALUE && cursorMaxIdle>=0) {
+            args.add("MAXIDLE");
+            args.add(Long.toString(cursorMaxIdle));
+          }
+        }
+        
         return args;
     }
 
@@ -156,5 +213,9 @@ public class AggregationRequest {
             sj.add(s);
         }
         return sj.toString();
+    }
+    
+    public boolean isWithCursor() {
+        return cursorCount > 0;
     }
 }

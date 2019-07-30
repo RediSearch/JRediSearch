@@ -109,7 +109,15 @@ public class Schema {
         }
 
         public TagField(String name, String separator) {
-        	super(name, FieldType.Tag, false);
+        	this(name, separator, false);
+        }
+
+        public TagField(String name, boolean sortable) {
+        	this(name, DEFAULT_SEPARATOR, sortable);
+        }
+
+        public TagField(String name, String separator, boolean sortable) {
+        	super(name, FieldType.Tag, sortable);
             this.separator = separator;
         }
 

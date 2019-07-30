@@ -28,7 +28,17 @@ releases.
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>0.22.0</version>
+      <version>0.25.0</version>
+    </dependency>
+  </dependencies>
+
+or   
+  
+  <dependencies>
+    <dependency>
+      <groupId>com.redislabs</groupId>
+      <artifactId>jredisearch</artifactId>
+      <version>1.0.0-rc1</version>
     </dependency>
   </dependencies>
 ```

@@ -1,5 +1,6 @@
 package io.redisearch;
 
+import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.AddOptions;
 import io.redisearch.client.SuggestionOptions;
@@ -43,7 +44,13 @@ public interface Client {
 
     SearchResult search(Query q);
 
+    /**
+     * @deprecated use {@link #aggregate(AggregationBuilder)} instead
+     */
+    @Deprecated
     AggregationResult aggregate(AggregationRequest q);
+    
+    AggregationResult aggregate(AggregationBuilder q);
     
     boolean cursorDelete(long cursorId);
     

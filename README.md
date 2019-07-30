@@ -117,6 +117,7 @@ Adding documents to the index:
 ```java
 Map<String, Object> fields = new HashMap<>();
 fields.put("title", "hello world");
+fields.put("state", "NY");
 fields.put("body", "lorem ipsum");
 fields.put("price", 1337);
 
@@ -136,7 +137,14 @@ Query q = new Query("hello world")
 // actual search
 SearchResult res = client.search(q);
 
-
+// aggregation query
+AggregationBuilder r = new AggregationBuilder("hello")
+  .apply("@price/1000", "k")
+  .groupBy("@state", Reducers.avg("@k").as("avgprice"))
+  .filter("@avgprice>=2")
+  .sortBy(10, SortedField.asc("@state"));
+  
+AggregationResult res = client.aggregate(r);
 ```
 
 ---

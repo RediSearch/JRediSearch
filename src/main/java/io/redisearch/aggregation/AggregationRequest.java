@@ -7,7 +7,9 @@ import java.util.*;
 
 /**
  * Created by mnunberg on 2/22/18.
+ * @deprecated use {@link io.redisearch.aggregation.AggregationBuilder} instead
  */
+@Deprecated
 public class AggregationRequest {
     private String query;
     private final List<String> load = new ArrayList<>();

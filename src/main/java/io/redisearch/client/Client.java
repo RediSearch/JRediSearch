@@ -1,6 +1,7 @@
 package io.redisearch.client;
 
 import io.redisearch.*;
+import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.SuggestionOptions.With;
 import redis.clients.jedis.*;
@@ -228,6 +229,10 @@ public class Client implements io.redisearch.Client {
         }
     }
 
+    /**
+     * @deprecated use {@link #aggregate(AggregationBuilder)} instead
+     */
+    @Deprecated
     public AggregationResult aggregate(AggregationRequest q) {
         ArrayList<byte[]> args = new ArrayList<>();
         args.add(this.endocdedIndexName);
@@ -242,6 +247,21 @@ public class Client implements io.redisearch.Client {
             return new AggregationResult(resp);  
         }
     }
+    
+    public AggregationResult aggregate(AggregationBuilder q) {
+      ArrayList<byte[]> args = new ArrayList<>();
+      args.add(this.endocdedIndexName);
+      q.serializeRedisArgs(args);
+
+      try (Jedis conn = _conn()) {
+          List<Object> resp = sendCommand(conn, commands.getAggregateCommand(), args.toArray(new byte[args.size()][]))
+                  .getObjectMultiBulkReply();
+          if(q.isWithCursor()) {
+            return new AggregationResult((List<Object>)resp.get(0), (long)resp.get(1));
+          } 
+          return new AggregationResult(resp);  
+      }
+  }
 
     /**
      * Generate an explanatory textual query tree for this query string

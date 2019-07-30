@@ -864,8 +864,8 @@ public class Client implements io.redisearch.Client {
         }
     }
 
-	public void close() {
-		this.pool.close();
-	}
-
+    @Override
+    public void close() {
+      this.pool.close();
+    }
 }

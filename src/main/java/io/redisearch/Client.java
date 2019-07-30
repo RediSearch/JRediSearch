@@ -5,10 +5,11 @@ import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.AddOptions;
 import io.redisearch.client.SuggestionOptions;
 
+import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
 
-public interface Client {
+public interface Client extends Closeable{
   
     /**
      * @Deprecated use {@link Keywords#INCR} instead 

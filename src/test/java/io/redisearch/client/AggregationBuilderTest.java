@@ -3,7 +3,7 @@ package io.redisearch.client;
 import io.redisearch.AggregationResult;
 import io.redisearch.Document;
 import io.redisearch.Schema;
-import io.redisearch.aggregation.AggregationRequest;
+import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.Row;
 import io.redisearch.aggregation.SortedField;
 import io.redisearch.aggregation.reducers.Reducers;
@@ -16,7 +16,7 @@ import static junit.framework.TestCase.*;
 /**
  * Created by mnunberg on 5/17/18.
  */
-public class AggregationTest extends ClientTest {
+public class AggregationBuilderTest extends ClientTest {
   @Test
   public void testAggregations() {
     /**
@@ -38,9 +38,9 @@ public class AggregationTest extends ClientTest {
     cl.addDocument(new Document("data2").set("name", "def").set("count", 5));
     cl.addDocument(new Document("data3").set("name", "def").set("count", 25));
 
-    AggregationRequest r = new AggregationRequest()
+    AggregationBuilder r = new AggregationBuilder()
         .groupBy("@name", Reducers.sum("@count").as("sum"))
-        .sortBy(SortedField.desc("@sum"), 10);
+        .sortBy(10, SortedField.desc("@sum"));
 
 
     // actual search
@@ -95,10 +95,10 @@ public class AggregationTest extends ClientTest {
     cl.addDocument(new Document("data5").set("name", "def").set("subj1", 65).set("subj2", 45));
     cl.addDocument(new Document("data6").set("name", "ghi").set("subj1", 70).set("subj2", 70));
 
-    AggregationRequest r = new AggregationRequest().queryApply("(@subj1+@subj2)/2", "attemptavg")
+    AggregationBuilder r = new AggregationBuilder().apply("(@subj1+@subj2)/2", "attemptavg")
         .groupBy("@name",Reducers.avg("@attemptavg").as("avgscore"))
         .filter("@avgscore>=50")
-        .sortBy(SortedField.asc("@name"), 10);
+        .sortBy(10, SortedField.asc("@name"));
 
 
     // actual search
@@ -135,9 +135,9 @@ public class AggregationTest extends ClientTest {
     cl.addDocument(new Document("data2").set("name", "def").set("count", 5));
     cl.addDocument(new Document("data3").set("name", "def").set("count", 25));
 
-    AggregationRequest r = new AggregationRequest()
+    AggregationBuilder r = new AggregationBuilder()
         .groupBy("@name", Reducers.sum("@count").as("sum"))
-        .sortBy(SortedField.desc("@sum"), 10)
+        .sortBy(10, SortedField.desc("@sum"))
         .cursor(1, 3000);
 
     // actual search
@@ -165,9 +165,9 @@ public class AggregationTest extends ClientTest {
       assertTrue(false);
     } catch(JedisDataException e) {}
 
-    AggregationRequest r2 = new AggregationRequest()
+    AggregationBuilder r2 = new AggregationBuilder()
         .groupBy("@name", Reducers.sum("@count").as("sum"))
-        .sortBy(SortedField.desc("@sum"), 10)
+        .sortBy(10, SortedField.desc("@sum"))
         .cursor(1, 1000);
 
     Thread.sleep(1000);

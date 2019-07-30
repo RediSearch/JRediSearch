@@ -28,7 +28,17 @@ releases.
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>0.22.0</version>
+      <version>0.25.0</version>
+    </dependency>
+  </dependencies>
+
+or   
+  
+  <dependencies>
+    <dependency>
+      <groupId>com.redislabs</groupId>
+      <artifactId>jredisearch</artifactId>
+      <version>1.0.0-rc2</version>
     </dependency>
   </dependencies>
 ```
@@ -50,7 +60,7 @@ and
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>0.23.0-SNAPSHOT</version>
+      <version>1.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 ```
@@ -117,6 +127,7 @@ Adding documents to the index:
 ```java
 Map<String, Object> fields = new HashMap<>();
 fields.put("title", "hello world");
+fields.put("state", "NY");
 fields.put("body", "lorem ipsum");
 fields.put("price", 1337);
 
@@ -136,7 +147,14 @@ Query q = new Query("hello world")
 // actual search
 SearchResult res = client.search(q);
 
-
+// aggregation query
+AggregationBuilder r = new AggregationBuilder("hello")
+  .apply("@price/1000", "k")
+  .groupBy("@state", Reducers.avg("@k").as("avgprice"))
+  .filter("@avgprice>=2")
+  .sortBy(10, SortedField.asc("@state"));
+  
+AggregationResult res = client.aggregate(r);
 ```
 
 ---

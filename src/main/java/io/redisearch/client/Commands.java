@@ -13,6 +13,7 @@ import redis.clients.jedis.util.SafeEncoder;
     public enum Command implements ProtocolCommand {
 
         CREATE("FT.CREATE"),
+        ALTER("FT.ALTER"),
         ADD("FT.ADD"),
         ADDHASH("FT.ADDHASH"),
         INFO("FT.INFO"),
@@ -38,6 +39,7 @@ import redis.clients.jedis.util.SafeEncoder;
     public enum ClusterCommand implements ProtocolCommand {
 
         CREATE("FT.CREATE"),
+        ALTER("FT.ALTER"),
         ADD("FT.ADD"),
         ADDHASH("FT.ADDHASH"),
         INFO("FT.INFO"),
@@ -63,6 +65,7 @@ import redis.clients.jedis.util.SafeEncoder;
 
     public interface CommandProvider {
         ProtocolCommand getCreateCommand();
+        ProtocolCommand getAlterCommand();
         ProtocolCommand getAddCommand();
         ProtocolCommand getAddHashCommand();
         ProtocolCommand getDelCommand();
@@ -80,6 +83,11 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getCreateCommand() {
             return Command.CREATE;
+        }
+        
+        @Override
+        public ProtocolCommand getAlterCommand() {
+            return Command.ALTER;
         }
 
         @Override
@@ -138,6 +146,11 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getCreateCommand() {
             return ClusterCommand.CREATE;
+        }
+        
+        @Override
+        public ProtocolCommand getAlterCommand() {
+            return ClusterCommand.ALTER;
         }
 
         @Override

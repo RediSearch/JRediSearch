@@ -1,6 +1,8 @@
 package io.redisearch.client;
 
 import io.redisearch.*;
+import io.redisearch.Schema.TagField;
+import io.redisearch.Schema.TextField;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -338,6 +340,39 @@ public class ClientTest {
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());
+    }
+    
+    @Test
+    public void testAlterAdd() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+
+        Schema sc = new Schema().addTextField("title", 1.0);
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("title", "hello world");
+        for (int i = 0; i < 100; i++) {
+            assertTrue(cl.addDocument(String.format("doc%d", i), fields));
+        }
+        
+        SearchResult res = cl.search(new Query("hello world"));
+        assertEquals(100, res.totalResults);
+        
+        assertTrue(cl.alterIndex(new TagField("tags", ","), new TextField("name", 0.5)));
+        for (int i = 0; i < 100; i++) {
+          Map<String, Object> fields2 = new HashMap<>();
+          fields2.put("name", "name" + i);
+          fields2.put("tags", String.format("tagA,tagB,tag%d", i));
+          assertTrue(cl.updateDocument(String.format("doc%d", i), 1.0, fields2));
+        }
+        SearchResult res2 = cl.search(new Query("@tags:{tagA}"));
+        assertEquals(100, res2.totalResults);        
+        
+        Map<String, Object> info = cl.getInfo();
+        assertEquals(TEST_INDEX, info.get("index_name"));
+        assertEquals("tags", SafeEncoder.encode(((List<List<byte[]>>)info.get("fields")).get(1).get(0)));
+        assertEquals("TAG", SafeEncoder.encode(((List<List<byte[]>>)info.get("fields")).get(1).get(2)));
     }
 
     @Test

@@ -195,6 +195,11 @@ public class Schema {
         fields.add(new TagField(name, separator));
         return this;
     }
+    
+    public Schema addSortableTagField(String name, String separator) {
+      fields.add(new TagField(name, separator, true));
+      return this;
+    }
 
     public Schema addField(Field field) {
         fields.add(field);

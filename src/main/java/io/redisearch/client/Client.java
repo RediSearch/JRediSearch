@@ -1,6 +1,7 @@
 package io.redisearch.client;
 
 import io.redisearch.*;
+import io.redisearch.Schema.Field;
 import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.SuggestionOptions.With;
@@ -185,7 +186,7 @@ public class Client implements io.redisearch.Client {
 
         options.serializeRedisArgs(args);
 
-        args.add("SCHEMA");
+        args.add(Keywords.SCHEMA.name());
 
         for (Schema.Field f : schema.fields) {
             f.serializeRedisArgs(args);
@@ -193,6 +194,32 @@ public class Client implements io.redisearch.Client {
 
         try (Jedis conn = _conn()) {
             String rep = sendCommand(conn, commands.getCreateCommand(), args.toArray(new String[args.size()]))
+                    .getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+    
+    /**
+     * Alter index add fields
+     *
+     * @param fields list of fields
+     * @return true if successful
+     */
+    public boolean alterIndex(Schema.Field ...fields) {
+
+        ArrayList<String> args = new ArrayList<>();
+
+        args.add(indexName);
+
+        args.add(Keywords.SCHEMA.name());
+        args.add(Keywords.ADD.name());
+
+        for (Schema.Field f : fields) {
+            f.serializeRedisArgs(args);
+        }
+
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getAlterCommand(), args.toArray(new String[args.size()]))
                     .getStatusCodeReply();
             return rep.equals("OK");
         }
@@ -447,7 +474,7 @@ public class Client implements io.redisearch.Client {
         args.add(Double.toString(score));
 
         if (replace) {
-            args.add("REPLACE");
+            args.add(Keywords.REPLACE.name());
         }
 
         try (Jedis conn = _conn()) {
@@ -840,21 +867,21 @@ public class Client implements io.redisearch.Client {
         public void serializeRedisArgs(List<String> args) {
 
             if ((flags & USE_TERM_OFFSETS) == 0) {
-                args.add("NOOFFSETS");
+                args.add(Keywords.NOOFFSETS.name());
             }
             if ((flags & KEEP_FIELD_FLAGS) == 0) {
-                args.add("NOFIELDS");
+                args.add(Keywords.NOFIELDS.name());
             }
             if ((flags & KEEP_TERM_FREQUENCIES) == 0) {
-                args.add("NOFREQS");
+                args.add(Keywords.NOFREQS.name());
             }
             if(expire > 0) {
-              args.add("TEMPORARY");
+              args.add(Keywords.TEMPORARY.name());
               args.add(Long.toString(this.expire));
             }
 
             if (stopwords != null) {
-                args.add("STOPWORDS");
+                args.add(Keywords.STOPWORDS.name());
                 args.add(Integer.toString(stopwords.size()));
                 if (!stopwords.isEmpty()) {
                     args.addAll(stopwords);

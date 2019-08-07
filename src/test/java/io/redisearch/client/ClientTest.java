@@ -579,7 +579,10 @@ public class ClientTest {
         cl.addDocument(new Document("doc2").set("txt1", "Hello World!2"), new AddOptions());
         cl.addDocument(new Document("doc3").set("txt1", "Hello World!3"), new AddOptions());
        
-        List<Document> docs = cl.getDocuments("doc1", "doc3");
+        List<Document> docs = cl.getDocuments();
+        assertEquals(0, docs.size());
+        
+        docs = cl.getDocuments("doc1", "doc3");
         assertEquals(2, docs.size());
         assertEquals("Hello World!1", docs.get(0).get("txt1"));
         assertEquals("Hello World!3", docs.get(1).get("txt1"));

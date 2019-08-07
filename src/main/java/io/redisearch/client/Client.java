@@ -1,7 +1,6 @@
 package io.redisearch.client;
 
 import io.redisearch.*;
-import io.redisearch.Schema.Field;
 import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.SuggestionOptions.With;
@@ -125,7 +124,7 @@ public class Client implements io.redisearch.Client {
 
     private static void handleListMapping(List<Object> items, KVHandler handler, boolean decode) {
         for (int i = 0; i < items.size(); i += 2) {
-            String key = new String((byte[]) items.get(i));
+            String key = SafeEncoder.encode((byte[]) items.get(i));
             Object val = items.get(i + 1);
             if (decode && val instanceof byte[]) {
                 val = SafeEncoder.encode((byte[]) val);
@@ -593,6 +592,49 @@ public class Client implements io.redisearch.Client {
             }
             handleListMapping(res, d::set, decode);
             return d;
+        }
+    }
+
+    
+    /**
+     * Get a documents from the index
+     *
+     * @param docId The document IDs to retrieve 
+     * @return The documents stored in the index. If the document does not exist, null is returned in the list.
+     */
+    public List<Document> getDocuments(String ...docIds) {
+      return getDocuments(true, docIds);
+    }
+    
+    
+    /**
+     * Get a documents from the index
+     *
+     * @param docId The document IDs to retrieve
+     * @param decode <code>false</code> - keeps the fields value as byte[] 
+     * @return The document as stored in the index. If the document does not exist, null is returned.
+     */
+    public List<Document> getDocuments(boolean decode, String ...docIds) {
+        int len = docIds.length;
+        if(len == 0) {
+          return new ArrayList<>(0);
+        }
+      
+        byte[][] args = new byte[docIds.length+1][];
+        args[0] = endocdedIndexName;
+        for(int i=0 ; i<len ; ++i) {
+          args[i+1] = SafeEncoder.encode(docIds[i]); 
+        }
+        
+        List<Document> documents = new ArrayList<>(len); 
+        try (Jedis conn = _conn()) {
+            List<Object> res = sendCommand(conn, commands.getMGetCommand(), args).getObjectMultiBulkReply();
+            for(int i=0; i<len; ++i) {
+              Document d = new Document(docIds[i]);
+              handleListMapping((List<Object>)res.get(i), d::set, decode);
+              documents.add(d);
+            }            
+            return documents;
         }
     }
 

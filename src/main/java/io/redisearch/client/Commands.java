@@ -22,6 +22,7 @@ import redis.clients.jedis.util.SafeEncoder;
         DEL("FT.DEL"),
         DROP("FT.DROP"),
         GET("FT.GET"),
+        MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"), 
         CURSOR("FT.CURSOR");
       
@@ -49,6 +50,7 @@ import redis.clients.jedis.util.SafeEncoder;
         DROP("FT.DROP"),
         BROADCAST("FT.BROADCAST"),
         GET("FT.GET"),
+        MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"),
         CURSOR("FT.CURSOR");
       
@@ -74,6 +76,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getSearchCommand();
         ProtocolCommand getExplainCommand();
         ProtocolCommand getGetCommand();
+        ProtocolCommand getMGetCommand();
         ProtocolCommand getAggregateCommand();
         ProtocolCommand getCursorCommand();
     }
@@ -139,6 +142,11 @@ import redis.clients.jedis.util.SafeEncoder;
         public ProtocolCommand getCursorCommand() {
           return Command.CURSOR;
         }
+
+        @Override
+        public ProtocolCommand getMGetCommand() {
+          return Command.MGET;
+        }
     }
 
     public static class ClusterCommands implements CommandProvider {
@@ -201,6 +209,11 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getCursorCommand() {
           return ClusterCommand.CURSOR;
+        }
+
+        @Override
+        public ProtocolCommand getMGetCommand() {
+          return ClusterCommand.MGET;
         }
     }
 }

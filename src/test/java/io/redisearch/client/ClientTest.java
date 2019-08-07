@@ -570,6 +570,25 @@ public class ClientTest {
         assertNotNull(d);
         assertTrue(Arrays.equals( SafeEncoder.encode("Hello World!"), (byte[])d.get("txt1")));
     }
+    
+    @Test
+    public void testMGet() throws Exception {
+        Client cl = getClient();
+        cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.defaultOptions());
+        cl.addDocument(new Document("doc1").set("txt1", "Hello World!1"), new AddOptions());
+        cl.addDocument(new Document("doc2").set("txt1", "Hello World!2"), new AddOptions());
+        cl.addDocument(new Document("doc3").set("txt1", "Hello World!3"), new AddOptions());
+       
+        List<Document> docs = cl.getDocuments("doc1", "doc3");
+        assertEquals(2, docs.size());
+        assertEquals("Hello World!1", docs.get(0).get("txt1"));
+        assertEquals("Hello World!3", docs.get(1).get("txt1"));
+
+        // Test decode=false mode
+        docs = cl.getDocuments(false, "doc2");
+        assertEquals(1, docs.size());
+        assertTrue(Arrays.equals( SafeEncoder.encode("Hello World!2"), (byte[])docs.get(0).get("txt1")));
+    }
 
 
     @Test

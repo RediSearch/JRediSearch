@@ -582,10 +582,11 @@ public class ClientTest {
         List<Document> docs = cl.getDocuments();
         assertEquals(0, docs.size());
         
-        docs = cl.getDocuments("doc1", "doc3");
-        assertEquals(2, docs.size());
+        docs = cl.getDocuments("doc1", "doc3", "doc4");
+        assertEquals(3, docs.size());
         assertEquals("Hello World!1", docs.get(0).get("txt1"));
         assertEquals("Hello World!3", docs.get(1).get("txt1"));
+        assertNull(docs.get(2));
 
         // Test decode=false mode
         docs = cl.getDocuments(false, "doc2");

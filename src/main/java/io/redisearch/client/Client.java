@@ -630,9 +630,14 @@ public class Client implements io.redisearch.Client {
         try (Jedis conn = _conn()) {
             List<Object> res = sendCommand(conn, commands.getMGetCommand(), args).getObjectMultiBulkReply();
             for(int i=0; i<len; ++i) {
-              Document d = new Document(docIds[i]);
-              handleListMapping((List<Object>)res.get(i), d::set, decode);
-              documents.add(d);
+              List<Object> line = (List<Object>)res.get(i);
+              if (line == null) {
+                documents.add(null);
+              } else {
+                Document doc = new Document(docIds[i]);
+                handleListMapping(line, doc::set, decode);
+                documents.add(doc);
+              }
             }            
             return documents;
         }

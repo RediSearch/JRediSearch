@@ -1,4 +1,4 @@
-[![license](https://img.shields.io/github/license/RedisLabs/JRediSearch.svg)](https://github.com/RedisLabs/JRediSearch)
+[![license](https://img.shields.io/github/license/RedisLabs/JRediSearch.svg)](https://github.com/RediSearch/JRediSearch/blob/master/LICENSE)
 [![CircleCI](https://circleci.com/gh/RediSearch/JRediSearch/tree/master.svg?style=svg)](https://circleci.com/gh/RediSearch/JRediSearch/tree/master)
 [![GitHub issues](https://img.shields.io/github/release/RedisLabs/JRediSearch.svg)](https://github.com/RedisLabs/JRediSearch/releases/latest)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch)

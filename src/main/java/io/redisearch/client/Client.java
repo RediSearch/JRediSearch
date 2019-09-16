@@ -361,6 +361,7 @@ public class Client implements io.redisearch.Client {
     public boolean[] addDocuments(Document... docs){
     	return addDocuments(new AddOptions(), docs);
     }
+
     
     /**
      * Add a batch of documents to the index
@@ -369,11 +370,13 @@ public class Client implements io.redisearch.Client {
      * @return true on success for each document 
      */
     public boolean[] addDocuments(AddOptions options, Document... docs){
+
     	try (Jedis conn = _conn()) {
+            Pipeline p = conn.pipelined();
 	    	for(Document doc : docs) {
-	    		addDocument(doc, options, conn);
+	    		addDocument(doc, options, p);
 	    	}
-	    	List<Object> objects = conn.getClient().getMany(docs.length);
+	    	List<Object> objects = p.syncAndReturnAll();
 	    	boolean[] results = new boolean[docs.length];
 	    	int i=0;
 	    	for(Object obj : objects) {
@@ -383,13 +386,24 @@ public class Client implements io.redisearch.Client {
 	    	return results;
     	}
     }
-    
+
+    private void addDocument(Document doc, AddOptions options, Pipeline p) {
+        ArrayList<byte[]> args = addDocumentArgs(doc, options);
+        p.sendCommand(commands.getAddCommand(), args.toArray(new byte[args.size()][]));
+
+    }
+
     private BinaryClient addDocument(Document doc, AddOptions options, Jedis conn) {
+        ArrayList<byte[]> args = addDocumentArgs(doc, options);
+        return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 
+    }
+
+    private ArrayList<byte[]> addDocumentArgs(Document doc, AddOptions options) {
         ArrayList<byte[]> args = new ArrayList<>();
         args.add(endocdedIndexName);
         args.add(SafeEncoder.encode(doc.getId()));
         args.add(Protocol.toByteArray(doc.getScore()));
-        
+
         if (options.getNosave()) {
             args.add(Keywords.NOSAVE.getRaw());
         }
@@ -414,8 +428,7 @@ public class Client implements io.redisearch.Client {
             Object value = ent.getValue();
             args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
         }
-
-        return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 
+        return args;
     }
 
     /**

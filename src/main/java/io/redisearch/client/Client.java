@@ -388,17 +388,17 @@ public class Client implements io.redisearch.Client {
     }
 
     private void addDocument(Document doc, AddOptions options, Pipeline p) {
-        ArrayList<byte[]> args = addDocumentArgs(doc, options);
-        p.sendCommand(commands.getAddCommand(), args.toArray(new byte[args.size()][]));
+        byte[][] args = addDocumentArgs(doc, options);
+        p.sendCommand(commands.getAddCommand(), args);
 
     }
 
     private BinaryClient addDocument(Document doc, AddOptions options, Jedis conn) {
-        ArrayList<byte[]> args = addDocumentArgs(doc, options);
-        return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 
+        byte[][] args = addDocumentArgs(doc, options);
+        return sendCommand(conn, commands.getAddCommand(), args);
     }
 
-    private ArrayList<byte[]> addDocumentArgs(Document doc, AddOptions options) {
+    private byte[][] addDocumentArgs(Document doc, AddOptions options) {
         ArrayList<byte[]> args = new ArrayList<>();
         args.add(endocdedIndexName);
         args.add(SafeEncoder.encode(doc.getId()));
@@ -428,7 +428,7 @@ public class Client implements io.redisearch.Client {
             Object value = ent.getValue();
             args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
         }
-        return args;
+        return args.toArray(new byte[args.size()][]);
     }
 
     /**

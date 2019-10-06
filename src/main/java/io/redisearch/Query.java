@@ -397,7 +397,7 @@ public class Query {
     
     /**
      * Limit the query to results that are limited to a specific set of keys
-     * @param fields a list of TEXT fields in the schemas
+     * @param keys a list of TEXT fields in the schemas
      * @return the query object itself
      */
     public Query limitKeys(String... keys) {

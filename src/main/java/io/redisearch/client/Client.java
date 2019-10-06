@@ -76,7 +76,7 @@ public class Client implements io.redisearch.Client {
      * availability and automatic failover.
      *
      * @param indexName  the name of the index we are connecting to or creating
-     * @param masterName the masterName to connect from list of masters monitored by sentinels
+     * @param master the masterName to connect from list of masters monitored by sentinels
      * @param sentinels  the set of sentinels monitoring the cluster
      * @param timeout    the timeout in milliseconds
      * @param poolSize   the poolSize of JedisSentinelPool
@@ -599,7 +599,7 @@ public class Client implements io.redisearch.Client {
     /**
      * Get a documents from the index
      *
-     * @param docId The document IDs to retrieve 
+     * @param docIds The document IDs to retrieve 
      * @return The documents stored in the index. If the document does not exist, null is returned in the list.
      */
     public List<Document> getDocuments(String ...docIds) {
@@ -610,7 +610,7 @@ public class Client implements io.redisearch.Client {
     /**
      * Get a documents from the index
      *
-     * @param docId The document IDs to retrieve
+     * @param docIds The document IDs to retrieve
      * @param decode <code>false</code> - keeps the fields value as byte[] 
      * @return The document as stored in the index. If the document does not exist, null is returned.
      */

@@ -1,5 +1,6 @@
 package io.redisearch;
 
+import io.redisearch.Schema.Field;
 import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.AddOptions;
@@ -91,4 +92,32 @@ public interface Client extends Closeable{
      * @return list of suggestions
      */
     List<Suggestion> getSuggestion(String prefix, SuggestionOptions suggestionOptions);
+
+    boolean alterIndex(Field... fields);
+
+    SearchResult search(Query q, boolean decode);
+
+    boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload);
+
+    boolean addDocument(Document doc);
+
+    boolean[] addDocuments(Document... docs);
+
+    boolean[] addDocuments(AddOptions options, Document... docs);
+
+    boolean addDocument(String docId, double score, Map<String, Object> fields);
+
+    boolean addDocument(String docId, Map<String, Object> fields);
+
+    boolean[] deleteDocuments(boolean deleteDocuments, String... docIds);
+
+    boolean deleteDocument(String docId, boolean deleteDocument);
+
+    Document getDocument(String docId, boolean decode);
+
+    List<Document> getDocuments(String... docIds);
+
+    List<Document> getDocuments(boolean decode, String... docIds);
+
+    boolean dropIndex();
 }

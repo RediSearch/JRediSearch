@@ -516,6 +516,7 @@ public class Client implements io.redisearch.Client {
         handleListMapping(res, info::put, true /*decode*/);
         return info;
     }
+    
     /**
      * Delete a documents from the index
      *

@@ -99,6 +99,7 @@ public class ClusterClient extends Client implements io.redisearch.ClusterClient
         this(indexName, masterName, sentinels, 500, 100);
     }
 
+    @Override
     public List<Object> broadcast(String... args) {
         try (Jedis conn = _conn()) {
             BinaryClient client = conn.getClient();

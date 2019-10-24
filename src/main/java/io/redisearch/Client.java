@@ -262,7 +262,7 @@ public interface Client extends Closeable{
      * @param decode <code>false</code> - keeps the fields value as byte[] 
      * @return The document as stored in the index. If the document does not exist, null is returned.
      */
-    List<Document> getDocuments(String... docIds);
+    List<Document> getDocuments(String ...docIds);
 
     /**
      * Get a documents from the index
@@ -271,7 +271,7 @@ public interface Client extends Closeable{
      * @param decode <code>false</code> - keeps the fields value as byte[] 
      * @return The document as stored in the index. If the document does not exist, null is returned.
      */
-    List<Document> getDocuments(boolean decode, String... docIds);
+    List<Document> getDocuments(boolean decode, String ...docIds);
     
     /**
      * Drop the index and all associated keys, including documents
@@ -310,5 +310,5 @@ public interface Client extends Closeable{
      * @param fields list of fields
      * @return true if successful
      */
-    boolean alterIndex(Field... fields);
+    boolean alterIndex(Field ...fields);
 }

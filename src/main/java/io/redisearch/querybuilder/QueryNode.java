@@ -35,7 +35,7 @@ public abstract class QueryNode implements Node {
      * @return The current node for chaining.
      */
     public QueryNode add(String field, Collection<Value> values) {
-        return add(field, (Value[])values.toArray());
+        return add(field, values.toArray(new Value[0]));
     }
 
     /**

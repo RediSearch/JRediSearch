@@ -6,9 +6,9 @@
 [![Codecov](https://codecov.io/gh/RediSearch/JRediSearch/branch/master/graph/badge.svg)](https://codecov.io/gh/RediSearch/JRediSearch)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/RediSearch/JRediSearch.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/RediSearch/JRediSearch/context:java)
 
-
-
 # JRediSearch
+[![Mailing List](https://img.shields.io/badge/Mailing%20List-RediSearch-blue)](https://groups.google.com/forum/#!forum/redisearch)
+[![Gitter](https://badges.gitter.im/RedisLabs/RediSearch.svg)](https://gitter.im/RedisLabs/RediSearch?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge)
 
 A Java Client Library for [RediSearch](https://oss.redislabs.com/redisearch/)
 

@@ -56,6 +56,7 @@ public class Schema {
 
     	private final double weight;
         private final boolean nostem;
+        private final String phonetic;
 
         public TextField(String name) {
             this(name, 1.0);
@@ -74,10 +75,16 @@ public class Schema {
         }
 
         public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex) {
-        	super(name, FieldType.FullText, sortable, noindex);
-            this.weight = weight;
-            this.nostem = nostem;
+        	this(name, weight, sortable, nostem, noindex, null);
         }
+        
+        public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex, String phonetic) {
+          super(name, FieldType.FullText, sortable, noindex);
+          this.weight = weight;
+          this.nostem = nostem;
+          this.phonetic = phonetic;
+      }
+
 
         @Override
         public void serializeRedisArgs(List<String> args) {
@@ -95,6 +102,10 @@ public class Schema {
             }
             if (noindex) {
                 args.add("NOINDEX");
+            }
+            if (phonetic != null) {
+              args.add("PHONETIC");
+              args.add(this.phonetic);
             }
         }
     }

@@ -76,7 +76,7 @@ public class Client implements io.redisearch.Client {
      * availability and automatic failover.
      *
      * @param indexName  the name of the index we are connecting to or creating
-     * @param masterName the masterName to connect from list of masters monitored by sentinels
+     * @param master the masterName to connect from list of masters monitored by sentinels
      * @param sentinels  the set of sentinels monitoring the cluster
      * @param timeout    the timeout in milliseconds
      * @param poolSize   the poolSize of JedisSentinelPool
@@ -177,6 +177,7 @@ public class Client implements io.redisearch.Client {
      * @param options index option flags, see {@link IndexOptions}
      * @return true if successful
      */
+    @Override
     public boolean createIndex(Schema schema, IndexOptions options) {
 
         ArrayList<String> args = new ArrayList<>();
@@ -204,6 +205,7 @@ public class Client implements io.redisearch.Client {
      * @param fields list of fields
      * @return true if successful
      */
+    @Override
     public boolean alterIndex(Schema.Field ...fields) {
 
         ArrayList<String> args = new ArrayList<>();
@@ -230,6 +232,7 @@ public class Client implements io.redisearch.Client {
      * @param q a {@link Query} object with the query string and optional parameters
      * @return a {@link SearchResult} object with the results
      */
+    @Override
     public SearchResult search(Query q) {
       return this.search(q, true);
     }
@@ -242,6 +245,7 @@ public class Client implements io.redisearch.Client {
      * 
      * @return a {@link SearchResult} object with the results
      */
+    @Override
     public SearchResult search(Query q, boolean decode) {
         ArrayList<byte[]> args = new ArrayList<>(4);
         args.add(this.endocdedIndexName);
@@ -259,6 +263,7 @@ public class Client implements io.redisearch.Client {
      * @deprecated use {@link #aggregate(AggregationBuilder)} instead
      */
     @Deprecated
+    @Override
     public AggregationResult aggregate(AggregationRequest q) {
         ArrayList<byte[]> args = new ArrayList<>();
         args.add(this.endocdedIndexName);
@@ -274,6 +279,7 @@ public class Client implements io.redisearch.Client {
         }
     }
     
+    @Override
     public AggregationResult aggregate(AggregationBuilder q) {
       ArrayList<byte[]> args = new ArrayList<>();
       args.add(this.endocdedIndexName);
@@ -295,6 +301,7 @@ public class Client implements io.redisearch.Client {
      * @param q The query to explain
      * @return A string describing this query
      */
+    @Override
     public String explain(Query q) {
         ArrayList<byte[]> args = new ArrayList<>(4);
         args.add(this.endocdedIndexName);
@@ -316,6 +323,7 @@ public class Client implements io.redisearch.Client {
      * @param payload if set, we can save a payload in the index to be retrieved or evaluated by scoring functions on the server
      * @return true on success
      */
+    @Override
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
         return doAddDocument(docId, score, fields, noSave, replace, false, payload);
     }
@@ -338,6 +346,7 @@ public class Client implements io.redisearch.Client {
      * @param doc The document to add
      * @return true on success
      */
+    @Override
     public boolean addDocument(Document doc) {
         return addDocument(doc, new AddOptions());
     }
@@ -349,6 +358,7 @@ public class Client implements io.redisearch.Client {
      * @param options Options for the operation
      * @return true on success
      */
+    @Override
     public boolean addDocument(Document doc, AddOptions options) {
         try (Jedis conn = _conn()) {
             return addDocument(doc, options, conn).getStatusCodeReply().equals("OK");
@@ -358,6 +368,7 @@ public class Client implements io.redisearch.Client {
     /**
      * see {@link #addDocuments(AddOptions, Document...)}
      */
+    @Override
     public boolean[] addDocuments(Document... docs){
     	return addDocuments(new AddOptions(), docs);
     }
@@ -369,6 +380,7 @@ public class Client implements io.redisearch.Client {
      * @param docs The documents to add
      * @return true on success for each document 
      */
+    @Override
     public boolean[] addDocuments(AddOptions options, Document... docs){
 
     	try (Jedis conn = _conn()) {
@@ -439,6 +451,7 @@ public class Client implements io.redisearch.Client {
      * @param fields
      * @return true on success
      */
+    @Override
     public boolean replaceDocument(String docId, double score, Map<String, Object> fields) {
         return addDocument(docId, score, fields, false, true, null);
     }
@@ -453,6 +466,7 @@ public class Client implements io.redisearch.Client {
      * @param fields a map of the document's fields
      * @return true on success
      */
+    @Override
     public boolean updateDocument(String docId, double score, Map<String, Object> fields) {
         return doAddDocument(docId, score, fields, false, true, true, null);
     }
@@ -460,6 +474,7 @@ public class Client implements io.redisearch.Client {
     /**
      * See {@link #updateDocument(String, double, Map)}
      */
+    @Override
     public boolean addDocument(String docId, double score, Map<String, Object> fields) {
         return this.addDocument(docId, score, fields, false, false, null);
     }
@@ -467,6 +482,7 @@ public class Client implements io.redisearch.Client {
     /**
      * See {@link #updateDocument(String, double, Map)}
      */
+    @Override
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
     }
@@ -479,6 +495,7 @@ public class Client implements io.redisearch.Client {
      * @param replace if set, and the document already exists, we reindex and update it
      * @return true on success
      */
+    @Override
     public boolean addHash(String docId, double score, boolean replace) {
         ArrayList<String> args = new ArrayList<>(4);
         args.add(indexName);
@@ -501,6 +518,7 @@ public class Client implements io.redisearch.Client {
      *
      * @return a map of key/value pairs
      */
+    @Override
     public Map<String, Object> getInfo() {
         List<Object> res;
         try (Jedis conn = _conn()) {
@@ -511,6 +529,7 @@ public class Client implements io.redisearch.Client {
         handleListMapping(res, info::put, true /*decode*/);
         return info;
     }
+    
     /**
      * Delete a documents from the index
      *
@@ -518,6 +537,7 @@ public class Client implements io.redisearch.Client {
      * @param docIds the document's ids
      * @return true on success for each document if it has been deleted, false if it did not exist
      */
+    @Override
     public boolean[] deleteDocuments(boolean deleteDocuments, String... docIds) {
     	try (Jedis conn = _conn()) {
 	    	for(String docId : docIds) {
@@ -542,6 +562,7 @@ public class Client implements io.redisearch.Client {
      * 
      * @see #deleteDocument(String, boolean) 
      */
+    @Override
     public boolean deleteDocument(String docId) {
     	return deleteDocument(docId, false);
     }
@@ -553,6 +574,7 @@ public class Client implements io.redisearch.Client {
      * @param deleteDocument if <code>true</code> also deletes the actual document if it is in the index
      * @return true if it has been deleted, false if it did not exist
      */
+    @Override
     public boolean deleteDocument(String docId, boolean deleteDocument) {
         try (Jedis conn = _conn()) {        	
         	return deleteDocument(docId, deleteDocument, conn).getIntegerReply() == 1;
@@ -585,6 +607,7 @@ public class Client implements io.redisearch.Client {
      * 
      * @see #getDocument(String, boolean)
      */
+    @Override
     public Document getDocument(String docId) {
       return this.getDocument(docId, true);
     }
@@ -596,6 +619,7 @@ public class Client implements io.redisearch.Client {
      * @param decode <code>false</code> - keeps the fields value as byte[] 
      * @return The document as stored in the index. If the document does not exist, null is returned.
      */
+    @Override
     public Document getDocument(String docId, boolean decode) {
         Document d = new Document(docId);
         try (Jedis conn = _conn()) {
@@ -612,9 +636,10 @@ public class Client implements io.redisearch.Client {
     /**
      * Get a documents from the index
      *
-     * @param docId The document IDs to retrieve 
+     * @param docIds The document IDs to retrieve 
      * @return The documents stored in the index. If the document does not exist, null is returned in the list.
      */
+    @Override
     public List<Document> getDocuments(String ...docIds) {
       return getDocuments(true, docIds);
     }
@@ -623,10 +648,11 @@ public class Client implements io.redisearch.Client {
     /**
      * Get a documents from the index
      *
-     * @param docId The document IDs to retrieve
+     * @param docIds The document IDs to retrieve
      * @param decode <code>false</code> - keeps the fields value as byte[] 
      * @return The document as stored in the index. If the document does not exist, null is returned.
      */
+    @Override
     public List<Document> getDocuments(boolean decode, String ...docIds) {
         int len = docIds.length;
         if(len == 0) {
@@ -661,6 +687,7 @@ public class Client implements io.redisearch.Client {
      *
      * @return true on success
      */
+    @Override
     public boolean dropIndex() {
         return dropIndex(false);
     }
@@ -671,6 +698,7 @@ public class Client implements io.redisearch.Client {
      * @param missingOk If the index does not exist, don't throw an exception, but return false instead
      * @return True if the index was dropped, false if it did not exist (or some other error occurred).
      */
+    @Override
     public boolean dropIndex(boolean missingOk) {
         try (Jedis conn = _conn()) {
           String res = sendCommand(conn, commands.getDropCommand(), this.endocdedIndexName).getStatusCodeReply();

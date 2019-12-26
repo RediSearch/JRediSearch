@@ -395,6 +395,36 @@ public class ClientTest {
         res = cl.search(new Query("@notStemmed:location"));
         assertEquals(0, res.totalResults);
     }
+    
+    @Test
+    public void testPhoneticMatch() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+        Schema sc = new Schema()
+            .addTextField("noPhonetic", 1.0)
+            .addField(new Schema.TextField("withPhonetic", 1.0, false, false, false, "dm:en"));
+        
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("noPhonetic", "morfix");
+        doc.put("withPhonetic", "morfix");
+        
+        // Store it
+        assertTrue(cl.addDocument("doc", doc));
+
+        // Query
+        SearchResult res = cl.search(new Query("@withPhonetic:morphix=>{$phonetic:true}"));
+        assertEquals(1, res.totalResults);
+
+        try {
+          cl.search(new Query("@noPhonetic:morphix=>{$phonetic:true}"));
+          Assert.fail();
+        }catch( JedisDataException e) {/*field does not support phonetics*/}       
+        
+        SearchResult res3 = cl.search(new Query("@withPhonetic:morphix=>{$phonetic:false}"));
+        assertEquals(0, res3.totalResults);
+    }
 
     @Test
     public void testInfo() throws Exception {

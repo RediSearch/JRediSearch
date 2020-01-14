@@ -45,6 +45,8 @@ public class AggregationBuilderTest extends ClientTest {
 
     // actual search
     AggregationResult res = cl.aggregate(r);
+    assertEquals(2, res.totalResults);
+    
     Row r1 = res.getRow(0);
     assertNotNull(r1);
     assertEquals("def", r1.getString("name"));
@@ -144,7 +146,7 @@ public class AggregationBuilderTest extends ClientTest {
 
     // actual search
     AggregationResult res = cl.aggregate(r);
-    assertEquals(3, res.totalResults);
+    assertEquals(2, res.totalResults);
     
     Row row = res.getRow(0);
     assertNotNull(row);

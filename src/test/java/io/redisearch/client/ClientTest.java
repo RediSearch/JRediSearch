@@ -640,6 +640,17 @@ public class ClientTest {
     @Test
     public void testAddSuggestionGetSuggestion() throws Exception {
         Client cl = getClient();
+        
+        try {
+          Suggestion.builder().str("ANOTHER_WORD").score(3).build();
+          fail("Illegal score");
+        } catch(IllegalStateException e) {}
+        
+        try {
+          Suggestion.builder().score(1).build();
+          fail("Missing required string");
+        } catch(IllegalStateException e) {}
+        
         Suggestion suggestion = Suggestion.builder().str("ANOTHER_WORD").score(1).build();
         Suggestion noMatch = Suggestion.builder().str("_WORD MISSED").score(1).build();
 

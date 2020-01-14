@@ -11,8 +11,10 @@ import java.util.Map;
  * Created by mnunberg on 2/22/18.
  */
 public class AggregationResult {
-  
- 	private long cursorId = -1;
+
+    public final long totalResults;
+
+    private long cursorId = -1;
     private final List<Map<String, Object>> results = new ArrayList<>();
     
     public AggregationResult(List<Object> resp, long cursorId) {
@@ -20,6 +22,9 @@ public class AggregationResult {
       this.cursorId = cursorId;
     }
     public AggregationResult(List<Object> resp) {
+        // the first element is always the number of results
+        totalResults = (Long) resp.get(0);    	
+
         for (int i = 1; i < resp.size(); i++) {
             Object o = resp.get(i);
             List<Object> raw = (List<Object>)o;

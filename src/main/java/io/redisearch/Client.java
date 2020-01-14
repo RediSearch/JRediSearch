@@ -144,7 +144,7 @@ public interface Client extends Closeable{
     /**
      * Add a document to the index
      * 
-     * @param doc The document to add
+     * @param docs The document to add
      * @return true on success
      */
     boolean[] addDocuments(Document... docs);
@@ -258,18 +258,17 @@ public interface Client extends Closeable{
     /**
      * Get a document from the index
      *
-     * @param docId The document ID to retrieve
-     * @param decode <code>false</code> - keeps the fields value as byte[] 
-     * @return The document as stored in the index. If the document does not exist, null is returned.
+     * @param docIds The document IDs to retrieve 
+     * @return The documents stored in the index. If a document does not exist, null is returned.
      */
     List<Document> getDocuments(String ...docIds);
 
     /**
      * Get a documents from the index
      *
-     * @param docIds The document IDs to retrieve
      * @param decode <code>false</code> - keeps the fields value as byte[] 
-     * @return The document as stored in the index. If the document does not exist, null is returned.
+     * @param docIds The document IDs to retrieve
+     * @return The documents stored in the index. If a document does not exist, null is returned.
      */
     List<Document> getDocuments(boolean decode, String ...docIds);
     

@@ -486,20 +486,20 @@ public class ClientTest {
                 .addTextField("f1", 1.0)
                 .addTextField("f2", 1.0)
                 .addTextField("f3", 1.0);
-        cl.createIndex(sc, Client.IndexOptions.defaultOptions());
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> mm = new HashMap<>();
         mm.put("f1", "f1_val");
         mm.put("f2", "f2_val");
 
-        cl.addDocument("doc1", mm);
-        cl.addDocument("doc2", mm);
+        assertTrue(cl.addDocument("doc1", mm));
+        assertTrue(cl.addDocument("doc2", mm));
 
         mm.clear();
         mm.put("f3", "f3_val");
 
-        cl.updateDocument("doc1", 1.0, mm);
-        cl.replaceDocument("doc2", 1.0, mm);
+        assertTrue(cl.updateDocument("doc1", 1.0, mm));
+        assertTrue(cl.replaceDocument("doc2", 1.0, mm));
 
         // Search for f3 value. All documents should have it.
         SearchResult res = cl.search(new Query(("@f3:f3_Val")));
@@ -507,6 +507,49 @@ public class ClientTest {
 
         res = cl.search(new Query("@f3:f3_val @f2:f2_val @f1:f1_val"));
         assertEquals(1, res.totalResults);
+    }
+    
+    @Test
+    public void testReplaceIf() throws Exception {
+        Client cl = getClient();
+
+        Schema sc = new Schema()
+                .addTextField("f1", 1.0)
+                .addTextField("f2", 1.0)
+                .addTextField("f3", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        Map<String, Object> mm = new HashMap<>();
+        mm.put("f1", "v1_val");
+        mm.put("f2", "v2_val");
+
+        assertTrue(cl.addDocument("doc1", mm));
+        assertTrue(cl.addDocument("doc2", mm));
+
+        mm.clear();
+        mm.put("f3", "v3_val");
+
+        assertFalse(cl.updateDocument("doc1", 1.0, mm, "@f1=='vv1_val'"));
+        // Search for f3 value. No documents should not have it.
+        SearchResult res1 = cl.search(new Query(("@f3:f3_Val")));
+        assertEquals(0, res1.totalResults);
+
+        assertTrue(cl.updateDocument("doc1", 1.0, mm, "@f2=='v2_val'"));
+        // Search for f3 value. All documents should have it.
+        SearchResult res2 = cl.search(new Query(("@f3:v3_Val")));
+        assertEquals(1, res2.totalResults);
+
+        assertFalse(cl.replaceDocument("doc2", 1.0, mm, "@f1=='vv3_Val'"));
+
+        // Search for f3 value. Only one document should have it.
+        SearchResult res3 = cl.search(new Query(("@f3:v3_Val")));
+        assertEquals(1, res3.totalResults);
+
+        assertTrue(cl.replaceDocument("doc2", 1.0, mm, "@f1=='v1_val'"));
+
+        // Search for f3 value. All documents should have it.
+        SearchResult res4 = cl.search(new Query(("@f3:v3_Val")));
+        assertEquals(2, res4.totalResults);
     }
 
     @Test

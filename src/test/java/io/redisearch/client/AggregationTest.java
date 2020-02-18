@@ -16,6 +16,7 @@ import static junit.framework.TestCase.*;
 /**
  * Created by mnunberg on 5/17/18.
  */
+@SuppressWarnings("deprecation")
 public class AggregationTest extends ClientTest {
   @Test
   public void testAggregations() {

@@ -178,6 +178,18 @@ public interface Client extends Closeable{
     boolean replaceDocument(String docId, double score, Map<String, Object> fields);
 
     /**
+     * replaceDocument is a convenience for calling addDocument with replace=true
+     *
+     * @param docId
+     * @param score
+     * @param fields
+     * @param filter updates the document only if a boolean expression applies to the document
+     * @return true on success
+     */
+    boolean replaceDocument(String docId, double score, Map<String, Object> fields, String filter);
+
+
+    /**
      * Replace specific fields in a document. Unlike #replaceDocument(), fields not present in the field list
      * are not erased, but retained. This avoids reindexing the entire document if the new values are not
      * indexed (though a reindex will happen
@@ -189,6 +201,19 @@ public interface Client extends Closeable{
      */
     boolean updateDocument(String docId, double score, Map<String, Object> fields);
 
+    /**
+     * Replace specific fields in a document. Unlike #replaceDocument(), fields not present in the field list
+     * are not erased, but retained. This avoids reindexing the entire document if the new values are not
+     * indexed (though a reindex will happen
+     *
+     * @param docId  the id of the document. It cannot belong to a document already in the index unless replace is set
+     * @param score  the document's score, floating point number between 0 and 1
+     * @param fields a map of the document's fields
+     * @param filter updates the document only if a boolean expression applies to the document
+     * @return true on success
+     */
+    boolean updateDocument(String docId, double score, Map<String, Object> fields, String filter);
+    
     /**
      * Index a document already in redis as a HASH key.
      *
@@ -310,4 +335,6 @@ public interface Client extends Closeable{
      * @return true if successful
      */
     boolean alterIndex(Field ...fields);
+
+
 }

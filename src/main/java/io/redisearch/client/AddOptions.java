@@ -28,6 +28,7 @@ public class AddOptions {
     private String language = null;
     private boolean save = true;
     private ReplacementPolicy replacementPolicy = ReplacementPolicy.NONE;
+    private String filter = null;
 
     /**
      * Create a new DocumentOptions object. Methods can later be chained via a builder-like pattern
@@ -74,6 +75,18 @@ public class AddOptions {
         this.replacementPolicy = mode;
         return this;
     }
+    
+    /**
+     * Indicate the behavior for the existing document.
+     * @param mode One of the replacement modes
+     * @param filter updates the document only if a boolean expression applies to the document 
+     * @return the {@link AddOptions} object for further options
+     */
+    public AddOptions setReplacementPolicy(ReplacementPolicy mode, String filter) {
+        this.replacementPolicy = mode;
+        this.filter = filter;
+        return this;
+    }
 
     boolean getNosave() {
         return !this.save;
@@ -81,6 +94,10 @@ public class AddOptions {
 
     ReplacementPolicy getReplacementPolicy() {
         return replacementPolicy;
+    }
+    
+    String getReplacementFilter() {
+      return filter;
     }
 
     String getLanguage() {

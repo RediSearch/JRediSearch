@@ -227,6 +227,71 @@ public class Client implements io.redisearch.Client {
     }
 
     /**
+     * Set runtime configuration option
+     *
+     * @param option the name of the configuration option
+     * @param value a value for the configuration option
+     * @return
+     */
+    @Override
+    public boolean setConfig(ConfigOption option, String value) {
+        List<String> args = new ArrayList<>();
+        args.add(Keywords.SET.name());
+        args.add(option.getName());
+        args.add(value);
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getConfigCommand(), args.toArray(new String[args.size()]))
+                    .getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
+    /**
+     * Get runtime configuration option value
+     *
+     * @param option the name of the configuration option
+     * @return
+     */
+    @Override
+    public String getConfig(ConfigOption option) {
+        List<String> args = new ArrayList<>();
+        args.add(Keywords.GET.name());
+        args.add(option.getName());
+        try (Jedis conn = _conn()) {
+            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), args.toArray(new String[args.size()]))
+                    .getObjectMultiBulkReply();
+            if (objects != null && objects.size() > 0) {
+                List<byte[]> kvs = (List<byte[]>) objects.get(0);
+                return kvs.get(1) == null ? null : SafeEncoder.encode(kvs.get(1));
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get all configuration options, consisting of the option's name and current value
+     *
+     * @return
+     */
+    @Override
+    public Map<String, String> getAllConfig() {
+        List<String> args = new ArrayList<>();
+        args.add(Keywords.GET.name());
+        args.add(ConfigOption.ALL.getName());
+        Map<String, String> configs = new HashMap<>();
+        try (Jedis conn = _conn()) {
+            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), args.toArray(new String[args.size()]))
+                    .getObjectMultiBulkReply();
+
+            for (Object object : objects) {
+                List<byte[]> kvs = (List<byte[]>) object;
+                configs.put(SafeEncoder.encode(kvs.get(0)), kvs.get(1) == null ? null : SafeEncoder.encode(kvs.get(1)));
+            }
+            return configs;
+        }
+    }
+
+    /**
      * Search the index
      *
      * @param q a {@link Query} object with the query string and optional parameters

@@ -4,6 +4,7 @@ import io.redisearch.Schema.Field;
 import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.AddOptions;
+import io.redisearch.client.ConfigOption;
 import io.redisearch.client.SuggestionOptions;
 import io.redisearch.client.Client.IndexOptions;
 
@@ -310,4 +311,28 @@ public interface Client extends Closeable{
      * @return true if successful
      */
     boolean alterIndex(Field ...fields);
+
+    /**
+     * Set runtime configuration option
+     *
+     * @param option the name of the configuration option
+     * @param value a value for the configuration option
+     * @return
+     */
+    boolean setConfig(ConfigOption option, String value);
+
+    /**
+     * Get runtime configuration option value
+     *
+     * @param option the name of the configuration option
+     * @return
+     */
+    String getConfig(ConfigOption option);
+
+    /**
+     * Get all configuration options, consisting of the option's name and current value
+     *
+     * @return
+     */
+    Map<String, String> getAllConfig();
 }

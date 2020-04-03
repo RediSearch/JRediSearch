@@ -5,6 +5,7 @@
 [![Javadocs](https://www.javadoc.io/badge/com.redislabs/jredisearch.svg)](https://www.javadoc.io/doc/com.redislabs/jredisearch)
 [![Codecov](https://codecov.io/gh/RediSearch/JRediSearch/branch/master/graph/badge.svg)](https://codecov.io/gh/RediSearch/JRediSearch)
 [![Language grade: Java](https://img.shields.io/lgtm/grade/java/g/RediSearch/JRediSearch.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/RediSearch/JRediSearch/context:java)
+[![Known Vulnerabilities](https://snyk.io/test/github/RediSearch/JRediSearch/badge.svg?targetFile=pom.xml)](https://snyk.io/test/github/RediSearch/JRediSearch?targetFile=pom.xml)
 
 # JRediSearch
 [![Mailing List](https://img.shields.io/badge/Mailing%20List-RediSearch-blue)](https://groups.google.com/forum/#!forum/redisearch)
@@ -29,7 +30,7 @@ releases.
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>1.3.0</version>
+      <version>1.4.0</version>
     </dependency>
   </dependencies>
 ```
@@ -51,7 +52,7 @@ and
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>1.4.0-SNAPSHOT</version>
+      <version>1.5.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 ```

@@ -4,7 +4,7 @@ package io.redisearch.querybuilder;
  * Created by mnunberg on 2/23/18.
  */
 public class GeoValue extends Value {
-    enum Unit {
+    public enum Unit {
         KILOMETERS("km"),
         METERS("m"),
         FEET("ft"),

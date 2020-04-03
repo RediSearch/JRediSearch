@@ -47,19 +47,19 @@ public class ClusterTest {
 
     @Test
     public void getClusterClientWithPasswordTest(){
-        ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, PROTECTD_CLUSTER_PASSWORD);
-        
-        try ( Jedis conn = clusterClient._conn()){
+        try (ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, PROTECTD_CLUSTER_PASSWORD)){
+          try(Jedis conn = clusterClient._conn()){
             assertEquals("SUCCESS", conn.ping("SUCCESS"));
+          }
         }
     }
     
     @Test(expected = JedisConnectionException.class)
     public void getClusterClientWithWrongPasswordTest(){
-        ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, WRONG_PASSWORD);
-        
-        try ( Jedis conn = clusterClient._conn()){
-            fail("Should throw JedisConnectionException as password is incorrect.");
+        try(ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, WRONG_PASSWORD)){
+          try ( Jedis conn = clusterClient._conn()){
+              fail("Should throw JedisConnectionException as password is incorrect.");
+          }
         }
     }
 
@@ -224,7 +224,7 @@ public class ClusterTest {
 
 
         for (int i = 0; i < 100; i++) {
-            fields.put("title", i % 2 == 1 ? "hello worlds" : "hello world");
+            fields.put("title", i % 2 != 0 ? "hello worlds" : "hello world");
             assertTrue(cl.addDocument(String.format("doc%d", i), (double) i / 100.0, fields));
         }
 

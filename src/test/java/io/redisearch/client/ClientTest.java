@@ -63,7 +63,11 @@ public class ClientTest {
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
             assertTrue(d.getScore() < 100);
-            //System.out.println(d);
+            assertEquals(
+                String.format(
+                "{\"id\":\"%s\",\"score\":%s,\"properties\":{\"title\":\"hello world\",\"body\":\"lorem ipsum\"}}", 
+                d.getId(), Double.toString(d.getScore())),
+                d.toString());
         }
 
         assertTrue(cl.deleteDocument("doc0", true));
@@ -232,7 +236,7 @@ public class ClientTest {
 
 
         for (int i = 0; i < 100; i++) {
-            fields.put("title", i % 2 == 1 ? "hello worlds" : "hello world");
+            fields.put("title", i % 2 != 0 ? "hello worlds" : "hello world");
             assertTrue(cl.addDocument(String.format("doc%d", i), (double) i / 100.0, fields));
         }
 

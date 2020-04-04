@@ -235,13 +235,10 @@ public class Client implements io.redisearch.Client {
      */
     @Override
     public boolean setConfig(ConfigOption option, String value) {
-        List<String> args = new ArrayList<>();
-        args.add(Keywords.SET.name());
-        args.add(option.getName());
-        args.add(value);
         try (Jedis conn = _conn()) {
-            String rep = sendCommand(conn, commands.getConfigCommand(), args.toArray(new String[args.size()]))
-                    .getStatusCodeReply();
+            String rep = sendCommand(conn, commands.getConfigCommand(), Keywords.SET.getRaw(),
+                option.getRaw(), SafeEncoder.encode(value))
+                .getStatusCodeReply();
             return rep.equals("OK");
         }
     }
@@ -254,15 +251,15 @@ public class Client implements io.redisearch.Client {
      */
     @Override
     public String getConfig(ConfigOption option) {
-        List<String> args = new ArrayList<>();
-        args.add(Keywords.GET.name());
-        args.add(option.getName());
+
         try (Jedis conn = _conn()) {
-            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), args.toArray(new String[args.size()]))
-                    .getObjectMultiBulkReply();
-            if (objects != null && objects.size() > 0) {
+            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), 
+                Keywords.GET.getRaw(), option.getRaw())
+                .getObjectMultiBulkReply();
+            if (objects != null && !objects.isEmpty()) {
                 List<byte[]> kvs = (List<byte[]>) objects.get(0);
-                return kvs.get(1) == null ? null : SafeEncoder.encode(kvs.get(1));
+                byte[] val = kvs.get(1);
+                return val == null ? null : SafeEncoder.encode(val);
             }
         }
         return null;
@@ -275,17 +272,16 @@ public class Client implements io.redisearch.Client {
      */
     @Override
     public Map<String, String> getAllConfig() {
-        List<String> args = new ArrayList<>();
-        args.add(Keywords.GET.name());
-        args.add(ConfigOption.ALL.getName());
-        Map<String, String> configs = new HashMap<>();
         try (Jedis conn = _conn()) {
-            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), args.toArray(new String[args.size()]))
-                    .getObjectMultiBulkReply();
-
+            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), 
+                Keywords.GET.getRaw(), ConfigOption.ALL.getRaw())
+                .getObjectMultiBulkReply();
+            
+            Map<String, String> configs = new HashMap<>(objects.size());
             for (Object object : objects) {
                 List<byte[]> kvs = (List<byte[]>) object;
-                configs.put(SafeEncoder.encode(kvs.get(0)), kvs.get(1) == null ? null : SafeEncoder.encode(kvs.get(1)));
+                byte[] val = kvs.get(1);
+                configs.put(SafeEncoder.encode(kvs.get(0)), val == null ? null : SafeEncoder.encode(val));
             }
             return configs;
         }

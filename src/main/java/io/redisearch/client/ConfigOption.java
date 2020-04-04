@@ -1,6 +1,9 @@
 package io.redisearch.client;
 
-public enum ConfigOption {
+import redis.clients.jedis.commands.ProtocolCommand;
+import redis.clients.jedis.util.SafeEncoder;
+
+public enum ConfigOption implements ProtocolCommand {
     NOGC("NOGC"),
     MINPREFIX("MINPREFIX"),
     MAXEXPANSIONS("MAXEXPANSIONS"),
@@ -8,14 +11,19 @@ public enum ConfigOption {
     ON_TIMEOUT("ON_TIMEOUT"),
     MIN_PHONETIC_TERM_LEN("MIN_PHONETIC_TERM_LEN"),
     ALL("*");
+  
+    private final byte[] raw;
 
-    private final String name;
-
+    ConfigOption() {
+      raw = SafeEncoder.encode(this.name());
+    }
+    
     ConfigOption(String name) {
-        this.name = name;
+        raw = SafeEncoder.encode(name);
     }
 
-    public String getName() {
-        return name;
+    @Override
+    public byte[] getRaw() {
+      return raw;
     }
 }

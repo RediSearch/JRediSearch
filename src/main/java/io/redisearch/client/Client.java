@@ -386,17 +386,18 @@ public class Client implements io.redisearch.Client {
      */
     @Override
     public boolean addDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, byte[] payload) {
-        return doAddDocument(docId, score, fields, noSave, replace, false, payload);
+        return doAddDocument(docId, score, fields, noSave, replace, false, payload, null/*filter*/);
     }
 
-    private boolean doAddDocument(String docId, double score, Map<String, Object> fields, boolean noSave, boolean replace, boolean partial, byte[] payload) {
+    private boolean doAddDocument(String docId, double score, Map<String, Object> fields, boolean noSave,
+        boolean replace, boolean partial, byte[] payload, String filter) {
         Document doc = new Document(docId, fields, score, payload);
         AddOptions options = new AddOptions().setNosave(noSave);
         if (replace) {
-            options.setReplacementPolicy(AddOptions.ReplacementPolicy.FULL);
+            options.setReplacementPolicy(AddOptions.ReplacementPolicy.FULL, filter);
         }
         if (partial) {
-            options.setReplacementPolicy(AddOptions.ReplacementPolicy.PARTIAL);
+            options.setReplacementPolicy(AddOptions.ReplacementPolicy.PARTIAL, filter);
         }
         return addDocument(doc, options);
     }
@@ -471,6 +472,11 @@ public class Client implements io.redisearch.Client {
             if (options.getReplacementPolicy() == AddOptions.ReplacementPolicy.PARTIAL) {
                 args.add(Keywords.PARTIAL.getRaw());
             }
+            String filter = options.getReplacementFilter();
+            if (filter != null) {
+              args.add(Keywords.IF.getRaw());
+              args.add(SafeEncoder.encode(filter));
+            }
         }
         if (options.getLanguage() != null && !options.getLanguage().isEmpty()) {
             args.add(Keywords.LANGUAGE.getRaw());
@@ -501,7 +507,23 @@ public class Client implements io.redisearch.Client {
      */
     @Override
     public boolean replaceDocument(String docId, double score, Map<String, Object> fields) {
-        return addDocument(docId, score, fields, false, true, null);
+        return this.doAddDocument(docId, score, fields, false/*noSave*/, true/*replace*/, 
+            false/*partial*/, null/*payload*/, null /*filter*/);
+    }
+    
+    /**
+     * replaceDocument is a convenience for calling addDocument with replace=true
+     *
+     * @param docId
+     * @param score
+     * @param fields
+     * @param filter updates the document only if a boolean expression applies to the document
+     * @return true on success
+     */
+    @Override
+    public boolean replaceDocument(String docId, double score, Map<String, Object> fields, String filter) {
+      return this.doAddDocument(docId, score, fields, false/*noSave*/, true/*replace*/, 
+          false/*partial*/, null/*payload*/, filter);     
     }
 
     /**
@@ -516,7 +538,25 @@ public class Client implements io.redisearch.Client {
      */
     @Override
     public boolean updateDocument(String docId, double score, Map<String, Object> fields) {
-        return doAddDocument(docId, score, fields, false, true, true, null);
+        return this.doAddDocument(docId, score, fields, false/*noSave*/,
+            true/*replace*/, true/*partial*/, null/*payload*/, null/*filter*/);
+    }
+    
+    /**
+     * Replace specific fields in a document. Unlike #replaceDocument(), fields not present in the field list
+     * are not erased, but retained. This avoids reindexing the entire document if the new values are not
+     * indexed (though a reindex will happen
+     *
+     * @param docId  the id of the document. It cannot belong to a document already in the index unless replace is set
+     * @param score  the document's score, floating point number between 0 and 1
+     * @param fields a map of the document's fields
+     * @param filter updates the document only if a boolean expression applies to the document
+     * @return true on success
+     */
+    @Override
+    public boolean updateDocument(String docId, double score, Map<String, Object> fields, String filter) {
+      return this.doAddDocument(docId, score, fields, false/*noSave*/,
+          true/*replace*/, true/*partial*/, null/*payload*/, filter);
     }
 
     /**

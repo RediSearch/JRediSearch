@@ -914,7 +914,7 @@ public class ClientTest {
         boolean result = cl.setConfig(ConfigOption.TIMEOUT, "100");
         assertTrue(result);
         Map<String, String> configMap = cl.getAllConfig();
-        assertEquals("100", configMap.get(ConfigOption.TIMEOUT.getName()));
+        assertEquals("100", configMap.get(ConfigOption.TIMEOUT.name()));
         assertEquals("100", cl.getConfig(ConfigOption.TIMEOUT));
 
         cl.setConfig(ConfigOption.ON_TIMEOUT, "fail");

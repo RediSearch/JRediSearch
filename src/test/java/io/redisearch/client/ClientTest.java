@@ -962,5 +962,7 @@ public class ClientTest {
 
         cl.setConfig(ConfigOption.ON_TIMEOUT, "fail");
         assertEquals("fail", cl.getConfig(ConfigOption.ON_TIMEOUT));
+
+        assertFalse(cl.setConfig(ConfigOption.ON_TIMEOUT, "null"));
     }
 }

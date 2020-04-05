@@ -24,7 +24,8 @@ import redis.clients.jedis.util.SafeEncoder;
         GET("FT.GET"),
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"), 
-        CURSOR("FT.CURSOR");
+        CURSOR("FT.CURSOR"),
+        CONFIG("FT.CONFIG");
       
         private final byte[] raw;
 
@@ -52,7 +53,8 @@ import redis.clients.jedis.util.SafeEncoder;
         GET("FT.GET"),
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"),
-        CURSOR("FT.CURSOR");
+        CURSOR("FT.CURSOR"),
+        CONFIG("FT.CONFIG");
       
         private final byte[] raw;
 
@@ -79,6 +81,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getMGetCommand();
         ProtocolCommand getAggregateCommand();
         ProtocolCommand getCursorCommand();
+        ProtocolCommand getConfigCommand();
     }
 
     public static class SingleNodeCommands implements CommandProvider {
@@ -141,6 +144,11 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getCursorCommand() {
           return Command.CURSOR;
+        }
+
+        @Override
+        public ProtocolCommand getConfigCommand() {
+            return Command.CONFIG;
         }
 
         @Override
@@ -209,6 +217,11 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getCursorCommand() {
           return ClusterCommand.CURSOR;
+        }
+
+        @Override
+        public ProtocolCommand getConfigCommand() {
+            return ClusterCommand.CONFIG;
         }
 
         @Override

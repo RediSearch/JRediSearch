@@ -947,5 +947,22 @@ public class ClientTest {
         assertEquals("doc1", res.docs.get(0).getId());
         assertEquals("value", res.docs.get(0).getString("field1"));
         assertTrue( Arrays.equals( blob, (byte[])res.docs.get(0).get("field2")));
-    }   
+    }
+
+    @Test
+    public void testConfig() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+
+        boolean result = cl.setConfig(ConfigOption.TIMEOUT, "100");
+        assertTrue(result);
+        Map<String, String> configMap = cl.getAllConfig();
+        assertEquals("100", configMap.get(ConfigOption.TIMEOUT.name()));
+        assertEquals("100", cl.getConfig(ConfigOption.TIMEOUT));
+
+        cl.setConfig(ConfigOption.ON_TIMEOUT, "fail");
+        assertEquals("fail", cl.getConfig(ConfigOption.ON_TIMEOUT));
+
+        assertFalse(cl.setConfig(ConfigOption.ON_TIMEOUT, "null"));
+    }
 }

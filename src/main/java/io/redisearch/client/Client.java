@@ -227,6 +227,67 @@ public class Client implements io.redisearch.Client {
     }
 
     /**
+     * Set runtime configuration option
+     *
+     * @param option the name of the configuration option
+     * @param value a value for the configuration option
+     * @return
+     */
+    @Override
+    public boolean setConfig(ConfigOption option, String value) {
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getConfigCommand(), Keywords.SET.getRaw(),
+                option.getRaw(), SafeEncoder.encode(value))
+                .getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
+    /**
+     * Get runtime configuration option value
+     *
+     * @param option the name of the configuration option
+     * @return
+     */
+    @Override
+    public String getConfig(ConfigOption option) {
+
+        try (Jedis conn = _conn()) {
+            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), 
+                Keywords.GET.getRaw(), option.getRaw())
+                .getObjectMultiBulkReply();
+            if (objects != null && !objects.isEmpty()) {
+                List<byte[]> kvs = (List<byte[]>) objects.get(0);
+                byte[] val = kvs.get(1);
+                return val == null ? null : SafeEncoder.encode(val);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Get all configuration options, consisting of the option's name and current value
+     *
+     * @return
+     */
+    @Override
+    public Map<String, String> getAllConfig() {
+        try (Jedis conn = _conn()) {
+            List<Object> objects = sendCommand(conn, commands.getConfigCommand(), 
+                Keywords.GET.getRaw(), ConfigOption.ALL.getRaw())
+                .getObjectMultiBulkReply();
+            
+            Map<String, String> configs = new HashMap<>(objects.size());
+            for (Object object : objects) {
+                List<byte[]> kvs = (List<byte[]>) object;
+                byte[] val = kvs.get(1);
+                configs.put(SafeEncoder.encode(kvs.get(0)), val == null ? null : SafeEncoder.encode(val));
+            }
+            return configs;
+        }
+    }
+
+    /**
      * Search the index
      *
      * @param q a {@link Query} object with the query string and optional parameters

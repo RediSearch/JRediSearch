@@ -330,6 +330,18 @@ public interface Client extends Closeable{
     List<Suggestion> getSuggestion(String prefix, SuggestionOptions suggestionOptions);
 
     /**
+     * Deletes a string from a suggestion
+     * @return 1 if the string was found and deleted, 0 otherwise.
+     */
+    Long deleteSuggestion(String entry);
+
+    /**
+     * Gets the size of an auto-complete suggestion
+     * @return the size of an auto-complete suggestion dictionary
+     */
+    Long getSuggestionLength();
+
+    /**
      * Alter index add fields
      *
      * @param fields list of fields

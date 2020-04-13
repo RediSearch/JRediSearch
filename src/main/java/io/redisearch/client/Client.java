@@ -847,7 +847,20 @@ public class Client implements io.redisearch.Client {
                 return getSuggestionsWithScores(args);
         }
     }
-    
+
+    @Override
+    public Long deleteSuggestion(String entry) {
+        try (Jedis conn = _conn()) {
+            return sendCommand(conn, AutoCompleter.Command.SUGDEL, this.indexName, entry).getIntegerReply();
+        }
+    }
+
+    @Override public Long getSuggestionLength() {
+        try (Jedis conn = _conn()) {
+            return sendCommand(conn, AutoCompleter.Command.SUGLEN, this.indexName).getIntegerReply();
+        }
+    }
+
     @Override
     public boolean cursorDelete(long cursorId) {
       try (Jedis conn = _conn()) {

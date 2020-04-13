@@ -788,6 +788,33 @@ public class ClientTest {
     }
 
     @Test
+    public void testAddSuggestionDeleteSuggestionLength() throws Exception {
+        Client cl = getClient();
+        cl.addSuggestion(Suggestion.builder().str("TOPIC OF WORDS").score(1).build(), true);
+        cl.addSuggestion(Suggestion.builder().str("ANOTHER ENTRY").score(1).build(), true);
+
+        long result = cl.deleteSuggestion("ANOTHER ENTRY");
+        assertEquals("The delete of the suggestion should return 1", 1, result);
+        assertTrue(cl.getSuggestionLength() == 1);
+
+        result = cl.deleteSuggestion("ANOTHER ENTRY THAT IS NOT PRESENT");
+        assertEquals("The delete of the suggestion should return 0", 0, result);
+        assertTrue(cl.getSuggestionLength() == 1);
+    }
+
+    @Test
+    public void testAddSuggestionGetSuggestionLength() throws Exception {
+        Client cl = getClient();
+        cl.addSuggestion(Suggestion.builder().str("TOPIC OF WORDS").score(1).build(), true);
+        cl.addSuggestion(Suggestion.builder().str("ANOTHER ENTRY").score(1).build(), true);
+        assertTrue(cl.getSuggestionLength() == 2);
+
+        cl.addSuggestion(Suggestion.builder().str("FINAL ENTRY").score(1).build(), true);
+        assertTrue(cl.getSuggestionLength() == 3);
+    }
+
+
+    @Test
     public void testGetTagField() {
         Client cl = getClient();
         Schema sc = new Schema()

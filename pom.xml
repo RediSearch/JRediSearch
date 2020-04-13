@@ -6,7 +6,7 @@
 
 	<groupId>com.redislabs</groupId>
 	<artifactId>jredisearch</artifactId>
-	<version>1.6.0-SNAPSHOT</version>
+	<version>1.7.0-SNAPSHOT</version>
 
 	<name>JRediSearch</name>
 	<description>Official client for Redis Search</description>

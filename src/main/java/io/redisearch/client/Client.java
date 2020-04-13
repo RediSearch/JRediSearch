@@ -850,12 +850,8 @@ public class Client implements io.redisearch.Client {
 
     @Override
     public Long deleteSuggestion(String entry) {
-        String[] args = new String[2];
-        args[0] = this.indexName;
-        args[1] = entry;
-
         try (Jedis conn = _conn()) {
-            return sendCommand(conn, AutoCompleter.Command.SUGDEL,  args).getIntegerReply();
+            return sendCommand(conn, AutoCompleter.Command.SUGDEL, this.indexName, entry).getIntegerReply();
         }
     }
 

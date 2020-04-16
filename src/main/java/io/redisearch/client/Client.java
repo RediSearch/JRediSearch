@@ -488,10 +488,17 @@ public class Client implements io.redisearch.Client {
         }
 
         args.add(Keywords.FIELDS.getRaw());
-        for (Map.Entry<String, Object> ent : doc.getProperties()) {
-            args.add(SafeEncoder.encode(ent.getKey()));
-            Object value = ent.getValue();
-            args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
+        String key = null;
+        try {
+            for (Map.Entry<String, Object> ent : doc.getProperties()) {
+                key = ent.getKey();
+                args.add(SafeEncoder.encode(key));
+                Object value = ent.getValue();
+                args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
+            }
+        }catch (NullPointerException npe) {
+            // A value cannot be null
+            throw new JedisDataException( "Document attribute '"+ key +"' is null. (Remove it, or set a value)" );
         }
 
         return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 

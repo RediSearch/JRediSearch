@@ -322,6 +322,63 @@ public class ClientTest {
     }
 
     @Test
+    public void testNullField() throws Exception {
+        Client cl = getClient();
+        Schema sc = new Schema()
+                .addTextField("title", 1.0)
+                .addTextField("genre", 1.0)
+                .addTextField("plot", 1.0)
+                .addSortableNumericField("release_year")
+                .addTagField("tag")
+                .addGeoField("loc");
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        // create a document with a field set to null
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("title", "another test with title ");
+        fields.put("genre", "Comedy");
+        fields.put("plot", "this is the plot for the test");
+        fields.put("tag", "fun");
+        fields.put("release_year", 2019);
+        fields.put("loc", "-0.1,51.2");
+
+        cl.addDocument("doc1", fields);
+        SearchResult res = cl.search(new Query("title"));
+        assertEquals(1, res.totalResults);
+
+        fields = new HashMap<>();
+        fields.put("title", "another title another test");
+        fields.put("genre", "Action");
+        fields.put("plot", null);
+        fields.put("tag", null);
+
+        try {
+            cl.addDocument("doc2", fields);
+            fail("Should throw a 'Null Pointer Exception'.");
+        } catch (JedisDataException e) {
+            assertEquals("Document attribute 'tag' is null. (Remove it, or set a value)" , e.getMessage());
+        }
+
+        res = cl.search(new Query("title"));
+        assertEquals(1, res.totalResults);
+
+        // Testing with numerical value
+        fields = new HashMap<>();
+        fields.put("title", "another title another test");
+        fields.put("genre", "Action");
+        fields.put("release_year", null);
+        try {
+            cl.addDocument("doc2", fields);
+            fail("Should throw a 'Null Pointer Exception'.");
+        } catch (JedisDataException e) {
+            assertEquals("Document attribute 'release_year' is null. (Remove it, or set a value)" , e.getMessage());
+        }
+        res = cl.search(new Query("title"));
+        assertEquals(1, res.totalResults);
+    }
+
+
+    @Test
     public void testDrop() throws Exception {
         Client cl = getClient();
         cl._conn().flushDB();

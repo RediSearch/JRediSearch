@@ -25,8 +25,4 @@ public class AutoCompleter {
             return raw;
         }
     }
-//    SUGADD("FT.SUGADD"),
-//    SUGGET("FT.SUGGET"),
-//    SUGDEL("FT.SUGDEL"),
-//    SUGLEN("FT.SUGLEN");
 }

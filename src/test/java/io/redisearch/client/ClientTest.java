@@ -1000,8 +1000,16 @@ public class ClientTest {
 
         Schema sc = new Schema().addTextField("field1", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field1", "value");
+        assertTrue(cl.addDocument("doc1", doc));
 
         assertTrue(cl.addAlias("TEST1"));
+        // search with alias
+        SearchResult res = cl.search(new Query("value").indexAlias("TEST1"));
+        assertEquals(1, res.totalResults);
+        assertEquals("doc1", res.docs.get(0).getId());
+
         assertTrue(cl.updateAlias("TEST2"));
         boolean result = false;
         try {

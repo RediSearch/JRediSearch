@@ -333,7 +333,11 @@ public class Client implements io.redisearch.Client {
     @Override
     public SearchResult search(Query q, boolean decode) {
         ArrayList<byte[]> args = new ArrayList<>(4);
-        args.add(this.endocdedIndexName);
+        if (q.getIndexAlias() != null) {
+            args.add(SafeEncoder.encode(q.getIndexAlias()));
+        } else {
+            args.add(this.endocdedIndexName);
+        }
         q.serializeRedisArgs(args);
 
         try (Jedis conn = _conn()) {

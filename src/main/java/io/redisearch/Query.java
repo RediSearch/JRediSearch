@@ -138,6 +138,8 @@ public class Query {
      */
     protected final Paging _paging = new Paging(0, 10);
 
+    protected String _indexAlias;
+
     protected boolean _verbatim = false;
     protected boolean _noContent = false;
     protected boolean _noStopwords = false;
@@ -458,5 +460,14 @@ public class Query {
         _sortBy = field;
         _sortAsc = ascending;
         return this;
+    }
+
+    public Query indexAlias(String alias) {
+        this._indexAlias = alias;
+        return this;
+    }
+
+    public String getIndexAlias() {
+        return _indexAlias;
     }
 }

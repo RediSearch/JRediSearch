@@ -25,7 +25,10 @@ import redis.clients.jedis.util.SafeEncoder;
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"), 
         CURSOR("FT.CURSOR"),
-        CONFIG("FT.CONFIG");
+        CONFIG("FT.CONFIG"),
+        ALIASADD("FT.ALIASADD"),
+        ALIASUPDATE("FT.ALIASUPDATE"),
+        ALIASDEL("FT.ALIASDEL");
       
         private final byte[] raw;
 
@@ -54,7 +57,10 @@ import redis.clients.jedis.util.SafeEncoder;
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"),
         CURSOR("FT.CURSOR"),
-        CONFIG("FT.CONFIG");
+        CONFIG("FT.CONFIG"),
+        ALIASADD("FT.ALIASADD"),
+        ALIASUPDATE("FT.ALIASUPDATE"),
+        ALIASDEL("FT.ALIASDEL");
       
         private final byte[] raw;
 
@@ -82,6 +88,9 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getAggregateCommand();
         ProtocolCommand getCursorCommand();
         ProtocolCommand getConfigCommand();
+        ProtocolCommand getAliasAddCommand();
+        ProtocolCommand getAliasUpdateCommand();
+        ProtocolCommand getAliasDelCommand();
     }
 
     public static class SingleNodeCommands implements CommandProvider {
@@ -149,6 +158,21 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getConfigCommand() {
             return Command.CONFIG;
+        }
+
+        @Override
+        public ProtocolCommand getAliasAddCommand() {
+            return Command.ALIASADD;
+        }
+
+        @Override
+        public ProtocolCommand getAliasUpdateCommand() {
+            return Command.ALIASUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getAliasDelCommand() {
+            return Command.ALIASDEL;
         }
 
         @Override
@@ -222,6 +246,21 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getConfigCommand() {
             return ClusterCommand.CONFIG;
+        }
+
+        @Override
+        public ProtocolCommand getAliasAddCommand() {
+            return ClusterCommand.ALIASADD;
+        }
+
+        @Override
+        public ProtocolCommand getAliasUpdateCommand() {
+            return ClusterCommand.ALIASUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getAliasDelCommand() {
+            return ClusterCommand.ALIASDEL;
         }
 
         @Override

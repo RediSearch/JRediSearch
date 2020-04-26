@@ -992,4 +992,25 @@ public class ClientTest {
 
         assertFalse(cl.setConfig(ConfigOption.ON_TIMEOUT, "null"));
     }
+
+    @Test
+    public void testAlias() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+
+        Schema sc = new Schema().addTextField("field1", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        assertTrue(cl.addAlias("TEST1"));
+        assertTrue(cl.updateAlias("TEST2"));
+        boolean result = false;
+        try {
+            result = cl.deleteAlias("TEST3");
+        } catch (JedisDataException e) {
+            // Alias does not exist
+            result = false;
+        }
+        assertFalse(result);
+        assertTrue(cl.deleteAlias("TEST2"));
+    }
 }

@@ -372,4 +372,27 @@ public interface Client extends Closeable{
      * @return
      */
     Map<String, String> getAllConfig();
+
+    /**
+     * Add an alias to the index.
+     * @param name
+     * @return
+     */
+    boolean addAlias(String name);
+
+    /**
+     * Update an alias from an index.
+     *
+     * @param name
+     * @return
+     */
+    boolean updateAlias(String name);
+
+    /**
+     * remove an alias from an index.
+     *
+     * @param name
+     * @return
+     */
+    boolean deleteAlias(String name);
 }

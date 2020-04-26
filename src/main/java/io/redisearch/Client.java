@@ -372,4 +372,28 @@ public interface Client extends Closeable{
      * @return
      */
     Map<String, String> getAllConfig();
+    
+    /**
+     * Adds a synonym group.
+     * 
+     * @param terms
+     * 
+     * @return the synonym group id
+     */
+    long addSynonym(String ...terms);
+      
+    /**
+     * Updates a synonym group.
+     * 
+     * @param synonymGroupId
+     * @param terms
+     * 
+     * @return true on success
+     */
+    boolean updateSynonym(long synonymGroupId, String ...terms);
+       
+    /**
+     * @return a map of synonym terms and their synonym group ids.
+     */
+    Map<String, List<Long>> dumpSynonym();
 }

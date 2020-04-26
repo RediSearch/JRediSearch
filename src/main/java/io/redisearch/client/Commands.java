@@ -25,7 +25,10 @@ import redis.clients.jedis.util.SafeEncoder;
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"), 
         CURSOR("FT.CURSOR"),
-        CONFIG("FT.CONFIG");
+        CONFIG("FT.CONFIG"),
+        SYNADD("FT.SYNADD"),
+        SYNUPDATE("FT.SYNUPDATE"),
+        SYNDUMP("FT.SYNDUMP");
       
         private final byte[] raw;
 
@@ -54,7 +57,10 @@ import redis.clients.jedis.util.SafeEncoder;
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"),
         CURSOR("FT.CURSOR"),
-        CONFIG("FT.CONFIG");
+        CONFIG("FT.CONFIG"),
+        SYNADD("FT.SYNADD"),
+        SYNUPDATE("FT.SYNUPDATE"),
+        SYNDUMP("FT.SYNDUMP");
       
         private final byte[] raw;
 
@@ -82,6 +88,9 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getAggregateCommand();
         ProtocolCommand getCursorCommand();
         ProtocolCommand getConfigCommand();
+        ProtocolCommand getSynAddCommand();
+        ProtocolCommand getSynUpdateCommand();
+        ProtocolCommand getSynDumpCommand();
     }
 
     public static class SingleNodeCommands implements CommandProvider {
@@ -155,6 +164,21 @@ import redis.clients.jedis.util.SafeEncoder;
         public ProtocolCommand getMGetCommand() {
           return Command.MGET;
         }
+
+        @Override
+        public ProtocolCommand getSynAddCommand() {
+          return Command.SYNADD;
+        }
+
+        @Override
+        public ProtocolCommand getSynUpdateCommand() {
+          return Command.SYNUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getSynDumpCommand() {
+          return Command.SYNDUMP;
+        }
     }
 
     public static class ClusterCommands implements CommandProvider {
@@ -227,6 +251,21 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getMGetCommand() {
           return ClusterCommand.MGET;
+        }
+
+        @Override
+        public ProtocolCommand getSynAddCommand() {
+          return ClusterCommand.SYNADD;
+        }
+
+        @Override
+        public ProtocolCommand getSynUpdateCommand() {
+          return ClusterCommand.SYNUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getSynDumpCommand() {
+          return ClusterCommand.SYNDUMP;
         }
     }
 }

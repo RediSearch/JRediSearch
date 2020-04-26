@@ -28,7 +28,7 @@ import redis.clients.jedis.util.SafeEncoder;
         CONFIG("FT.CONFIG"),
         ALIASADD("FT.ALIASADD"),
         ALIASUPDATE("FT.ALIASUPDATE"),
-        ALIASDEL("FT.ALIASDEL")
+        ALIASDEL("FT.ALIASDEL"),
         SYNADD("FT.SYNADD"),
         SYNUPDATE("FT.SYNUPDATE"),
         SYNDUMP("FT.SYNDUMP");
@@ -63,7 +63,7 @@ import redis.clients.jedis.util.SafeEncoder;
         CONFIG("FT.CONFIG"),
         ALIASADD("FT.ALIASADD"),
         ALIASUPDATE("FT.ALIASUPDATE"),
-        ALIASDEL("FT.ALIASDEL")
+        ALIASDEL("FT.ALIASDEL"),
         SYNADD("FT.SYNADD"),
         SYNUPDATE("FT.SYNUPDATE"),
         SYNDUMP("FT.SYNDUMP");

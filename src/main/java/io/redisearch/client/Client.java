@@ -287,6 +287,30 @@ public class Client implements io.redisearch.Client {
         }
     }
 
+    @Override
+    public boolean addAlias(String name) {
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getAliasAddCommand(), name, indexName).getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
+    @Override
+    public boolean updateAlias(String name) {
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getAliasUpdateCommand(), name, indexName).getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
+    @Override
+    public boolean deleteAlias(String name) {
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getAliasDelCommand(), name).getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
     /**
      * Search the index
      *

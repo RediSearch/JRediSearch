@@ -962,6 +962,46 @@ public class Client implements io.redisearch.Client {
         }
         return list;
     }
+    
+    @Override
+    public long addSynonym(String... terms) {
+      
+      String[] args = new String[terms.length + 1];
+      args[0] = this.indexName;
+      System.arraycopy(terms, 0, args, 1, terms.length);
+      
+      try (Jedis conn = _conn()) {
+        return sendCommand(conn, commands.getSynAddCommand(), args).getIntegerReply();
+      }
+    }
+
+    @Override
+    public boolean updateSynonym(long synonymGroupId, String... terms) {
+      
+      String[] args = new String[terms.length + 2];
+      args[0] = this.indexName;
+      args[1] = Long.toString(synonymGroupId);
+      System.arraycopy(terms, 0, args, 2, terms.length);
+      
+      try (Jedis conn = _conn()) {
+        String rep = sendCommand(conn, commands.getSynUpdateCommand(), args).getStatusCodeReply();
+        return rep.equals("OK");
+      }
+    }
+
+    @Override
+    public Map<String, List<Long>> dumpSynonym() {
+      try (Jedis conn = _conn()) {
+        List<Object> res = sendCommand(conn, commands.getSynDumpCommand(), this.indexName).getObjectMultiBulkReply();
+        
+        Map<String, List<Long>> dump = new HashMap<>(res.size()/2);
+        for(int i=0; i<res.size(); i+=2) {
+            dump.put(SafeEncoder.encode((byte[])res.get(i)), (List<Long>)res.get(i+1));
+        }
+        return dump;
+      }
+    }
+    
 
     @FunctionalInterface
     private interface KVHandler {

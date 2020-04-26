@@ -1004,22 +1004,31 @@ public class ClientTest {
         doc.put("field1", "value");
         assertTrue(cl.addDocument("doc1", doc));
 
-        assertTrue(cl.addAlias("TEST1"));
-        // search with alias
-        SearchResult res = cl.search(new Query("value").indexAlias("TEST1"));
-        assertEquals(1, res.totalResults);
-        assertEquals("doc1", res.docs.get(0).getId());
+        assertTrue(cl.addAlias("ALIAS1"));
+        Client alias1 = getClient("ALIAS1");
+        SearchResult res1 = alias1.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res1.totalResults);
+        assertEquals("value", res1.docs.get(0).get("field1"));
 
-        assertTrue(cl.updateAlias("TEST2"));
-        boolean result = false;
+        assertTrue(cl.updateAlias("ALIAS2"));
+        Client alias2 = getClient("ALIAS2");
+        SearchResult res2 = alias2.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res2.totalResults);
+        assertEquals("value", res2.docs.get(0).get("field1"));
+
         try {
-            result = cl.deleteAlias("TEST3");
+            cl.deleteAlias("ALIAS3");
+            Assert.fail("Should throw JedisDataException");
         } catch (JedisDataException e) {
             // Alias does not exist
-            result = false;
         }
-        assertFalse(result);
-        assertTrue(cl.deleteAlias("TEST2"));
+        assertTrue(cl.deleteAlias("ALIAS2"));
+        try {
+            cl.deleteAlias("ALIAS2");
+            Assert.fail("Should throw JedisDataException");
+        } catch (JedisDataException e) {
+            // Alias does not exist
+        }
     }
   
     @Test

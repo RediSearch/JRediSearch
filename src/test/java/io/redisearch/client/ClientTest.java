@@ -992,4 +992,30 @@ public class ClientTest {
 
         assertFalse(cl.setConfig(ConfigOption.ON_TIMEOUT, "null"));
     }
+    
+    @Test
+    public void testSyn() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+        
+        Schema sc = new Schema().addTextField("name", 1.0).addTextField("addr", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        
+        long group1 = cl.addSynonym("girl", "baby");
+        assertTrue(cl.updateSynonym(group1, "child"));
+        
+        long group2 = cl.addSynonym("child");
+        
+        assertNotSame(group1, group2);
+        
+        Map<String, List<Long>> dump = cl.dumpSynonym();
+        
+        Map<String, List<Long>> expected = new HashMap<>();
+        expected.put("girl", Arrays.asList(group1));
+        expected.put("baby", Arrays.asList(group1));
+        expected.put("child", Arrays.asList(group1, group2));
+        assertEquals(expected, dump);        
+        
+    }
 }

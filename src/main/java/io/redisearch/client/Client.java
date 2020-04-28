@@ -512,9 +512,14 @@ public class Client implements io.redisearch.Client {
         }
 
         args.add(Keywords.FIELDS.getRaw());
+        String key = null;
         for (Map.Entry<String, Object> ent : doc.getProperties()) {
-            args.add(SafeEncoder.encode(ent.getKey()));
+            key = ent.getKey();
+            args.add(SafeEncoder.encode(key));
             Object value = ent.getValue();
+            if (value == null) {
+                throw new NullPointerException( "Document attribute '"+ key +"' is null. (Remove it, or set a value)" );
+            }
             args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
         }
 

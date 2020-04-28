@@ -25,7 +25,13 @@ import redis.clients.jedis.util.SafeEncoder;
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"), 
         CURSOR("FT.CURSOR"),
-        CONFIG("FT.CONFIG");
+        CONFIG("FT.CONFIG"),
+        ALIASADD("FT.ALIASADD"),
+        ALIASUPDATE("FT.ALIASUPDATE"),
+        ALIASDEL("FT.ALIASDEL"),
+        SYNADD("FT.SYNADD"),
+        SYNUPDATE("FT.SYNUPDATE"),
+        SYNDUMP("FT.SYNDUMP");
       
         private final byte[] raw;
 
@@ -54,7 +60,13 @@ import redis.clients.jedis.util.SafeEncoder;
         MGET("FT.MGET"),
         AGGREGATE("FT.AGGREGATE"),
         CURSOR("FT.CURSOR"),
-        CONFIG("FT.CONFIG");
+        CONFIG("FT.CONFIG"),
+        ALIASADD("FT.ALIASADD"),
+        ALIASUPDATE("FT.ALIASUPDATE"),
+        ALIASDEL("FT.ALIASDEL"),
+        SYNADD("FT.SYNADD"),
+        SYNUPDATE("FT.SYNUPDATE"),
+        SYNDUMP("FT.SYNDUMP");
       
         private final byte[] raw;
 
@@ -82,6 +94,12 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getAggregateCommand();
         ProtocolCommand getCursorCommand();
         ProtocolCommand getConfigCommand();
+        ProtocolCommand getAliasAddCommand();
+        ProtocolCommand getAliasUpdateCommand();
+        ProtocolCommand getAliasDelCommand();
+        ProtocolCommand getSynAddCommand();
+        ProtocolCommand getSynUpdateCommand();
+        ProtocolCommand getSynDumpCommand();
     }
 
     public static class SingleNodeCommands implements CommandProvider {
@@ -152,8 +170,38 @@ import redis.clients.jedis.util.SafeEncoder;
         }
 
         @Override
+        public ProtocolCommand getAliasAddCommand() {
+            return Command.ALIASADD;
+        }
+
+        @Override
+        public ProtocolCommand getAliasUpdateCommand() {
+            return Command.ALIASUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getAliasDelCommand() {
+            return Command.ALIASDEL;
+        }
+
+        @Override
         public ProtocolCommand getMGetCommand() {
           return Command.MGET;
+        }
+
+        @Override
+        public ProtocolCommand getSynAddCommand() {
+          return Command.SYNADD;
+        }
+
+        @Override
+        public ProtocolCommand getSynUpdateCommand() {
+          return Command.SYNUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getSynDumpCommand() {
+          return Command.SYNDUMP;
         }
     }
 
@@ -225,8 +273,38 @@ import redis.clients.jedis.util.SafeEncoder;
         }
 
         @Override
+        public ProtocolCommand getAliasAddCommand() {
+            return ClusterCommand.ALIASADD;
+        }
+
+        @Override
+        public ProtocolCommand getAliasUpdateCommand() {
+            return ClusterCommand.ALIASUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getAliasDelCommand() {
+            return ClusterCommand.ALIASDEL;
+        }
+
+        @Override
         public ProtocolCommand getMGetCommand() {
           return ClusterCommand.MGET;
+        }
+
+        @Override
+        public ProtocolCommand getSynAddCommand() {
+          return ClusterCommand.SYNADD;
+        }
+
+        @Override
+        public ProtocolCommand getSynUpdateCommand() {
+          return ClusterCommand.SYNUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getSynDumpCommand() {
+          return ClusterCommand.SYNDUMP;
         }
     }
 }

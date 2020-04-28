@@ -1049,4 +1049,67 @@ public class ClientTest {
 
         assertFalse(cl.setConfig(ConfigOption.ON_TIMEOUT, "null"));
     }
+
+    @Test
+    public void testAlias() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+
+        Schema sc = new Schema().addTextField("field1", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field1", "value");
+        assertTrue(cl.addDocument("doc1", doc));
+
+        assertTrue(cl.addAlias("ALIAS1"));
+        Client alias1 = getClient("ALIAS1");
+        SearchResult res1 = alias1.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res1.totalResults);
+        assertEquals("value", res1.docs.get(0).get("field1"));
+
+        assertTrue(cl.updateAlias("ALIAS2"));
+        Client alias2 = getClient("ALIAS2");
+        SearchResult res2 = alias2.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res2.totalResults);
+        assertEquals("value", res2.docs.get(0).get("field1"));
+
+        try {
+            cl.deleteAlias("ALIAS3");
+            Assert.fail("Should throw JedisDataException");
+        } catch (JedisDataException e) {
+            // Alias does not exist
+        }
+        assertTrue(cl.deleteAlias("ALIAS2"));
+        try {
+            cl.deleteAlias("ALIAS2");
+            Assert.fail("Should throw JedisDataException");
+        } catch (JedisDataException e) {
+            // Alias does not exist
+        }
+    }
+  
+    @Test
+    public void testSyn() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+        
+        Schema sc = new Schema().addTextField("name", 1.0).addTextField("addr", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        
+        long group1 = cl.addSynonym("girl", "baby");
+        assertTrue(cl.updateSynonym(group1, "child"));
+        
+        long group2 = cl.addSynonym("child");
+        
+        assertNotSame(group1, group2);
+        
+        Map<String, List<Long>> dump = cl.dumpSynonym();
+        
+        Map<String, List<Long>> expected = new HashMap<>();
+        expected.put("girl", Arrays.asList(group1));
+        expected.put("baby", Arrays.asList(group1));
+        expected.put("child", Arrays.asList(group1, group2));
+        assertEquals(expected, dump);               
+    }
 }

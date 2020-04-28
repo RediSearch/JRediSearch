@@ -372,4 +372,51 @@ public interface Client extends Closeable{
      * @return
      */
     Map<String, String> getAllConfig();
+
+    /**
+     * Add an alias to the index.
+     * @param name
+     * @return
+     */
+    boolean addAlias(String name);
+
+    /**
+     * Update an alias from an index.
+     *
+     * @param name
+     * @return
+     */
+    boolean updateAlias(String name);
+
+    /**
+     * remove an alias from an index.
+     *
+     * @param name
+     * @return
+     */
+    boolean deleteAlias(String name);
+    
+    /**
+     * Adds a synonym group.
+     * 
+     * @param terms
+     * 
+     * @return the synonym group id
+     */
+    long addSynonym(String ...terms);
+      
+    /**
+     * Updates a synonym group.
+     * 
+     * @param synonymGroupId
+     * @param terms
+     * 
+     * @return true on success
+     */
+    boolean updateSynonym(long synonymGroupId, String ...terms);
+       
+    /**
+     * @return a map of synonym terms and their synonym group ids.
+     */
+    Map<String, List<Long>> dumpSynonym();
 }

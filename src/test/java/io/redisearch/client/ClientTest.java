@@ -354,8 +354,8 @@ public class ClientTest {
 
         try {
             cl.addDocument("doc2", fields);
-            fail("Should throw a 'JedisDataException'.");
-        } catch (JedisDataException e) {
+            fail("Should throw a 'NullPointerException'.");
+        } catch (NullPointerException e) {
             assertEquals("Document attribute 'tag' is null. (Remove it, or set a value)" , e.getMessage());
         }
 
@@ -369,8 +369,8 @@ public class ClientTest {
         fields.put("release_year", null);
         try {
             cl.addDocument("doc2", fields);
-            fail("Should throw a 'JedisDataException'.");
-        } catch (JedisDataException e) {
+            fail("Should throw a 'NullPointerException'.");
+        } catch (NullPointerException e) {
             assertEquals("Document attribute 'release_year' is null. (Remove it, or set a value)" , e.getMessage());
         }
         res = cl.search(new Query("title"));

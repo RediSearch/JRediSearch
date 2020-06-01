@@ -318,6 +318,40 @@ public class Client implements io.redisearch.Client {
      * @return a {@link SearchResult} object with the results
      */
     @Override
+    public SearchResult[] searchBatch(Query... queries) {
+
+      Response[] responses = new Response[queries.length];
+      try (Jedis conn = _conn()) {
+        Pipeline pipelined = conn.pipelined();
+        
+        for(int i=0; i<queries.length ; ++i) {
+          Query q = queries[i];
+          ArrayList<byte[]> args = new ArrayList<>(4);
+          args.add(this.endocdedIndexName);
+          q.serializeRedisArgs(args);
+          responses[i] = pipelined.sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][]));;          
+        }
+        
+        pipelined.sync();
+        
+        SearchResult[] results = new SearchResult[queries.length];
+        for(int i=0; i<queries.length ; ++i) {
+          Query q = queries[i];
+          Response response = responses[i];
+          results[i] = new SearchResult((List<Object>)response.get(), !q.getNoContent(), q.getWithScores(), q.getWithPayloads(), true);
+        }
+        return results;
+      }
+    }
+    
+    
+    /**
+     * Search the index
+     *
+     * @param q a {@link Query} object with the query string and optional parameters
+     * @return a {@link SearchResult} object with the results
+     */
+    @Override
     public SearchResult search(Query q) {
       return this.search(q, true);
     }

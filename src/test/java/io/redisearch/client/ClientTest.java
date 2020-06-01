@@ -86,6 +86,46 @@ public class ClientTest {
         }
         assertTrue(threw);
     }
+    
+    @Test
+    public void searchBatch() throws Exception {
+        Client cl = getClient();
+
+        Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("title", "hello world");
+        fields.put("body", "lorem ipsum");
+        for (int i = 0; i < 50; i++) {
+          fields.put("title", "hello world");
+            assertTrue(cl.addDocument(String.format("doc%d", i), (double) i / 100.0, fields));
+        }
+        
+        for (int i = 50; i < 100; i++) {
+          fields.put("title", "good night");
+            assertTrue(cl.addDocument(String.format("doc%d", i), (double) i / 100.0, fields));
+        }
+
+        SearchResult[] res = cl.searchBatch(
+            new Query("hello world").limit(0, 5).setWithScores(),
+            new Query("good night").limit(0, 5).setWithScores()
+            );
+        
+        assertEquals(2, res.length);
+        assertEquals(50, res[0].totalResults);
+        assertEquals(50, res[1].totalResults);
+        assertEquals(5, res[0].docs.size());
+        for (Document d : res[0].docs) {
+            assertTrue(d.getId().startsWith("doc"));
+            assertTrue(d.getScore() < 100);
+            assertEquals(
+                String.format(
+                "{\"id\":\"%s\",\"score\":%s,\"properties\":{\"title\":\"hello world\",\"body\":\"lorem ipsum\"}}", 
+                d.getId(), Double.toString(d.getScore())),
+                d.toString());
+        }    
+    }
 
 
     @Test

@@ -62,6 +62,14 @@ public interface Client extends Closeable{
     SearchResult search(Query q);
 
     /**
+     * Batch search the index
+     *
+     * @param queries batch of {@link Query} objects with the query strings and optional parameters
+     * @return {@link SearchResult} batch with the results
+     */
+    SearchResult[] searchBatch(Query... queries);
+    
+    /**
      * Search the index
      *
      * @param q a {@link Query} object with the query string and optional parameters

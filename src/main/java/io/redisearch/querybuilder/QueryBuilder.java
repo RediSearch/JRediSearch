@@ -16,8 +16,6 @@ public class QueryBuilder {
     private QueryBuilder() {
     }
 
-    private static final String ANY_FIELD = "";
-
     /**
      * Create a new intersection node with child nodes. An intersection node is true if all its children
      * are also true

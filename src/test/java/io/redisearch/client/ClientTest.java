@@ -11,11 +11,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.SafeEncoder;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 import static junit.framework.TestCase.*;
 
@@ -531,11 +527,31 @@ public class ClientTest {
     public void testInfo() throws Exception {
         Client cl = getClient();
 
-        Schema sc = new Schema().addTextField("title", 1.0);
+        String MOVIE_ID = "movie_id";
+        String TITLE = "title";
+        String GENRE = "genre";
+        String VOTES = "votes";
+        String RATING = "rating";
+        String RELEASE_YEAR = "release_year";
+        String PLOT = "plot";
+        String POSTER = "poster";
+
+        Schema sc =  new Schema()
+                    .addTextField(TITLE, 5.0)
+                    .addSortableTextField(PLOT, 1.0)
+                    .addSortableTagField(GENRE, ",")
+                    .addSortableNumericField(RELEASE_YEAR)
+                    .addSortableNumericField(RATING)
+                    .addSortableNumericField(VOTES);
+
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
+
+        assertEquals(6, ((ArrayList)info.get("fields")).size());
+        assertEquals("global_idle", ((ArrayList)info.get("cursor_stats")).get(0));
+        assertEquals(0L, ((ArrayList)info.get("cursor_stats")).get(1));
 
     }
 

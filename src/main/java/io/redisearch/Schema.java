@@ -49,8 +49,7 @@ public class Schema {
         }
 
         @Override public String toString() {
-            return "Field{" + "name='" + name + '\'' + ", type=" + type + ", sortable=" + sortable + ", noindex=" + noindex
-                    + '}';
+            return "Field{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex + '}';
         }
     }
 
@@ -116,8 +115,8 @@ public class Schema {
 
         @Override
         public String toString() {
-            return "TextField{" + "name='" + name + '\'' + ", type=" + type + ", sortable=" + sortable + ", noindex=" + noindex
-                    + ", weight=" + weight + ", nostem=" + nostem + ", phonetic='" + phonetic + '\'' + '}';
+            return "TextField{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex
+                    + ", weight=" + weight + ", nostem=" + nostem + ", phonetic='" + phonetic + "'}";
         }
     }
 
@@ -155,8 +154,8 @@ public class Schema {
 
         @Override
         public String toString() {
-            return "TagField{" + "name='" + name + '\'' + ", type=" + type + ", sortable=" + sortable + ", noindex=" + noindex
-                    + ", separator='" + separator + '\'' + '}';
+            return "TagField{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex
+                    + ", separator='" + separator + "'}";
         }
     }
 
@@ -235,6 +234,6 @@ public class Schema {
     }
 
     @Override public String toString() {
-        return "Schema{" + "fields=" + fields + '}';
+        return "Schema{fields=" + fields + '}';
     }
 }

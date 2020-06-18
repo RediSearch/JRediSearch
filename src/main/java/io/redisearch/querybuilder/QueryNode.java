@@ -51,11 +51,11 @@ public abstract class QueryNode implements Node {
     protected boolean shouldUseParens(ParenMode mode) {
         if (mode == ParenMode.ALWAYS) {
             return true;
-        } else if (mode == ParenMode.NEVER) {
+        } 
+        if (mode == ParenMode.NEVER) {
             return false;
-        } else {
-            return children.size() > 1;
         }
+        return children.size() > 1;
     }
 
     @Override
@@ -63,14 +63,14 @@ public abstract class QueryNode implements Node {
         StringBuilder sb = new StringBuilder();
         StringJoiner sj = new StringJoiner(getJoinString());
         if (shouldUseParens(parenMode)) {
-            sb.append("(");
+            sb.append('(');
         }
         for (Node n : children) {
             sj.add(n.toString(parenMode));
         }
         sb.append(sj.toString());
         if (shouldUseParens(parenMode)) {
-            sb.append(")");
+            sb.append(')');
         }
         return sb.toString();
     }

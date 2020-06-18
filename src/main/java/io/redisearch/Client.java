@@ -15,31 +15,31 @@ import java.util.Map;
 public interface Client extends Closeable{
   
     /**
-     * @Deprecated use {@link Keywords#INCR} instead 
+     * @deprecated use {@link Keywords#INCR} instead 
      */
     @Deprecated
     String INCREMENT_FLAG = "INCR";
     
     /**
-     * @Deprecated use {@link Keywords#PAYLOAD} instead 
+     * @deprecated use {@link Keywords#PAYLOAD} instead 
      */
     @Deprecated
     String PAYLOAD_FLAG = "PAYLOAD";
     
     /**
-     * @Deprecated use {@link Keywords#MAX} instead 
+     * @deprecated use {@link Keywords#MAX} instead 
      */
     @Deprecated
     String MAX_FLAG = "MAX";
     
     /**
-     * @Deprecated use {@link Keywords#FUZZY} instead 
+     * @deprecated use {@link Keywords#FUZZY} instead 
      */
     @Deprecated
     String FUZZY_FLAG = "FUZZY";
     
     /**
-     * @Deprecated use {@link Keywords#DD} instead 
+     * @deprecated use {@link Keywords#DD} instead 
      */
     @Deprecated
     String DELETE_DOCUMENT = "DD";

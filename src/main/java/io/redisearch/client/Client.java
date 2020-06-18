@@ -329,7 +329,7 @@ public class Client implements io.redisearch.Client {
           ArrayList<byte[]> args = new ArrayList<>(4);
           args.add(this.endocdedIndexName);
           q.serializeRedisArgs(args);
-          responses[i] = pipelined.sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][]));;          
+          responses[i] = pipelined.sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][]));          
         }
         
         pipelined.sync();

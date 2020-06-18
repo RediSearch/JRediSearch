@@ -47,6 +47,10 @@ public class Schema {
                 args.add("NOINDEX");
             }
         }
+
+        @Override public String toString() {
+            return "Field{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex + "}";
+        }
     }
 
     /**
@@ -108,6 +112,12 @@ public class Schema {
               args.add(this.phonetic);
             }
         }
+
+        @Override
+        public String toString() {
+            return "TextField{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex
+                    + ", weight=" + weight + ", nostem=" + nostem + ", phonetic='" + phonetic + "'}";
+        }
     }
 
     public static class TagField extends Field {
@@ -140,6 +150,12 @@ public class Schema {
                 args.add("SEPARATOR");
                 args.add(separator);
             }
+        }
+
+        @Override
+        public String toString() {
+            return "TagField{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex
+                    + ", separator='" + separator + "'}";
         }
     }
 
@@ -217,4 +233,7 @@ public class Schema {
         return this;
     }
 
+    @Override public String toString() {
+        return "Schema{fields=" + fields + "}";
+    }
 }

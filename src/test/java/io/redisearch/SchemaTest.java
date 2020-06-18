@@ -31,7 +31,5 @@ public class SchemaTest {
         String schemaPrint = sc.toString();
         Assert.assertThat( schemaPrint, CoreMatchers.startsWith("Schema{fields=[TextField{name='title'"));
         Assert.assertThat( schemaPrint, CoreMatchers.containsString("{name='release_year', type=Numeric, sortable=true, noindex=false}"));
-
-        System.out.println(schemaPrint);
     }
 }

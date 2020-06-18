@@ -49,7 +49,7 @@ public class Schema {
         }
 
         @Override public String toString() {
-            return "Field{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex + '}';
+            return "Field{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex + "}";
         }
     }
 
@@ -234,6 +234,6 @@ public class Schema {
     }
 
     @Override public String toString() {
-        return "Schema{fields=" + fields + '}';
+        return "Schema{fields=" + fields + "}";
     }
 }

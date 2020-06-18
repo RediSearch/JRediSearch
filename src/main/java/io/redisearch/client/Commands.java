@@ -8,8 +8,6 @@ import redis.clients.jedis.util.SafeEncoder;
  */
  public class Commands {
 
-
-    // TODO: Move this to the client and autocompleter as two different enums
     public enum Command implements ProtocolCommand {
 
         CREATE("FT.CREATE"),
@@ -43,7 +41,11 @@ import redis.clients.jedis.util.SafeEncoder;
             return raw;
         }
     }
-
+    
+    /**
+     * @deprecated ClusterCommand is going to be removed in the future
+     */
+    @Deprecated
     public enum ClusterCommand implements ProtocolCommand {
 
         CREATE("FT.CREATE"),

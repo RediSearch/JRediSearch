@@ -8,8 +8,6 @@ import redis.clients.jedis.util.SafeEncoder;
  */
  public class Commands {
 
-
-    // TODO: Move this to the client and autocompleter as two different enums
     public enum Command implements ProtocolCommand {
 
         CREATE("FT.CREATE"),
@@ -26,6 +24,9 @@ import redis.clients.jedis.util.SafeEncoder;
         AGGREGATE("FT.AGGREGATE"), 
         CURSOR("FT.CURSOR"),
         CONFIG("FT.CONFIG"),
+        ALIASADD("FT.ALIASADD"),
+        ALIASUPDATE("FT.ALIASUPDATE"),
+        ALIASDEL("FT.ALIASDEL"),
         SYNADD("FT.SYNADD"),
         SYNUPDATE("FT.SYNUPDATE"),
         SYNDUMP("FT.SYNDUMP");
@@ -40,7 +41,11 @@ import redis.clients.jedis.util.SafeEncoder;
             return raw;
         }
     }
-
+    
+    /**
+     * @deprecated ClusterCommand is going to be removed in the future
+     */
+    @Deprecated
     public enum ClusterCommand implements ProtocolCommand {
 
         CREATE("FT.CREATE"),
@@ -58,6 +63,9 @@ import redis.clients.jedis.util.SafeEncoder;
         AGGREGATE("FT.AGGREGATE"),
         CURSOR("FT.CURSOR"),
         CONFIG("FT.CONFIG"),
+        ALIASADD("FT.ALIASADD"),
+        ALIASUPDATE("FT.ALIASUPDATE"),
+        ALIASDEL("FT.ALIASDEL"),
         SYNADD("FT.SYNADD"),
         SYNUPDATE("FT.SYNUPDATE"),
         SYNDUMP("FT.SYNDUMP");
@@ -88,6 +96,9 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getAggregateCommand();
         ProtocolCommand getCursorCommand();
         ProtocolCommand getConfigCommand();
+        ProtocolCommand getAliasAddCommand();
+        ProtocolCommand getAliasUpdateCommand();
+        ProtocolCommand getAliasDelCommand();
         ProtocolCommand getSynAddCommand();
         ProtocolCommand getSynUpdateCommand();
         ProtocolCommand getSynDumpCommand();
@@ -158,6 +169,21 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getConfigCommand() {
             return Command.CONFIG;
+        }
+
+        @Override
+        public ProtocolCommand getAliasAddCommand() {
+            return Command.ALIASADD;
+        }
+
+        @Override
+        public ProtocolCommand getAliasUpdateCommand() {
+            return Command.ALIASUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getAliasDelCommand() {
+            return Command.ALIASDEL;
         }
 
         @Override
@@ -246,6 +272,21 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getConfigCommand() {
             return ClusterCommand.CONFIG;
+        }
+
+        @Override
+        public ProtocolCommand getAliasAddCommand() {
+            return ClusterCommand.ALIASADD;
+        }
+
+        @Override
+        public ProtocolCommand getAliasUpdateCommand() {
+            return ClusterCommand.ALIASUPDATE;
+        }
+
+        @Override
+        public ProtocolCommand getAliasDelCommand() {
+            return ClusterCommand.ALIASDEL;
         }
 
         @Override

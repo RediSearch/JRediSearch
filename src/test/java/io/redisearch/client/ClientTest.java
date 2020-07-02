@@ -86,6 +86,46 @@ public class ClientTest {
         }
         assertTrue(threw);
     }
+    
+    @Test
+    public void searchBatch() throws Exception {
+        Client cl = getClient();
+
+        Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
+
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("title", "hello world");
+        fields.put("body", "lorem ipsum");
+        for (int i = 0; i < 50; i++) {
+          fields.put("title", "hello world");
+            assertTrue(cl.addDocument(String.format("doc%d", i), (double) i / 100.0, fields));
+        }
+        
+        for (int i = 50; i < 100; i++) {
+          fields.put("title", "good night");
+            assertTrue(cl.addDocument(String.format("doc%d", i), (double) i / 100.0, fields));
+        }
+
+        SearchResult[] res = cl.searchBatch(
+            new Query("hello world").limit(0, 5).setWithScores(),
+            new Query("good night").limit(0, 5).setWithScores()
+            );
+        
+        assertEquals(2, res.length);
+        assertEquals(50, res[0].totalResults);
+        assertEquals(50, res[1].totalResults);
+        assertEquals(5, res[0].docs.size());
+        for (Document d : res[0].docs) {
+            assertTrue(d.getId().startsWith("doc"));
+            assertTrue(d.getScore() < 100);
+            assertEquals(
+                String.format(
+                "{\"id\":\"%s\",\"score\":%s,\"properties\":{\"title\":\"hello world\",\"body\":\"lorem ipsum\"}}", 
+                d.getId(), Double.toString(d.getScore())),
+                d.toString());
+        }    
+    }
 
 
     @Test
@@ -320,6 +360,63 @@ public class ClientTest {
         assertEquals(1, res.totalResults);
         assertEquals("foo", res.docs.get(0).getId());
     }
+
+    @Test
+    public void testNullField() throws Exception {
+        Client cl = getClient();
+        Schema sc = new Schema()
+                .addTextField("title", 1.0)
+                .addTextField("genre", 1.0)
+                .addTextField("plot", 1.0)
+                .addSortableNumericField("release_year")
+                .addTagField("tag")
+                .addGeoField("loc");
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        // create a document with a field set to null
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("title", "another test with title ");
+        fields.put("genre", "Comedy");
+        fields.put("plot", "this is the plot for the test");
+        fields.put("tag", "fun");
+        fields.put("release_year", 2019);
+        fields.put("loc", "-0.1,51.2");
+
+        cl.addDocument("doc1", fields);
+        SearchResult res = cl.search(new Query("title"));
+        assertEquals(1, res.totalResults);
+
+        fields = new HashMap<>();
+        fields.put("title", "another title another test");
+        fields.put("genre", "Action");
+        fields.put("plot", null);
+        fields.put("tag", null);
+
+        try {
+            cl.addDocument("doc2", fields);
+            fail("Should throw a 'NullPointerException'.");
+        } catch (NullPointerException e) {
+            assertEquals("Document attribute 'tag' is null. (Remove it, or set a value)" , e.getMessage());
+        }
+
+        res = cl.search(new Query("title"));
+        assertEquals(1, res.totalResults);
+
+        // Testing with numerical value
+        fields = new HashMap<>();
+        fields.put("title", "another title another test");
+        fields.put("genre", "Action");
+        fields.put("release_year", null);
+        try {
+            cl.addDocument("doc2", fields);
+            fail("Should throw a 'NullPointerException'.");
+        } catch (NullPointerException e) {
+            assertEquals("Document attribute 'release_year' is null. (Remove it, or set a value)" , e.getMessage());
+        }
+        res = cl.search(new Query("title"));
+        assertEquals(1, res.totalResults);
+    }
+
 
     @Test
     public void testDrop() throws Exception {
@@ -992,7 +1089,45 @@ public class ClientTest {
 
         assertFalse(cl.setConfig(ConfigOption.ON_TIMEOUT, "null"));
     }
-    
+
+    @Test
+    public void testAlias() throws Exception {
+        Client cl = getClient();
+        cl._conn().flushDB();
+
+        Schema sc = new Schema().addTextField("field1", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+        Map<String, Object> doc = new HashMap<>();
+        doc.put("field1", "value");
+        assertTrue(cl.addDocument("doc1", doc));
+
+        assertTrue(cl.addAlias("ALIAS1"));
+        Client alias1 = getClient("ALIAS1");
+        SearchResult res1 = alias1.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res1.totalResults);
+        assertEquals("value", res1.docs.get(0).get("field1"));
+
+        assertTrue(cl.updateAlias("ALIAS2"));
+        Client alias2 = getClient("ALIAS2");
+        SearchResult res2 = alias2.search(new Query("*").returnFields("field1"));
+        assertEquals(1, res2.totalResults);
+        assertEquals("value", res2.docs.get(0).get("field1"));
+
+        try {
+            cl.deleteAlias("ALIAS3");
+            Assert.fail("Should throw JedisDataException");
+        } catch (JedisDataException e) {
+            // Alias does not exist
+        }
+        assertTrue(cl.deleteAlias("ALIAS2"));
+        try {
+            cl.deleteAlias("ALIAS2");
+            Assert.fail("Should throw JedisDataException");
+        } catch (JedisDataException e) {
+            // Alias does not exist
+        }
+    }
+  
     @Test
     public void testSyn() throws Exception {
         Client cl = getClient();
@@ -1015,7 +1150,6 @@ public class ClientTest {
         expected.put("girl", Arrays.asList(group1));
         expected.put("baby", Arrays.asList(group1));
         expected.put("child", Arrays.asList(group1, group2));
-        assertEquals(expected, dump);        
-        
+        assertEquals(expected, dump);               
     }
 }

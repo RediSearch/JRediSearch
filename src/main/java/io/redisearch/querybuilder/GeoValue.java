@@ -8,7 +8,7 @@ public class GeoValue extends Value {
         KILOMETERS("km"),
         METERS("m"),
         FEET("ft"),
-        MILES("m");
+        MILES("mi");
 
         private final String unit;
         Unit(String unit) {

@@ -88,6 +88,15 @@ public class BuilderTest {
                 add(disjunct("created", lt(1000)));
         assertEquals("(@name:(mark|dvir) @time:[100 200] -@created:[-inf (1000])", n.toString());
     }
+    
+    @Test
+    public void testOptional() {
+        Node n = optional("name", tags("foo", "bar"));
+        assertEquals("~@name:{foo | bar}", n.toString());
+        
+        n = optional(n, n);
+        assertEquals("~(~@name:{foo | bar} ~@name:{foo | bar})", n.toString());
+    }
 
     @Test
     public void testAggregation() {

@@ -15,31 +15,31 @@ import java.util.Map;
 public interface Client extends Closeable{
   
     /**
-     * @Deprecated use {@link Keywords#INCR} instead 
+     * @deprecated use {@link Keywords#INCR} instead 
      */
     @Deprecated
     String INCREMENT_FLAG = "INCR";
     
     /**
-     * @Deprecated use {@link Keywords#PAYLOAD} instead 
+     * @deprecated use {@link Keywords#PAYLOAD} instead 
      */
     @Deprecated
     String PAYLOAD_FLAG = "PAYLOAD";
     
     /**
-     * @Deprecated use {@link Keywords#MAX} instead 
+     * @deprecated use {@link Keywords#MAX} instead 
      */
     @Deprecated
     String MAX_FLAG = "MAX";
     
     /**
-     * @Deprecated use {@link Keywords#FUZZY} instead 
+     * @deprecated use {@link Keywords#FUZZY} instead 
      */
     @Deprecated
     String FUZZY_FLAG = "FUZZY";
     
     /**
-     * @Deprecated use {@link Keywords#DD} instead 
+     * @deprecated use {@link Keywords#DD} instead 
      */
     @Deprecated
     String DELETE_DOCUMENT = "DD";
@@ -61,6 +61,14 @@ public interface Client extends Closeable{
      */
     SearchResult search(Query q);
 
+    /**
+     * Batch search the index
+     *
+     * @param queries batch of {@link Query} objects with the query strings and optional parameters
+     * @return {@link SearchResult} batch with the results
+     */
+    SearchResult[] searchBatch(Query... queries);
+    
     /**
      * Search the index
      *
@@ -372,6 +380,29 @@ public interface Client extends Closeable{
      * @return
      */
     Map<String, String> getAllConfig();
+
+    /**
+     * Add an alias to the index.
+     * @param name
+     * @return
+     */
+    boolean addAlias(String name);
+
+    /**
+     * Update an alias from an index.
+     *
+     * @param name
+     * @return
+     */
+    boolean updateAlias(String name);
+
+    /**
+     * remove an alias from an index.
+     *
+     * @param name
+     * @return
+     */
+    boolean deleteAlias(String name);
     
     /**
      * Adds a synonym group.

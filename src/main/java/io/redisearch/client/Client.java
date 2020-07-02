@@ -287,6 +287,64 @@ public class Client implements io.redisearch.Client {
         }
     }
 
+    @Override
+    public boolean addAlias(String name) {
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getAliasAddCommand(), name, indexName).getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
+    @Override
+    public boolean updateAlias(String name) {
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getAliasUpdateCommand(), name, indexName).getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
+    @Override
+    public boolean deleteAlias(String name) {
+        try (Jedis conn = _conn()) {
+            String rep = sendCommand(conn, commands.getAliasDelCommand(), name).getStatusCodeReply();
+            return rep.equals("OK");
+        }
+    }
+
+    /**
+     * Search the index
+     *
+     * @param q a {@link Query} object with the query string and optional parameters
+     * @return a {@link SearchResult} object with the results
+     */
+    @Override
+    public SearchResult[] searchBatch(Query... queries) {
+
+      Response[] responses = new Response[queries.length];
+      try (Jedis conn = _conn()) {
+        Pipeline pipelined = conn.pipelined();
+        
+        for(int i=0; i<queries.length ; ++i) {
+          Query q = queries[i];
+          ArrayList<byte[]> args = new ArrayList<>(4);
+          args.add(this.endocdedIndexName);
+          q.serializeRedisArgs(args);
+          responses[i] = pipelined.sendCommand(commands.getSearchCommand(), args.toArray(new byte[args.size()][]));          
+        }
+        
+        pipelined.sync();
+        
+        SearchResult[] results = new SearchResult[queries.length];
+        for(int i=0; i<queries.length ; ++i) {
+          Query q = queries[i];
+          Response response = responses[i];
+          results[i] = new SearchResult((List<Object>)response.get(), !q.getNoContent(), q.getWithScores(), q.getWithPayloads(), true);
+        }
+        return results;
+      }
+    }
+    
+    
     /**
      * Search the index
      *
@@ -488,9 +546,14 @@ public class Client implements io.redisearch.Client {
         }
 
         args.add(Keywords.FIELDS.getRaw());
+        String key = null;
         for (Map.Entry<String, Object> ent : doc.getProperties()) {
-            args.add(SafeEncoder.encode(ent.getKey()));
+            key = ent.getKey();
+            args.add(SafeEncoder.encode(key));
             Object value = ent.getValue();
+            if (value == null) {
+                throw new NullPointerException( "Document attribute '"+ key +"' is null. (Remove it, or set a value)" );
+            }
             args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
         }
 

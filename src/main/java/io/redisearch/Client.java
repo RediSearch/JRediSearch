@@ -224,16 +224,6 @@ public interface Client extends Closeable{
     boolean updateDocument(String docId, double score, Map<String, Object> fields, String filter);
 
     /**
-     * Index a document already in redis as a HASH key.
-     *
-     * @param docId   the id of the document in redis. This must match an existing, unindexed HASH key
-     * @param score   the document's index score, between 0 and 1
-     * @param replace if set, and the document already exists, we reindex and update it
-     * @return true on success
-     */
-    boolean addHash(String docId, double score, boolean replace);
-
-    /**
      * Get the index info, including memory consumption and other statistics.
      *
      * @return a map of key/value pairs

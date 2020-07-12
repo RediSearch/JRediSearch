@@ -63,6 +63,7 @@ public class ClientTest {
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
             assertTrue(d.getScore() < 100);
+            d.set("__score", null); // TODO remove 
             assertEquals(
                 String.format(
                 "{\"id\":\"%s\",\"score\":%s,\"properties\":{\"title\":\"hello world\",\"body\":\"lorem ipsum\"}}", 
@@ -119,6 +120,7 @@ public class ClientTest {
         for (Document d : res[0].docs) {
             assertTrue(d.getId().startsWith("doc"));
             assertTrue(d.getScore() < 100);
+            d.set("__score", null); // TODO remove 
             assertEquals(
                 String.format(
                 "{\"id\":\"%s\",\"score\":%s,\"properties\":{\"title\":\"hello world\",\"body\":\"lorem ipsum\"}}", 

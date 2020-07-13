@@ -35,7 +35,7 @@ releases.
   </dependencies>
 ```
 
-### Snapshots
+### Snapshots (Compatible with RediSearch 2.0)
 
 ```xml
   <repositories>
@@ -52,7 +52,7 @@ and
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>1.8.0-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 ```

@@ -183,6 +183,8 @@ public class Client implements io.redisearch.Client {
         ArrayList<String> args = new ArrayList<>();
 
         args.add(indexName);
+        args.add(Keywords.ON.name());
+        args.add(Keywords.HASH.name());
 
         options.serializeRedisArgs(args);
 
@@ -636,31 +638,6 @@ public class Client implements io.redisearch.Client {
     @Override
     public boolean addDocument(String docId, Map<String, Object> fields) {
         return this.addDocument(docId, 1, fields, false, false, null);
-    }
-
-    /**
-     * Index a document already in redis as a HASH key.
-     *
-     * @param docId   the id of the document in redis. This must match an existing, unindexed HASH key
-     * @param score   the document's index score, between 0 and 1
-     * @param replace if set, and the document already exists, we reindex and update it
-     * @return true on success
-     */
-    @Override
-    public boolean addHash(String docId, double score, boolean replace) {
-        ArrayList<String> args = new ArrayList<>(4);
-        args.add(indexName);
-        args.add(docId);
-        args.add(Double.toString(score));
-
-        if (replace) {
-            args.add(Keywords.REPLACE.name());
-        }
-
-        try (Jedis conn = _conn()) {
-            String resp = sendCommand(conn, commands.getAddHashCommand(), args.toArray(new String[args.size()])).getStatusCodeReply();
-            return resp.equals("OK");
-        }
     }
 
     /**

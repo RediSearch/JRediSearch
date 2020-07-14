@@ -30,7 +30,7 @@ releases.
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>1.7.0</version>
+      <version>1.8.0</version>
     </dependency>
   </dependencies>
 ```

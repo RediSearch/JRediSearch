@@ -13,6 +13,9 @@ import org.junit.Test;
 
 import static junit.framework.TestCase.*;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Created by mnunberg on 5/17/18.
  */
@@ -182,5 +185,41 @@ public class AggregationBuilderTest extends ClientTest {
       cl.cursorRead(res.getCursorId(), 1);
       assertTrue(false);
     } catch(JedisDataException e) {}
+  }
+  
+  @Test
+  public void testWrongAggregation() throws InterruptedException {
+
+    Client cl = getClient();
+    Schema sc = new Schema()
+        .addTextField("title", 5.0)
+        .addTextField("body", 1.0)
+        .addTextField("state", 1.0)
+        .addNumericField("price");
+
+    cl.createIndex(sc, Client.IndexOptions.defaultOptions());
+
+    // insert document(s)
+    Map<String, Object> fields = new HashMap<>();
+    fields.put("title", "hello world");
+    fields.put("state", "NY");
+    fields.put("body", "lorem ipsum");
+    fields.put("price", "1337");
+    cl.addDocument("doc1", fields);
+
+    // wrong aggregation query
+    AggregationBuilder builder = new AggregationBuilder("hello")
+        .apply("@price/1000", "k")
+        .groupBy("@state", Reducers.avg("@k").as("avgprice"))
+        .filter("@avgprice>=2")
+        .sortBy(10, SortedField.asc("@state"));
+
+    try {
+      cl.aggregate(builder);
+      fail();
+    }catch(JedisDataException e) {
+      // should throw JedisDataException on wrong aggregation query 
+    }
+
   }
 }

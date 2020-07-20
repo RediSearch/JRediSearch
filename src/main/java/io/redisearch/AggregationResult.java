@@ -1,6 +1,7 @@
 package io.redisearch;
 
 import io.redisearch.aggregation.Row;
+import redis.clients.jedis.exceptions.JedisDataException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,11 +27,14 @@ public class AggregationResult {
         totalResults = (Long) resp.get(0);    	
 
         for (int i = 1; i < resp.size(); i++) {
-            Object o = resp.get(i);
-            List<Object> raw = (List<Object>)o;
+            List<Object> raw = (List<Object>)resp.get(i);
             Map<String, Object> cur = new HashMap<>();
             for (int j = 0; j < raw.size(); j += 2) {
-                cur.put(new String((byte[])raw.get(j)), raw.get(j+1));
+                Object r = raw.get(j);
+                if(r instanceof JedisDataException) {
+                  throw (JedisDataException)r;
+                }
+                cur.put(new String((byte[])r), raw.get(j+1));
             }
             results.add(cur);
         }

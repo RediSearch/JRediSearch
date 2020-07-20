@@ -16,7 +16,7 @@ public class Query {
     /**
      * Filter represents a filtering rules in a query
      */
-	private abstract static class Filter {
+	public abstract static class Filter {
 
         public final String property;
 

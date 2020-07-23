@@ -346,6 +346,26 @@ public class ClientTest {
     }
 
     @Test
+    public void testAddHash() throws Exception {
+        Client cl = getClient();
+        Jedis conn = cl._conn();
+        Schema sc = new Schema().addTextField("title", 1.0);
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
+        HashMap<String, String> hm = new HashMap<>();
+        hm.put("title", "hello world");
+        conn.hmset("foo", hm);
+
+        try {
+          assertTrue(cl.addHash("foo", 1, false));
+        }catch(JedisDataException e) {
+          return; // 
+        }
+        SearchResult res = cl.search(new Query("hello world").setVerbatim());
+        assertEquals(1, res.totalResults);
+        assertEquals("foo", res.docs.get(0).getId());
+    }
+
+    @Test
     public void testNullField() throws Exception {
         Client cl = getClient();
         Schema sc = new Schema()

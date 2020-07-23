@@ -13,6 +13,8 @@ import redis.clients.jedis.util.SafeEncoder;
         CREATE("FT.CREATE"),
         ALTER("FT.ALTER"),
         ADD("FT.ADD"),
+        @Deprecated
+        ADDHASH("FT.ADDHASH"),
         INFO("FT.INFO"),
         SEARCH("FT.SEARCH"),
         EXPLAIN("FT.EXPLAIN"),
@@ -50,6 +52,7 @@ import redis.clients.jedis.util.SafeEncoder;
         CREATE("FT.CREATE"),
         ALTER("FT.ALTER"),
         ADD("FT.ADD"),
+        ADDHASH("FT.ADDHASH"),
         INFO("FT.INFO"),
         SEARCH("FT.SEARCH"),
         EXPLAIN("FT.EXPLAIN"),
@@ -83,6 +86,8 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getCreateCommand();
         ProtocolCommand getAlterCommand();
         ProtocolCommand getAddCommand();
+        @Deprecated
+        ProtocolCommand getAddHashCommand();
         ProtocolCommand getDelCommand();
         ProtocolCommand getInfoCommand();
         ProtocolCommand getDropCommand();
@@ -116,6 +121,12 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getAddCommand() {
             return Command.ADD;
+        }
+
+        @Deprecated
+        @Override
+        public ProtocolCommand getAddHashCommand() {
+            return Command.ADDHASH;
         }
 
         @Override
@@ -214,6 +225,12 @@ import redis.clients.jedis.util.SafeEncoder;
         @Override
         public ProtocolCommand getAddCommand() {
             return ClusterCommand.ADD;
+        }
+
+        @Deprecated
+        @Override
+        public ProtocolCommand getAddHashCommand() {
+            return ClusterCommand.ADDHASH;
         }
 
         @Override

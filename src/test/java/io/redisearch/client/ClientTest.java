@@ -424,13 +424,7 @@ public class ClientTest {
         Jedis conn = cl._conn();
 
         Set<String> keys = conn.keys("*");
-        assertEquals(100, keys.size());
-        try {
-          cl.getInfo();
-          fail(); // index was not dropped
-        }catch(JedisDataException e) {
-       // index was dropped
-        }
+        assertTrue(keys.isEmpty());
     }
     
     @Test

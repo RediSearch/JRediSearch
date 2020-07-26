@@ -358,7 +358,7 @@ public class ClientTest {
         try {
           assertTrue(cl.addHash("foo", 1, false));
         }catch(JedisDataException e) {
-          assertTrue(e.getMessage().startsWith("(error) ERR unknown command `FT.ADDHASH`"));
+          assertTrue(e.getMessage().startsWith("ERR unknown command `FT.ADDHASH`"));
           return; // Starting from RediSearch 2.0 this command is not supported anymore
         }
         SearchResult res = cl.search(new Query("hello world").setVerbatim());

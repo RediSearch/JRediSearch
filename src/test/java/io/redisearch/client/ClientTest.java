@@ -43,6 +43,42 @@ public class ClientTest {
         getClient()._conn().flushDB();
     }
     
+    
+    private static Map<String, String> toMap(String ...values){
+      Map<String, String> map = new HashMap<>();
+      for(int i=0; i<values.length; i+=2) {
+        map.put(values[i], values[i+1]);
+      }
+      return map;
+    }
+    
+    @Test
+    public void creatRule() throws Exception {
+      Client cl = getClient();
+      Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
+      IndexRule rule = new IndexRule()
+//          .setFilter("@age>16")
+          .setPrefixes(new String[] {"student:", "pupil:"});
+          
+      assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setRule(rule)));
+      
+      try(Jedis jedis = cl._conn()){
+        jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
+        jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
+        jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
+        jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
+        jedis.hset("pupil:4444", toMap("first", "Fan", "last", "Shu", "age", "21"));
+        jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
+        jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Bob", "age", "20"));
+      }
+      
+      SearchResult res1 = cl.search(new Query("@first:Jo*"));
+      assertEquals(2, res1.totalResults);
+
+      SearchResult res2 = cl.search(new Query("@first:Pat"));
+      assertEquals(0, res2.totalResults);
+    }
+    
     @Test
     public void search() throws Exception {
         Client cl = getClient();

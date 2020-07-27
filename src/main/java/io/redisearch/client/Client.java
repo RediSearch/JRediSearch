@@ -1076,6 +1076,7 @@ public class Client implements io.redisearch.Client {
         private final int flags;
         private List<String> stopwords;
         private long expire = 0L;
+        private IndexRule rule;
 
         /**
          * Default constructor
@@ -1157,9 +1158,21 @@ public class Client implements io.redisearch.Client {
           return this;
         }
         
+        public IndexRule getRule() {
+          return rule;
+        }
+
+        public IndexOptions setRule(IndexRule rule) {
+          this.rule = rule;
+          return this;
+        }
 
         public void serializeRedisArgs(List<String> args) {
 
+            if(rule != null) {
+              rule.serializeRedisArgs(args);
+            }
+          
             if ((flags & USE_TERM_OFFSETS) == 0) {
                 args.add(Keywords.NOOFFSETS.name());
             }
@@ -1180,11 +1193,10 @@ public class Client implements io.redisearch.Client {
                 if (!stopwords.isEmpty()) {
                     args.addAll(stopwords);
                 }
-
             }
         }
     }
-
+    
     @Override
     public void close() {
       this.pool.close();

@@ -110,7 +110,11 @@ Schema sc = new Schema()
                 .addTextField("body", 1.0)
                 .addNumericField("price");
 
-client.createIndex(sc, Client.IndexOptions.Default());
+IndexDefinition def = new IndexDefinition()
+						.setPrefixes(new String[] {"item:", "product:"})
+						.setFilter("@price>100");
+
+client.createIndex(sc, Client.IndexOptions.Default().setDefinion(def);
 
 ```
  
@@ -123,7 +127,7 @@ fields.put("state", "NY");
 fields.put("body", "lorem ipsum");
 fields.put("price", 1337);
 
-client.addDocument("doc1", fields);
+client.addDocument("item", fields);
 
 ```
 

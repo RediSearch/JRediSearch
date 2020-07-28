@@ -28,7 +28,7 @@ public class CreateTest {
 
     defaultOptions.setStopwords("stop", "run");
     defaultOptions.setTemporary(1234L);
-    defaultOptions.setRule(new IndexDefinition());
+    defaultOptions.setDefinition(new IndexDefinition());
 
     List<String> arrayList = new ArrayList<>();
     defaultOptions.serializeRedisArgs(arrayList);
@@ -68,5 +68,17 @@ public class CreateTest {
     assertEquals(Arrays.asList("ON", "HASH", "ASYNC", "PREFIX", "1", "person:", "FILTER", "@sum<30", "LANGUAGE_FIELD",
         "myLanguage", "LANGUAGE", "FR", "SCORE_FIELD", "myScore", "SCORE", "0.818656", "PAYLOAD_FIELD", "myPayload"),
         arrayList);
+    
+    
+    assertEquals(true, indexRule.isAsync());
+    assertEquals("@sum<30", indexRule.getFilter());
+    assertEquals("FR", indexRule.getLanguage());
+    assertEquals("myLanguage", indexRule.getLanguageField());
+    assertEquals("myPayload", indexRule.getPayloadField());
+    assertEquals("person:", indexRule.getPrefixes());
+    assertEquals(0.818656, indexRule.getScore());
+    assertEquals("myScore", indexRule.getScoreFiled());
+    assertEquals(IndexDefinition.Type.HASH, indexRule.getType());
+    
   }
 }

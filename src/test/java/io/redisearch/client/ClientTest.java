@@ -61,7 +61,7 @@ public class ClientTest {
           .setPrefixes(new String[] {"student:", "pupil:"});
           
       try {
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setRule(rule)));
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
       }catch(JedisDataException e) {
         // ON was only supported from RediSearch 2.0
         assertEquals("Unknown argument `ON`", e.getMessage());

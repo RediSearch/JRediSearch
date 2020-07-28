@@ -1076,7 +1076,7 @@ public class Client implements io.redisearch.Client {
         private final int flags;
         private List<String> stopwords;
         private long expire = 0L;
-        private IndexDefinition rule;
+        private IndexDefinition definition;
 
         /**
          * Default constructor
@@ -1158,19 +1158,19 @@ public class Client implements io.redisearch.Client {
           return this;
         }
         
-        public IndexDefinition getRule() {
-          return rule;
+        public IndexDefinition getDefinition() {
+          return definition;
         }
 
-        public IndexOptions setRule(IndexDefinition rule) {
-          this.rule = rule;
+        public IndexOptions setDefinition(IndexDefinition definition) {
+          this.definition = definition;
           return this;
         }
 
         public void serializeRedisArgs(List<String> args) {
 
-            if(rule != null) {
-              rule.serializeRedisArgs(args);
+            if(definition != null) {
+              definition.serializeRedisArgs(args);
             }
           
             if ((flags & USE_TERM_OFFSETS) == 0) {

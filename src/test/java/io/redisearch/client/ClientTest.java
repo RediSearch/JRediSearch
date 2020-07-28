@@ -53,30 +53,39 @@ public class ClientTest {
     }
     
     @Test
-    public void creatRule() throws Exception {
+    public void creatDefinion() throws Exception {
       Client cl = getClient();
       Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
-      IndexRule rule = new IndexRule()
+      IndexDefinition rule = new IndexDefinition()
 //          .setFilter("@age>16")
           .setPrefixes(new String[] {"student:", "pupil:"});
           
-      assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setRule(rule)));
+      try {
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setRule(rule)));
+      }catch(JedisDataException e) {
+        // ON was only supported from RediSearch 2.0
+        assertEquals("Unknown argument `ON`", e.getMessage());
+        return;
+      }
       
       try(Jedis jedis = cl._conn()){
         jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
         jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
         jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
         jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
-        jedis.hset("pupil:4444", toMap("first", "Fan", "last", "Shu", "age", "21"));
+        jedis.hset("pupil:4444", toMap("first", "Pat", "last", "Shu", "age", "21"));
         jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
-        jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Bob", "age", "20"));
+        jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
       }
       
       SearchResult res1 = cl.search(new Query("@first:Jo*"));
       assertEquals(2, res1.totalResults);
 
       SearchResult res2 = cl.search(new Query("@first:Pat"));
-      assertEquals(0, res2.totalResults);
+      assertEquals(1, res2.totalResults);
+      
+//      SearchResult res3 = cl.search(new Query("@last:Rod"));
+//      assertEquals(0, res3.totalResults);
     }
     
     @Test

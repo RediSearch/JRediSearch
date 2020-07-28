@@ -1076,7 +1076,7 @@ public class Client implements io.redisearch.Client {
         private final int flags;
         private List<String> stopwords;
         private long expire = 0L;
-        private IndexRule rule;
+        private IndexDefinition rule;
 
         /**
          * Default constructor
@@ -1158,11 +1158,11 @@ public class Client implements io.redisearch.Client {
           return this;
         }
         
-        public IndexRule getRule() {
+        public IndexDefinition getRule() {
           return rule;
         }
 
-        public IndexOptions setRule(IndexRule rule) {
+        public IndexOptions setRule(IndexDefinition rule) {
           this.rule = rule;
           return this;
         }

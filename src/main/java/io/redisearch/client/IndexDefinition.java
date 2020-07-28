@@ -5,29 +5,30 @@ import java.util.List;
 import io.redisearch.Keywords;
 
 /**
- * IndexRuleOptions encapsulates configuration for index rule creation and should be given to the client on index creation
+ * IndexDefinition encapsulates configuration for index definition creation 
+ * and should be given to the client on index creation
  */
-public class IndexRule {
+public class IndexDefinition {
   
   public enum Type {
     HASH
   }
   
   private Type type = Type.HASH;
-  private boolean async;
+  private boolean async = false; 
   private String[] prefixes;
   private String filter;
   private String languageField;
   private String language;
   private String scoreFiled;
-  private double score = 1.0;
+  private double score = 1.0; // Default score when score isn't defined 
   private String payloadField;
   
   public Type getType() {
     return type;
   }
   
-  public IndexRule setType(Type type) {
+  public IndexDefinition setType(Type type) {
     this.type = type;
     return this;    
   }
@@ -35,7 +36,7 @@ public class IndexRule {
   public boolean isAsync() {
     return async;
   }
-  public IndexRule setAsync(boolean async) {
+  public IndexDefinition setAsync(boolean async) {
     this.async = async;
     return this;    
   }
@@ -44,7 +45,7 @@ public class IndexRule {
     return prefixes;
   }
   
-  public IndexRule setPrefixes(String... prefixes) {
+  public IndexDefinition setPrefixes(String... prefixes) {
     this.prefixes = prefixes;
     return this;    
   }
@@ -53,7 +54,7 @@ public class IndexRule {
     return filter;
   }
   
-  public IndexRule setFilter(String filter) {
+  public IndexDefinition setFilter(String filter) {
     this.filter = filter;
     return this;    
   }
@@ -62,7 +63,7 @@ public class IndexRule {
     return languageField;
   }
   
-  public IndexRule setLanguageField(String languageField) {
+  public IndexDefinition setLanguageField(String languageField) {
     this.languageField = languageField;
     return this;    
   }
@@ -70,7 +71,7 @@ public class IndexRule {
     return language;
   }
   
-  public IndexRule setLanguage(String language) {
+  public IndexDefinition setLanguage(String language) {
     this.language = language;
     return this;    
   }
@@ -79,7 +80,7 @@ public class IndexRule {
     return scoreFiled;
   }
   
-  public IndexRule setScoreFiled(String scoreFiled) {
+  public IndexDefinition setScoreFiled(String scoreFiled) {
     this.scoreFiled = scoreFiled;
     return this;    
   }
@@ -88,7 +89,7 @@ public class IndexRule {
     return score;
   }
   
-  public IndexRule setScore(double score) {
+  public IndexDefinition setScore(double score) {
     this.score = score;
     return this;
   }
@@ -97,7 +98,7 @@ public class IndexRule {
     return payloadField;
   }
   
-  public IndexRule setPayloadField(String payloadField) {
+  public IndexDefinition setPayloadField(String payloadField) {
     this.payloadField = payloadField;
     return this;
   }

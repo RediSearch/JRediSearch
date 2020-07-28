@@ -10,7 +10,7 @@ import org.junit.Test;
 
 import io.redisearch.client.Client;
 import io.redisearch.client.Client.IndexOptions;
-import io.redisearch.client.IndexRule;
+import io.redisearch.client.IndexDefinition;
 
 public class CreateTest {
   @Test
@@ -28,7 +28,7 @@ public class CreateTest {
 
     defaultOptions.setStopwords("stop", "run");
     defaultOptions.setTemporary(1234L);
-    defaultOptions.setRule(new IndexRule());
+    defaultOptions.setRule(new IndexDefinition());
 
     List<String> arrayList = new ArrayList<>();
     defaultOptions.serializeRedisArgs(arrayList);
@@ -39,8 +39,8 @@ public class CreateTest {
   }
 
   @Test
-  public void emptyIndexRule() throws Exception {
-    IndexRule indexRule = new IndexRule();
+  public void emptyIndexDefinition() throws Exception {
+    IndexDefinition indexRule = new IndexDefinition();
 
     List<String> arrayList = new ArrayList<>();
     indexRule.serializeRedisArgs(arrayList);
@@ -49,8 +49,8 @@ public class CreateTest {
   }
 
   @Test
-  public void allIndexRule() throws Exception {
-    IndexRule indexRule = new IndexRule();
+  public void allIndexDefinition() throws Exception {
+    IndexDefinition indexRule = new IndexDefinition();
 
     indexRule.setAsync(true);
     indexRule.setFilter("@sum<30");
@@ -60,7 +60,7 @@ public class CreateTest {
     indexRule.setPrefixes("person:");
     indexRule.setScore(0.818656);
     indexRule.setScoreFiled("myScore");
-    indexRule.setType(IndexRule.Type.HASH);
+    indexRule.setType(IndexDefinition.Type.HASH);
 
     List<String> arrayList = new ArrayList<>();
     indexRule.serializeRedisArgs(arrayList);

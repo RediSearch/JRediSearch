@@ -1,6 +1,6 @@
 package io.redisearch;
 
-import static junit.framework.TestCase.*;
+import static org.junit.Assert.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,8 +75,8 @@ public class CreateTest {
     assertEquals("FR", indexRule.getLanguage());
     assertEquals("myLanguage", indexRule.getLanguageField());
     assertEquals("myPayload", indexRule.getPayloadField());
-    assertEquals("person:", indexRule.getPrefixes());
-    assertEquals(0.818656, indexRule.getScore());
+    assertArrayEquals(new String[]{"person:"}, indexRule.getPrefixes());
+    assertEquals(0.818656, indexRule.getScore(), 0.0);
     assertEquals("myScore", indexRule.getScoreFiled());
     assertEquals(IndexDefinition.Type.HASH, indexRule.getType());
     

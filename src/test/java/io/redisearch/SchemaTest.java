@@ -9,14 +9,12 @@ import org.junit.Test;
  */
 public class SchemaTest {
 
-    private final static String MOVIE_ID = "movie_id";
     private final static String TITLE = "title";
     private final static String GENRE = "genre";
     private final static String VOTES = "votes";
     private final static String RATING = "rating";
     private final static String RELEASE_YEAR = "release_year";
     private final static String PLOT = "plot";
-    private final static String POSTER = "poster";
 
     @Test
     public void printSchemaTest() throws Exception {

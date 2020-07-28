@@ -320,7 +320,7 @@ public class Client implements io.redisearch.Client {
     @Override
     public SearchResult[] searchBatch(Query... queries) {
 
-      Response[] responses = new Response[queries.length];
+      Response<?>[] responses = new Response[queries.length];
       try (Jedis conn = _conn()) {
         Pipeline pipelined = conn.pipelined();
         
@@ -337,7 +337,7 @@ public class Client implements io.redisearch.Client {
         SearchResult[] results = new SearchResult[queries.length];
         for(int i=0; i<queries.length ; ++i) {
           Query q = queries[i];
-          Response response = responses[i];
+          Response<?> response = responses[i];
           results[i] = new SearchResult((List<Object>)response.get(), !q.getNoContent(), q.getWithScores(), q.getWithPayloads(), true);
         }
         return results;

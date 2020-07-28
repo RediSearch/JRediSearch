@@ -20,7 +20,7 @@ public class IndexRule {
   private String languageField;
   private String language;
   private String scoreFiled;
-  private String score;
+  private double score = 1.0;
   private String payloadField;
   
   public Type getType() {
@@ -44,7 +44,7 @@ public class IndexRule {
     return prefixes;
   }
   
-  public IndexRule setPrefixes(String[] prefixes) {
+  public IndexRule setPrefixes(String... prefixes) {
     this.prefixes = prefixes;
     return this;    
   }
@@ -84,11 +84,11 @@ public class IndexRule {
     return this;    
   }
   
-  public String getScore() {
+  public double getScore() {
     return score;
   }
   
-  public IndexRule setScore(String score) {
+  public IndexRule setScore(double score) {
     this.score = score;
     return this;
   }
@@ -136,12 +136,12 @@ public class IndexRule {
       
       if (scoreFiled != null) {
         args.add(Keywords.SCORE_FIELD.name());
-        args.add(filter);      
+        args.add(scoreFiled);      
       }
       
-      if (score != null) {
+      if (score != 1.0) {
         args.add(Keywords.SCORE.name());
-        args.add(filter);      
+        args.add(Double.toString(score));      
       }
       
       if (payloadField != null) {

@@ -48,7 +48,7 @@ public class ClusterTest {
     @Test
     public void getClusterClientWithPasswordTest(){
         try (ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, PROTECTD_CLUSTER_PASSWORD)){
-          try(Jedis conn = clusterClient._conn()){
+          try(Jedis conn = clusterClient.connection()){
             assertEquals("SUCCESS", conn.ping("SUCCESS"));
           }
         }
@@ -57,7 +57,7 @@ public class ClusterTest {
     @Test(expected = JedisConnectionException.class)
     public void getClusterClientWithWrongPasswordTest(){
         try(ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, WRONG_PASSWORD)){
-          try ( Jedis conn = clusterClient._conn()){
+          try ( Jedis conn = clusterClient.connection()){
               fail("Should throw JedisConnectionException as password is incorrect.");
           }
         }
@@ -263,7 +263,7 @@ public class ClusterTest {
 //    @Test
 //    public void testAddHash() throws Exception {
 //        Client cl = new Client("testung", "localhost", 6379);
-//        Jedis conn = cl._conn();
+//        Jedis conn = cl.connection();
 //        conn.flushDB();
 //        Schema sc = new Schema().addTextField("title", 1.0);
 //        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
@@ -281,7 +281,7 @@ public class ClusterTest {
 //    @Test
 //    public void testDrop() throws Exception {
 //        Client cl = new Client("testung", "localhost", 6379);
-//        cl._conn().flushDB();
+//        cl.connection().flushDB();
 //
 //        Schema sc = new Schema().addTextField("title", 1.0);
 //
@@ -298,7 +298,7 @@ public class ClusterTest {
 //
 //        assertTrue(cl.dropIndex());
 //
-//        Jedis conn = cl._conn();
+//        Jedis conn = cl.connection();
 //
 //        Set<String> keys = conn.keys("*");
 //        assertTrue(keys.isEmpty());
@@ -309,7 +309,7 @@ public class ClusterTest {
 //    @Test
 //    public void testInfo() throws Exception {
 //        Client cl = new Client("testung", "localhost", 6379);
-//        cl._conn().flushDB();
+//        cl.connection().flushDB();
 //
 //        Schema sc = new Schema().addTextField("title", 1.0);
 //        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));

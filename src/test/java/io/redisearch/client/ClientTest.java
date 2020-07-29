@@ -40,7 +40,52 @@ public class ClientTest {
 
     @Before
     public void setUp() {
-        getClient()._conn().flushDB();
+        getClient().connection().flushDB();
+    }
+    
+    
+    private static Map<String, String> toMap(String ...values){
+      Map<String, String> map = new HashMap<>();
+      for(int i=0; i<values.length; i+=2) {
+        map.put(values[i], values[i+1]);
+      }
+      return map;
+    }
+    
+    @Test
+    public void creatDefinion() throws Exception {
+      Client cl = getClient();
+      Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
+      IndexDefinition rule = new IndexDefinition()
+//          .setFilter("@age>16")
+          .setPrefixes(new String[] {"student:", "pupil:"});
+          
+      try {
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
+      }catch(JedisDataException e) {
+        // ON was only supported from RediSearch 2.0
+        assertEquals("Unknown argument `ON`", e.getMessage());
+        return;
+      }
+      
+      try(Jedis jedis = cl.connection()){
+        jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
+        jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
+        jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
+        jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
+        jedis.hset("pupil:4444", toMap("first", "Pat", "last", "Shu", "age", "21"));
+        jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
+        jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
+      }
+      
+      SearchResult res1 = cl.search(new Query("@first:Jo*"));
+      assertEquals(2, res1.totalResults);
+
+      SearchResult res2 = cl.search(new Query("@first:Pat"));
+      assertEquals(1, res2.totalResults);
+      
+//      SearchResult res3 = cl.search(new Query("@last:Rod"));
+//      assertEquals(0, res3.totalResults);
     }
     
     @Test
@@ -202,7 +247,7 @@ public class ClientTest {
         res = cl.search(new Query("foo bar"));
         assertEquals(0, res.totalResults);
 
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         assertTrue(cl.createIndex(sc,
                 Client.IndexOptions.defaultOptions().setNoStopwords()));
@@ -348,7 +393,7 @@ public class ClientTest {
     @Test
     public void testAddHash() throws Exception {
         Client cl = getClient();
-        Jedis conn = cl._conn();
+        Jedis conn = cl.connection();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         HashMap<String, String> hm = new HashMap<>();
@@ -426,7 +471,7 @@ public class ClientTest {
     @Test
     public void testDrop() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -442,7 +487,7 @@ public class ClientTest {
 
         assertTrue(cl.dropIndex());
 
-        Jedis conn = cl._conn();
+        Jedis conn = cl.connection();
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());
@@ -451,7 +496,7 @@ public class ClientTest {
     @Test
     public void testAlterAdd() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -484,7 +529,7 @@ public class ClientTest {
     @Test
     public void testNoStem() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -505,7 +550,7 @@ public class ClientTest {
     @Test
     public void testPhoneticMatch() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema()
             .addTextField("noPhonetic", 1.0)
             .addField(new Schema.TextField("withPhonetic", 1.0, false, false, false, "dm:en"));
@@ -1013,7 +1058,7 @@ public class ClientTest {
     @Test
     public void testReturnFields() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -1034,7 +1079,7 @@ public class ClientTest {
     @Test
     public void testInKeys() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -1057,7 +1102,7 @@ public class ClientTest {
     @Test
     public void testBlobField() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -1081,7 +1126,7 @@ public class ClientTest {
     @Test
     public void testConfig() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         boolean result = cl.setConfig(ConfigOption.TIMEOUT, "100");
         assertTrue(result);
@@ -1098,7 +1143,7 @@ public class ClientTest {
     @Test
     public void testAlias() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("field1", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -1136,7 +1181,7 @@ public class ClientTest {
     @Test
     public void testSyn() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         
         Schema sc = new Schema().addTextField("name", 1.0).addTextField("addr", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));

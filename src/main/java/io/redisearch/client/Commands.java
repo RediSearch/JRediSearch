@@ -210,6 +210,7 @@ import redis.clients.jedis.util.SafeEncoder;
         }
     }
 
+    @Deprecated
     public static class ClusterCommands implements CommandProvider {
 
         @Override
@@ -227,7 +228,6 @@ import redis.clients.jedis.util.SafeEncoder;
             return ClusterCommand.ADD;
         }
 
-        @Deprecated
         @Override
         public ProtocolCommand getAddHashCommand() {
             return ClusterCommand.ADDHASH;

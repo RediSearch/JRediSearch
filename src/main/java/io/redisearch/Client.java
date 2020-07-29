@@ -6,6 +6,7 @@ import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.AddOptions;
 import io.redisearch.client.ConfigOption;
 import io.redisearch.client.SuggestionOptions;
+import redis.clients.jedis.Jedis;
 import io.redisearch.client.Client.IndexOptions;
 
 import java.io.Closeable;
@@ -429,4 +430,9 @@ public interface Client extends Closeable{
      * @return a map of synonym terms and their synonym group ids.
      */
     Map<String, List<Long>> dumpSynonym();
+
+    /**
+     * @return a connection from the connection pool
+     */
+    Jedis connection();
 }

@@ -28,6 +28,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ALIASADD("FT.ALIASADD"),
         ALIASUPDATE("FT.ALIASUPDATE"),
         ALIASDEL("FT.ALIASDEL"),
+        @Deprecated
         SYNADD("FT.SYNADD"),
         SYNUPDATE("FT.SYNUPDATE"),
         SYNDUMP("FT.SYNDUMP");

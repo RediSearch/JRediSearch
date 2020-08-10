@@ -30,12 +30,12 @@ releases.
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>1.7.0</version>
+      <version>1.8.0</version>
     </dependency>
   </dependencies>
 ```
 
-### Snapshots
+### Snapshots (Compatible with RediSearch 2.0)
 
 ```xml
   <repositories>
@@ -52,7 +52,7 @@ and
     <dependency>
       <groupId>com.redislabs</groupId>
       <artifactId>jredisearch</artifactId>
-      <version>1.8.0-SNAPSHOT</version>
+      <version>2.0.0-SNAPSHOT</version>
     </dependency>
   </dependencies>
 ```
@@ -62,7 +62,6 @@ and
 Initializing the client with JedisPool:
 
 ```java
-
 import io.redisearch.client.Client;
 import io.redisearch.Document;
 import io.redisearch.SearchResult;
@@ -72,12 +71,10 @@ import io.redisearch.Schema;
 ...
 
 Client client = new Client("testung", "localhost", 6379);
-
 ```
 Initializing the client with JedisSentinelPool:
 
 ```java
-
 import io.redisearch.client.Client;
 import io.redisearch.Document;
 import io.redisearch.SearchResult;
@@ -98,20 +95,22 @@ static {
 ...
 
 Client client = new Client("testung", MASTER_NAME, sentinels);
-
 ```
 
 Defining a schema for an index and creating it:
 
 ```java
-
 Schema sc = new Schema()
                 .addTextField("title", 5.0)
                 .addTextField("body", 1.0)
                 .addNumericField("price");
 
-client.createIndex(sc, Client.IndexOptions.Default());
+// IndexDefinition requires RediSearch 2.0+
+IndexDefinition def = new IndexDefinition()
+						.setPrefixes(new String[] {"item:", "product:"})
+						.setFilter("@price>100");
 
+client.createIndex(sc, Client.IndexOptions.Default().setDefinion(def));
 ```
  
 Adding documents to the index:
@@ -123,14 +122,20 @@ fields.put("state", "NY");
 fields.put("body", "lorem ipsum");
 fields.put("price", 1337);
 
-client.addDocument("doc1", fields);
+// RediSearch 2.0+ supports working with Redis Hash commands
+try(Jedis conn = client.connction()){
+	conn.hset("item", fields);
+}
+```
 
+```java
+// Prior to RediSearch 2.0+ the addDocument has to be called
+client.addDocument("item", fields);
 ```
 
 Searching the index:
 
 ```java
-
 // Creating a complex query
 Query q = new Query("hello world")
                     .addFilter(new Query.NumericFilter("price", 0, 1000))

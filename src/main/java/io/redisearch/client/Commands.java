@@ -13,6 +13,7 @@ import redis.clients.jedis.util.SafeEncoder;
         CREATE("FT.CREATE"),
         ALTER("FT.ALTER"),
         ADD("FT.ADD"),
+        @Deprecated
         ADDHASH("FT.ADDHASH"),
         INFO("FT.INFO"),
         SEARCH("FT.SEARCH"),
@@ -27,6 +28,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ALIASADD("FT.ALIASADD"),
         ALIASUPDATE("FT.ALIASUPDATE"),
         ALIASDEL("FT.ALIASDEL"),
+        @Deprecated
         SYNADD("FT.SYNADD"),
         SYNUPDATE("FT.SYNUPDATE"),
         SYNDUMP("FT.SYNDUMP");
@@ -85,6 +87,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getCreateCommand();
         ProtocolCommand getAlterCommand();
         ProtocolCommand getAddCommand();
+        @Deprecated
         ProtocolCommand getAddHashCommand();
         ProtocolCommand getDelCommand();
         ProtocolCommand getInfoCommand();
@@ -121,6 +124,7 @@ import redis.clients.jedis.util.SafeEncoder;
             return Command.ADD;
         }
 
+        @Deprecated
         @Override
         public ProtocolCommand getAddHashCommand() {
             return Command.ADDHASH;
@@ -207,6 +211,7 @@ import redis.clients.jedis.util.SafeEncoder;
         }
     }
 
+    @Deprecated
     public static class ClusterCommands implements CommandProvider {
 
         @Override

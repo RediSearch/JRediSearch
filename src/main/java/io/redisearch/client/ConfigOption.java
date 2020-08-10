@@ -5,7 +5,7 @@ import redis.clients.jedis.util.SafeEncoder;
 
 public enum ConfigOption implements ProtocolCommand {
     NOGC,
-    MINPREFIXMINPREFIX,
+    MINPREFIX,
     MAXEXPANSIONS,
     TIMEOUT,
     ON_TIMEOUT,

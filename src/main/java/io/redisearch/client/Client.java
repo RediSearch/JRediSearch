@@ -11,6 +11,7 @@ import redis.clients.jedis.util.Pool;
 import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Client is the main RediSearch client class, wrapping connection management and all RediSearch commands
@@ -1010,6 +1011,7 @@ public class Client implements io.redisearch.Client {
         return list;
     }
     
+    @Deprecated
     @Override
     public long addSynonym(String... terms) {
       
@@ -1022,12 +1024,18 @@ public class Client implements io.redisearch.Client {
       }
     }
 
+    @Deprecated
     @Override
     public boolean updateSynonym(long synonymGroupId, String... terms) {
+      return updateSynonym(Long.toString(synonymGroupId), terms);
+    }
+    
+    @Override
+    public boolean updateSynonym(String synonymGroupId, String... terms) {
       
       String[] args = new String[terms.length + 2];
       args[0] = this.indexName;
-      args[1] = Long.toString(synonymGroupId);
+      args[1] = synonymGroupId;
       System.arraycopy(terms, 0, args, 2, terms.length);
       
       try (Jedis conn = connection()) {
@@ -1037,13 +1045,18 @@ public class Client implements io.redisearch.Client {
     }
 
     @Override
-    public Map<String, List<Long>> dumpSynonym() {
+    public Map<String, List<String>> dumpSynonym() {
       try (Jedis conn = connection()) {
         List<Object> res = sendCommand(conn, commands.getSynDumpCommand(), this.indexName).getObjectMultiBulkReply();
         
-        Map<String, List<Long>> dump = new HashMap<>(res.size()/2);
+        Map<String, List<String>> dump = new HashMap<>(res.size()/2);
         for(int i=0; i<res.size(); i+=2) {
-            dump.put(SafeEncoder.encode((byte[])res.get(i)), (List<Long>)res.get(i+1));
+            List<String> groups = ((List<?>) res.get(i+1))
+                .stream()
+                .map(x -> x instanceof Long ? String.valueOf(x) : SafeEncoder.encode((byte[])x))
+                .collect(Collectors.toList());
+            
+            dump.put(SafeEncoder.encode((byte[])res.get(i)), groups);
         }
         return dump;
       }
@@ -1056,7 +1069,8 @@ public class Client implements io.redisearch.Client {
     }
 
     /**
-     * IndexOptions encapsulates flags for index creation and shuold be given to the client on index creation
+     * IndexOptions encapsulates flags for index creation and should be given to the client on index creation
+     * @since 2.0
      */
     public static class IndexOptions {
         /**

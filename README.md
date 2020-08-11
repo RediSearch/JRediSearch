@@ -123,7 +123,7 @@ fields.put("body", "lorem ipsum");
 fields.put("price", 1337);
 
 // RediSearch 2.0+ supports working with Redis Hash commands
-try(Jedis conn = client.connction()){
+try(Jedis conn = client.connection()){
 	conn.hset("item", fields);
 }
 ```

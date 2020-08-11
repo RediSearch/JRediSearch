@@ -69,11 +69,17 @@ public class Reducers {
         };
     }
 
+    /**
+     * REDUCE FIRST_VALUE {nargs} {property} [BY {property} [ASC|DESC]]
+     * @param field
+     * @param sortBy
+     * @return
+     */
     public static Reducer first_value(String field, SortedField sortBy) {
-        return new Reducer() {
+        return new Reducer(field) {
             @Override
             public String getName() {
-                return null;
+                return "FIRST_VALUE";
             }
             @Override
             protected List<String> getOwnArgs() {

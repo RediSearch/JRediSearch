@@ -1186,20 +1186,37 @@ public class ClientTest {
         Schema sc = new Schema().addTextField("name", 1.0).addTextField("addr", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
+        long group1, group2;
+        try {
+          group1 = cl.addSynonym("girl", "baby");
+          assertTrue(cl.updateSynonym(group1, "child"));
+          group2 = cl.addSynonym("child");
+          assertNotSame(group1, group2);
+        }catch(JedisDataException e) {
+          // TF.SYNADD is not supported since RediSearch 2.0
+          assertEquals( "No longer suppoted, use FT.SYNUPDATE", e.getMessage());
+          
+          group1 = 345L;
+          group2 = 789L;
+          assertTrue(cl.updateSynonym(group1, "girl", "baby"));
+          assertTrue(cl.updateSynonym(group1, "child"));
+          assertTrue(cl.updateSynonym(group2, "child"));
+        }
         
-        long group1 = cl.addSynonym("girl", "baby");
-        assertTrue(cl.updateSynonym(group1, "child"));
+        Map<String, List<String>> dump = cl.dumpSynonym();
         
-        long group2 = cl.addSynonym("child");
-        
-        assertNotSame(group1, group2);
-        
-        Map<String, List<Long>> dump = cl.dumpSynonym();
-        
-        Map<String, List<Long>> expected = new HashMap<>();
-        expected.put("girl", Arrays.asList(group1));
-        expected.put("baby", Arrays.asList(group1));
-        expected.put("child", Arrays.asList(group1, group2));
+        Map<String, List<String>> expected = new HashMap<>();
+        expected.put("girl", Arrays.asList(String.valueOf(group1)));
+        expected.put("baby", Arrays.asList(String.valueOf(group1)));
+        expected.put("child", Arrays.asList(String.valueOf(group1), String.valueOf(group2)));
         assertEquals(expected, dump);               
+    }
+    
+    public void testSynSearch1() throws Exception {
+      
+    }
+      
+    public void testSynSearch2() throws Exception {
+      
     }
 }

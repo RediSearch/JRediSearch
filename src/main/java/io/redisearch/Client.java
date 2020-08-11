@@ -51,6 +51,7 @@ public interface Client extends Closeable{
      * @param schema  a schema definition, see {@link Schema}
      * @param options index option flags, see {@link IndexOptions}
      * @return true if successful
+     * @since 2.0
      */
     boolean createIndex(Schema schema, io.redisearch.client.Client.IndexOptions options);
 
@@ -231,7 +232,7 @@ public interface Client extends Closeable{
      * @param score   the document's index score, between 0 and 1
      * @param replace if set, and the document already exists, we reindex and update it
      * @return true on success
-     * @deprecated does support starting from RediSearch 2.0
+     * @deprecated not supported since RediSeach 2 use {@link Jedis#hset(byte[], Map)} instead 
      */
     @Deprecated
     boolean addHash(String docId, double score, boolean replace);
@@ -413,7 +414,9 @@ public interface Client extends Closeable{
      * @param terms
      * 
      * @return the synonym group id
+     * @deprecated not supported since RediSeach 2 use {@link #updateSynonym(String, String...) instead
      */
+    @Deprecated
     long addSynonym(String ...terms);
       
     /**
@@ -423,13 +426,25 @@ public interface Client extends Closeable{
      * @param terms
      * 
      * @return true on success
+     * @deprecated use {@link #updateSynonym(String, String...) instead
      */
+    @Deprecated
     boolean updateSynonym(long synonymGroupId, String ...terms);
+    
+    /**
+     * Updates a synonym group.
+     * 
+     * @param synonymGroupId
+     * @param terms
+     * 
+     * @return true on success
+     */
+    boolean updateSynonym(String synonymGroupId, String ...terms);
        
     /**
      * @return a map of synonym terms and their synonym group ids.
      */
-    Map<String, List<Long>> dumpSynonym();
+    Map<String, List<String>> dumpSynonym();
 
     /**
      * @return a connection from the connection pool

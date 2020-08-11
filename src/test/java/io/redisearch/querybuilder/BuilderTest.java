@@ -34,18 +34,34 @@ public class BuilderTest {
     @Test
     public void testRange() {
         Value v = between(1, 10);
-        assertEquals("[1.0 10.0]", v.toString());
+        assertEquals("[1 10]", v.toString());
         v = between(1, 10).inclusiveMax(false);
-        assertEquals("[1.0 (10.0]", v.toString());
+        assertEquals("[1 (10]", v.toString());
         v = between(1, 10).inclusiveMin(false);
-        assertEquals("[(1.0 10.0]", v.toString());
+        assertEquals("[(1 10]", v.toString());
+        
+        v = between(1.0, 10.1);
+        assertEquals("[1.0 10.1]", v.toString());
+        v = between(-1.0, 10.1).inclusiveMax(false);
+        assertEquals("[-1.0 (10.1]", v.toString());
+        v = between(-1.1, 150.61).inclusiveMin(false);
+        assertEquals("[(-1.1 150.61]", v.toString());
 
         // le, gt, etc.
-        assertEquals("[42.0 42.0]", eq(42).toString());
-        assertEquals("[-inf (42.0]", lt(42).toString());
-        assertEquals("[-inf 42.0]", le(42).toString());
-        assertEquals("[(42.0 inf]", gt(42).toString());
-        assertEquals("[42.0 inf]", ge(42).toString());
+        // le, gt, etc.
+        assertEquals("[42 42]", eq(42).toString());
+        assertEquals("[-inf (42]", lt(42).toString());
+        assertEquals("[-inf 42]", le(42).toString());
+        assertEquals("[(-42 inf]", gt(-42).toString());
+        assertEquals("[42 inf]", ge(42).toString());
+        
+        assertEquals("[42.0 42.0]", eq(42.0).toString());
+        assertEquals("[-inf (42.0]", lt(42.0).toString());
+        assertEquals("[-inf 42.0]", le(42.0).toString());
+        assertEquals("[(42.0 inf]", gt(42.0).toString());
+        assertEquals("[42.0 inf]", ge(42.0).toString());
+        
+        assertEquals("[(1587058030 inf]", gt(1587058030).toString());
 
         // string value
         assertEquals("s", value("s").toString());
@@ -70,7 +86,7 @@ public class BuilderTest {
                 add(union("name", value("mark"), value("dvir"))).
                 add("time", between(100, 200)).
                 add(disjunct("created", lt(1000)));
-        assertEquals("(@name:(mark|dvir) @time:[100.0 200.0] -@created:[-inf (1000.0])", n.toString());
+        assertEquals("(@name:(mark|dvir) @time:[100 200] -@created:[-inf (1000])", n.toString());
     }
     
     @Test

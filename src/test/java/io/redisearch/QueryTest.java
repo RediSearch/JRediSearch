@@ -36,12 +36,12 @@ public class QueryTest {
 
     @Test
     public void serializeRedisArgs() throws Exception {
-        query.setNoContent().setLanguage("xx").setNoStopwords().setVerbatim().setWithPayload().setWithScores();
+        query.setNoContent().setLanguage("xx").setNoStopwords().setVerbatim().setWithPayload().setWithScores().setScorer("My.Scorer");
 
         ArrayList<byte[]> args = new ArrayList<>(1);
         query.serializeRedisArgs(args);
 
-        assertEquals(8, args.size());
+        assertEquals(10, args.size());
         assertEquals(query._queryString, new String(args.get(0)));
 //        assertTrue(args.contains("xx".getBytes()));
 //        assertTrue(args.contains("NOSTOPWORDS".getBytes()));
@@ -75,7 +75,6 @@ public class QueryTest {
         assertTrue(query._verbatim);
     }
 
-
     @Test
     public void setNoStopwords() throws Exception {
         assertFalse(query._noStopwords);
@@ -84,12 +83,18 @@ public class QueryTest {
 
     }
 
-
     @Test
     public void setLanguage() throws Exception {
         assertEquals(null, query._language);
         assertEquals(query, query.setLanguage("chinese"));
         assertEquals("chinese", query._language);
+    }
+    
+    @Test
+    public void setScorer() throws Exception {
+        assertEquals(null, query._scorer);
+        assertEquals(query, query.setScorer("the.scroer"));
+        assertEquals("the.scroer", query._scorer);
     }
 
     @Test

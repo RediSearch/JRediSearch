@@ -10,11 +10,26 @@
 
 	<name>JRediSearch</name>
 	<description>Official client for Redis Search</description>
-	<url>http://redisearch.io</url>
+	<url>https://redisearch.io</url>
+	
+	<organization>
+		<name>RedisLabs</name>
+		<url>www.redislabs.com</url>
+	</organization>
+	
+	<ciManagement>
+		<system>CircleCI</system>
+		<url>https://circleci.com/gh/RediSearch/JRediSearch</url>
+	</ciManagement>
+	<issueManagement>
+		<url>https://github.com/RediSearch/JRediSearch/issues</url>
+		<system>Github</system>
+	</issueManagement>
+	
 	<scm>
-		<url>https://github.com/RedisLabs/JRediSearch</url>
-		<connection>scm:git:git://github.com/RedisLabs/JRediSearch.git</connection>
-		<developerConnection>scm:git:git@github.com:RedisLabs/JRediSearch.git</developerConnection>
+		<url>https://github.com/RediSearch/JRediSearch</url>
+		<connection>scm:git:git://github.com/RediSearch/JRediSearch.git</connection>
+		<developerConnection>scm:git:git@github.com:RediSearch/JRediSearch.git</developerConnection>
 	</scm>
 	<developers>
 		<developer>

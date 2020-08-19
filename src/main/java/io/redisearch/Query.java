@@ -158,6 +158,7 @@ public class Query {
     protected boolean _sortAsc = true;
     protected boolean wantsHighlight = false;
     protected boolean wantsSummarize = false;
+    protected String _scorer = null;
 
     /**
      * Create a new index
@@ -190,6 +191,12 @@ public class Query {
             args.add(Keywords.LANGUAGE.getRaw());
             args.add(SafeEncoder.encode(_language));
         }
+        
+        if (_scorer != null) {
+          args.add(Keywords.SCORER.getRaw());
+          args.add(SafeEncoder.encode(_scorer));
+        }
+        
         if (_fields != null && _fields.length > 0) {
             args.add(Keywords.INFIELDS.getRaw());
             args.add(Protocol.toByteArray(_fields.length));
@@ -376,12 +383,27 @@ public class Query {
 
     /**
      * Set the query language, for stemming purposes
-     * @param language a language. see http://redisearch.io for documentation on languages and stemming
+     * @param language a language. 
      * 
      * @return the query object itself
+     * 
+     * @see http://redisearch.io for documentation on languages and stemming
      */
     public Query setLanguage(String language) {
         this._language = language;
+        return this;
+    }
+
+    /**
+     * Set the query custom scorer
+     * @param scorer a custom scorer. 
+     * 
+     * @return the query object itself
+     * 
+     * @see http://redisearch.io for documentation on extending RediSearch
+     */
+    public Query setScorer(String scorer) {
+        this._scorer = scorer;
         return this;
     }
 

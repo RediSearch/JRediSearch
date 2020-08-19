@@ -5,9 +5,7 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 
-import static junit.framework.TestCase.assertEquals;
-import static junit.framework.TestCase.assertFalse;
-import static junit.framework.TestCase.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * Created by dvirsky on 19/02/17.
@@ -99,14 +97,14 @@ public class QueryTest {
 
     @Test
     public void limitFields() throws Exception {
-        assertEquals( null, query._fields);
+      assertNull(query._fields);
         assertEquals(query, query.limitFields("foo", "bar"));
         assertEquals(2, query._fields.length);
     }
     
     @Test
     public void returnFields() throws Exception {
-        assertEquals( null, query._returnFields);
+        assertNull(query._returnFields);
         assertEquals(query, query.returnFields("foo", "bar"));
         assertEquals(2, query._returnFields.length);
     }
@@ -114,21 +112,21 @@ public class QueryTest {
     @Test
     public void highlightFields() throws Exception {
         assertEquals(false, query.wantsHighlight);
-        assertEquals(null, query.highlightFields);
+        assertNull(query.highlightFields);
 
         query = new Query("Hello");
         assertEquals(query, query.highlightFields("foo", "bar"));
         assertEquals(2, query.highlightFields.length);
-        assertEquals(null, query.highlightTags);
+        assertNull(query.highlightTags);
         assertEquals(true, query.wantsHighlight);
 
         query = new Query("Hello").highlightFields();
-        assertEquals(null, query.highlightFields);
-        assertEquals(null, query.highlightTags);
+        assertNull(query.highlightFields);
+        assertNull(query.highlightTags);
         assertEquals(true, query.wantsHighlight);
 
         assertEquals(query, query.highlightFields(new Query.HighlightTags("<b>","</b>")));
-        assertEquals(null, query.highlightFields);
+        assertNull(query.highlightFields);
         assertEquals(2, query.highlightTags.length);
         assertEquals("<b>", query.highlightTags[0]);
         assertEquals("</b>", query.highlightTags[1]);
@@ -137,12 +135,12 @@ public class QueryTest {
     @Test
     public void summarizeFields() throws Exception {
         assertEquals(false, query.wantsSummarize);
-        assertEquals(null, query.summarizeFields);
+        assertNull(query.summarizeFields);
 
         query = new Query("Hello");
         assertEquals(query, query.summarizeFields());
         assertEquals(true, query.wantsSummarize);
-        assertEquals(null, query.summarizeFields);
+        assertNull(query.summarizeFields);
         assertEquals(-1, query.summarizeFragmentLen);
         assertEquals(-1, query.summarizeNumFragments);
 

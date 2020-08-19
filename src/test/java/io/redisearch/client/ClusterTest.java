@@ -13,7 +13,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.TestCase.*;
+import static org.junit.Assert.*;
 
 
 /**
@@ -97,7 +97,7 @@ public class ClusterTest {
         assertTrue(cl.dropIndex());
 
             res = cl.search(new Query("hello world"));
-        assertTrue(res.totalResults == 0);
+        assertEquals(0L, res.totalResults);
 
     }
 
@@ -236,7 +236,7 @@ public class ClusterTest {
 
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() != 1.0);
+            assertNotEquals(1.0, d.getScore());
             assertTrue(((String) d.get("title")).startsWith("hello world"));
         }
 
@@ -244,7 +244,7 @@ public class ClusterTest {
         res = cl.search(q);
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() == 1.0);
+            assertEquals(1.0, d.getScore(), 0);
             assertEquals(null, d.get("title"));
         }
 

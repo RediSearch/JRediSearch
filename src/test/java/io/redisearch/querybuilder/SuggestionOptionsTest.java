@@ -1,9 +1,9 @@
 package io.redisearch.querybuilder;
 
+import io.redisearch.client.SuggestionOptions;
+
 import org.junit.Test;
 import static org.junit.Assert.*;
-import io.redisearch.client.SuggestionOptions;
-import io.redisearch.client.SuggestionOptions.Builder;
 
 public class SuggestionOptionsTest {
 

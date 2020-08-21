@@ -11,6 +11,7 @@ import redis.clients.jedis.util.Pool;
 import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -123,15 +124,17 @@ public class Client implements io.redisearch.Client {
         this(indexName, masterName, sentinels, 500, 100);
     }
 
-    private static void handleListMapping(List<Object> items, KVHandler handler, boolean decode) {
+    private static Map<String, Object> handleListMapping(List<Object> items, boolean decode) {
+        Map<String, Object> map = new HashMap<>();
         for (int i = 0; i < items.size(); i += 2) {
             String key = SafeEncoder.encode((byte[]) items.get(i));
             Object val = items.get(i + 1);
             if (decode && val instanceof byte[]) {
                 val = SafeEncoder.encode((byte[]) val);
             }
-            handler.apply(key, val);
+            map.put(key, val);
         }
+        return map;
     }
 
     @Deprecated
@@ -685,9 +688,7 @@ public class Client implements io.redisearch.Client {
             res = sendCommand(conn, commands.getInfoCommand(), this.endocdedIndexName).getObjectMultiBulkReply();
         }
 
-        Map<String, Object> info = new HashMap<>();
-        handleListMapping(res, info::put, true /*decode*/);
-        return info;
+        return handleListMapping(res, true /*decode*/);
     }
     
     /**
@@ -781,14 +782,13 @@ public class Client implements io.redisearch.Client {
      */
     @Override
     public Document getDocument(String docId, boolean decode) {
-        Document d = new Document(docId);
         try (Jedis conn = connection()) {
             List<Object> res = sendCommand(conn, commands.getGetCommand(), indexName, docId).getObjectMultiBulkReply();
             if (res == null) {
                 return null;
             }
-            handleListMapping(res, d::set, decode);
-            return d;
+            Map<String, Object> map = handleListMapping(res, decode);
+            return new Document(docId, map);
         }
     }
 
@@ -833,9 +833,9 @@ public class Client implements io.redisearch.Client {
               if (line == null) {
                 documents.add(null);
               } else {
-                Document doc = new Document(docIds[i]);
-                handleListMapping(line, doc::set, decode);
-                documents.add(doc);
+                
+                Map<String, Object> map = handleListMapping(line, decode);
+                documents.add(new Document(docIds[i], map));
               }
             }            
             return documents;
@@ -957,7 +957,9 @@ public class Client implements io.redisearch.Client {
         final List<Suggestion> list = new ArrayList<>();
         try (Jedis conn = connection()) {
             final List<String> result = sendCommand(conn, AutoCompleter.Command.SUGGET, args.toArray(new String[args.size()])).getMultiBulkReply();
-            result.forEach(str -> list.add(Suggestion.builder().str(str).build()));
+            for(String res : result) { 
+              list.add(Suggestion.builder().str(res).build());
+            }
         }
         return list;
     }
@@ -1053,7 +1055,11 @@ public class Client implements io.redisearch.Client {
         for(int i=0; i<res.size(); i+=2) {
             List<String> groups = ((List<?>) res.get(i+1))
                 .stream()
-                .map(x -> x instanceof Long ? String.valueOf(x) : SafeEncoder.encode((byte[])x))
+                .map(new Function<Object, String>() {
+                  @Override
+                  public String apply(Object x) {
+                    return x instanceof Long ? String.valueOf(x) : SafeEncoder.encode((byte[])x);                  }
+                 }) 
                 .collect(Collectors.toList());
             
             dump.put(SafeEncoder.encode((byte[])res.get(i)), groups);
@@ -1062,12 +1068,6 @@ public class Client implements io.redisearch.Client {
       }
     }
     
-
-    @FunctionalInterface
-    private interface KVHandler {
-        void apply(String key, Object value);
-    }
-
     /**
      * IndexOptions encapsulates flags for index creation and should be given to the client on index creation
      * @since 2.0

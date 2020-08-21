@@ -1,6 +1,7 @@
 package io.redisearch.querybuilder;
 
 import java.util.Arrays;
+import java.util.function.Function;
 
 import static io.redisearch.querybuilder.Values.value;
 
@@ -13,6 +14,15 @@ import static io.redisearch.querybuilder.Values.value;
  * You can use <pre>import static</pre> for these helper methods.
  */
 public class QueryBuilder {
+    
+    private static final Function<String, Value> TO_VALUE = new Function<String, Value>() {
+      @Override
+      public Value apply(String s) {
+        return Values.value(s);
+      }
+    };
+  
+  
     private QueryBuilder() {
     }
 
@@ -76,7 +86,7 @@ public class QueryBuilder {
      * @return The union node
      */
     public static QueryNode union(String field, String ...values) {
-        return union(field, (Value[]) Arrays.stream(values).map(Values::value).toArray());
+        return union(field, (Value[]) Arrays.stream(values).map(TO_VALUE).toArray());
     }
 
     /**
@@ -110,7 +120,7 @@ public class QueryBuilder {
      * @return The node
      */
     public static QueryNode disjunct(String field, String ...values) {
-        return disjunct(field, (Value[]) Arrays.stream(values).map(Values::value).toArray());
+        return disjunct(field, (Value[]) Arrays.stream(values).map(TO_VALUE).toArray());
     }
 
     /**
@@ -128,7 +138,7 @@ public class QueryBuilder {
     }
 
     public static QueryNode disjunctUnion(String field, String ...values) {
-        return disjunctUnion(field, (Value[]) Arrays.stream(values).map(Values::value).toArray());
+        return disjunctUnion(field, (Value[]) Arrays.stream(values).map(TO_VALUE).toArray());
     }
 
     /**

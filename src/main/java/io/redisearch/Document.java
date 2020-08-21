@@ -30,7 +30,7 @@ public class Document implements Serializable {
     }
 
     public Document(String id, Map<String,Object> fields) {
-        this(id, fields, 1.0f);
+        this(id, fields, 1.0);
     }
 
     public Document(String id, Map<String, Object> fields, double score) {
@@ -39,7 +39,7 @@ public class Document implements Serializable {
 
     public Document(String id, Map<String, Object> fields, double score, byte[] payload) {
         this.id = id;
-        this.properties = new HashMap<>(fields);
+        this.properties = fields;
         this.score = score;
         this.payload = payload;
     }

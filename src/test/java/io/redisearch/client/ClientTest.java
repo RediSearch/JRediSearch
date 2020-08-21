@@ -446,7 +446,7 @@ public class ClientTest {
             cl.addDocument("doc2", fields);
             fail("Should throw a 'NullPointerException'.");
         } catch (NullPointerException e) {
-            assertEquals("Document attribute 'tag' is null. (Remove it, or set a value)" , e.getMessage());
+            assertEquals("Document attribute 'plot' is null. (Remove it, or set a value)" , e.getMessage());
         }
 
         res = cl.search(new Query("title"));

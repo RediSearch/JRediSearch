@@ -104,6 +104,11 @@
 						<format>xml</format>
 					</formats>
 					<check/>
+					<instrumentation>
+				        <ignores>
+          					<ignore>io.redisearch.client.ClusterClient</ignore>
+        				</ignores>
+      				</instrumentation>
 				</configuration>
 			</plugin>
 			<plugin>

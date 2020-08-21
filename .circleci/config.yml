@@ -1,3 +1,7 @@
+# Java Maven CircleCI 2.0 configuration file
+#
+# Check https://circleci.com/docs/2.0/language-java/ for more details
+#
 version: 2.1
 commands:
   early_return_for_forked_pull_requests:
@@ -32,7 +36,7 @@ jobs:
           key: jredisearch-{{ checksum "pom.xml" }}
           
       - run: mvn integration-test 
-      - run: mvn cobertura:cobertura
+#     - run: mvn cobertura:cobertura
       - early_return_for_forked_pull_requests
       - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
       - run: mvn -s .circleci.settings.xml -DskipTests deploy

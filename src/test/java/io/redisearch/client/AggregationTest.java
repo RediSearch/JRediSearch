@@ -11,7 +11,7 @@ import redis.clients.jedis.exceptions.JedisDataException;
 
 import org.junit.Test;
 
-import static junit.framework.TestCase.*;
+import static org.junit.Assert.*;
 
 /**
  * Created by mnunberg on 5/17/18.
@@ -52,11 +52,11 @@ public class AggregationTest extends ClientTest {
     assertNotNull(r1);
     assertEquals("def", r1.getString("name"));
     assertEquals(30, r1.getLong("sum"));
-    assertEquals(30., r1.getDouble("sum"));
+    assertEquals(30., r1.getDouble("sum"), 0);
 
 
     assertEquals(0L, r1.getLong("nosuchcol"));
-    assertEquals(0.0, r1.getDouble("nosuchcol"));
+    assertEquals(0.0, r1.getDouble("nosuchcol"), 0);
     assertEquals("", r1.getString("nosuchcol"));
 
 
@@ -111,13 +111,13 @@ public class AggregationTest extends ClientTest {
     Row r1 = res.getRow(0);
     assertNotNull(r1);
     assertEquals("def", r1.getString("name"));
-    assertEquals(52.5, r1.getDouble("avgscore"));
+    assertEquals(52.5, r1.getDouble("avgscore"), 0);
 
 
     Row r2 = res.getRow(1);
     assertNotNull(r2);
     assertEquals("ghi", r2.getString("name"));
-    assertEquals(67.5, r2.getDouble("avgscore"));
+    assertEquals(67.5, r2.getDouble("avgscore"), 0);
   }
   @Test
   public void testCursor() throws InterruptedException {
@@ -153,10 +153,10 @@ public class AggregationTest extends ClientTest {
     assertNotNull(row);
     assertEquals("def", row.getString("name"));
     assertEquals(30, row.getLong("sum"));
-    assertEquals(30., row.getDouble("sum"));
+    assertEquals(30., row.getDouble("sum"), 0);
 
     assertEquals(0L, row.getLong("nosuchcol"));
-    assertEquals(0.0, row.getDouble("nosuchcol"));
+    assertEquals(0.0, row.getDouble("nosuchcol"), 0);
     assertEquals("", row.getString("nosuchcol"));
 
     res = cl.cursorRead(res.getCursorId(), 1);        

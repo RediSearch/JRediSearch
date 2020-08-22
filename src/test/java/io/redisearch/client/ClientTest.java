@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static junit.framework.TestCase.*;
+import static org.junit.Assert.*;
 
 
 /**
@@ -333,7 +333,7 @@ public class ClientTest {
 
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() != 1.0);
+            assertNotEquals(1.0, d.getScore());
             assertTrue(((String) d.get("title")).startsWith("hello world"));
         }
 
@@ -341,7 +341,7 @@ public class ClientTest {
         res = cl.search(q);
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() == 1.0);
+            assertEquals(1.0, d.getScore(), 0);
             assertEquals(null, d.get("title"));
         }
 
@@ -942,11 +942,11 @@ public class ClientTest {
 
         long result = cl.deleteSuggestion("ANOTHER ENTRY");
         assertEquals("The delete of the suggestion should return 1", 1, result);
-        assertTrue(cl.getSuggestionLength() == 1);
+        assertEquals(1L, cl.getSuggestionLength().longValue());
 
         result = cl.deleteSuggestion("ANOTHER ENTRY THAT IS NOT PRESENT");
         assertEquals("The delete of the suggestion should return 0", 0, result);
-        assertTrue(cl.getSuggestionLength() == 1);
+        assertEquals(1L, cl.getSuggestionLength().longValue());
     }
 
     @Test
@@ -954,10 +954,10 @@ public class ClientTest {
         Client cl = getClient();
         cl.addSuggestion(Suggestion.builder().str("TOPIC OF WORDS").score(1).build(), true);
         cl.addSuggestion(Suggestion.builder().str("ANOTHER ENTRY").score(1).build(), true);
-        assertTrue(cl.getSuggestionLength() == 2);
+        assertEquals(2L, cl.getSuggestionLength().longValue());
 
         cl.addSuggestion(Suggestion.builder().str("FINAL ENTRY").score(1).build(), true);
-        assertTrue(cl.getSuggestionLength() == 3);
+        assertEquals(3L, cl.getSuggestionLength().longValue());
     }
 
 
@@ -1210,13 +1210,5 @@ public class ClientTest {
         expected.put("baby", Arrays.asList(String.valueOf(group1)));
         expected.put("child", Arrays.asList(String.valueOf(group1), String.valueOf(group2)));
         assertEquals(expected, dump);               
-    }
-    
-    public void testSynSearch1() throws Exception {
-      
-    }
-      
-    public void testSynSearch2() throws Exception {
-      
     }
 }

@@ -35,7 +35,7 @@ releases.
   </dependencies>
 ```
 
-### Snapshots (Compatible with RediSearch 2.0)
+### Snapshots
 
 ```xml
   <repositories>

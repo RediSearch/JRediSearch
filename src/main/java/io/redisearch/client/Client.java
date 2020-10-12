@@ -321,7 +321,7 @@ public class Client implements io.redisearch.Client {
     /**
      * Search the index
      *
-     * @param q a {@link Query} object with the query string and optional parameters
+     * @param queries an array of {@link Query} objects with the query strings and optional parameters
      * @return a {@link SearchResult} object with the results
      */
     @Override

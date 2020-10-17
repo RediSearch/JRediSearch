@@ -9,7 +9,9 @@ import java.util.Set;
 
 /**
  * Created by dvirvolk on 12/04/2017.
+ * @deprecated ClusterClient is going to be removed in the future
  */
+@Deprecated
 public class ClusterClient extends Client implements io.redisearch.ClusterClient {
 
     public ClusterClient(String indexName, String host, int port) {
@@ -101,7 +103,7 @@ public class ClusterClient extends Client implements io.redisearch.ClusterClient
 
     @Override
     public List<Object> broadcast(String... args) {
-        try (Jedis conn = _conn()) {
+        try (Jedis conn = connection()) {
             BinaryClient client = conn.getClient();
             client.sendCommand(Commands.ClusterCommand.BROADCAST, args);
             return client.getObjectMultiBulkReply();

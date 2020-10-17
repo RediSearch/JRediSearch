@@ -8,13 +8,12 @@ import redis.clients.jedis.util.SafeEncoder;
  */
  public class Commands {
 
-
-    // TODO: Move this to the client and autocompleter as two different enums
     public enum Command implements ProtocolCommand {
 
         CREATE("FT.CREATE"),
         ALTER("FT.ALTER"),
         ADD("FT.ADD"),
+        @Deprecated
         ADDHASH("FT.ADDHASH"),
         INFO("FT.INFO"),
         SEARCH("FT.SEARCH"),
@@ -29,6 +28,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ALIASADD("FT.ALIASADD"),
         ALIASUPDATE("FT.ALIASUPDATE"),
         ALIASDEL("FT.ALIASDEL"),
+        @Deprecated
         SYNADD("FT.SYNADD"),
         SYNUPDATE("FT.SYNUPDATE"),
         SYNDUMP("FT.SYNDUMP");
@@ -43,7 +43,11 @@ import redis.clients.jedis.util.SafeEncoder;
             return raw;
         }
     }
-
+    
+    /**
+     * @deprecated ClusterCommand is going to be removed in the future
+     */
+    @Deprecated
     public enum ClusterCommand implements ProtocolCommand {
 
         CREATE("FT.CREATE"),
@@ -83,6 +87,7 @@ import redis.clients.jedis.util.SafeEncoder;
         ProtocolCommand getCreateCommand();
         ProtocolCommand getAlterCommand();
         ProtocolCommand getAddCommand();
+        @Deprecated
         ProtocolCommand getAddHashCommand();
         ProtocolCommand getDelCommand();
         ProtocolCommand getInfoCommand();
@@ -119,6 +124,7 @@ import redis.clients.jedis.util.SafeEncoder;
             return Command.ADD;
         }
 
+        @Deprecated
         @Override
         public ProtocolCommand getAddHashCommand() {
             return Command.ADDHASH;
@@ -205,6 +211,7 @@ import redis.clients.jedis.util.SafeEncoder;
         }
     }
 
+    @Deprecated
     public static class ClusterCommands implements CommandProvider {
 
         @Override

@@ -32,13 +32,13 @@ public class ValueNode implements Node {
         if (field == null || field.isEmpty()) {
             return "";
         }
-        return "@" + field + ":";
+        return '@' + field + ':';
     }
 
     private String toStringCombinable(ParenMode mode) {
         StringBuilder sb = new StringBuilder(formatField());
         if (values.length > 1 || mode == ParenMode.ALWAYS) {
-            sb.append("(");
+            sb.append('(');
         }
         StringJoiner sj = new StringJoiner(joinString);
         for (Value v : values) {
@@ -46,7 +46,7 @@ public class ValueNode implements Node {
         }
         sb.append(sj.toString());
         if (values.length > 1 || mode == ParenMode.ALWAYS) {
-            sb.append(")");
+            sb.append(')');
         }
         return sb.toString();
     }
@@ -58,7 +58,7 @@ public class ValueNode implements Node {
         }
         StringBuilder sb = new StringBuilder();
         if (useParen) {
-            sb.append("(");
+            sb.append('(');
         }
         StringJoiner sj = new StringJoiner(joinString);
         for (Value v : values) {
@@ -66,7 +66,7 @@ public class ValueNode implements Node {
         }
         sb.append(sj.toString());
         if (useParen) {
-            sb.append(")");
+            sb.append(')');
         }
         return sb.toString();
     }
@@ -75,8 +75,7 @@ public class ValueNode implements Node {
     public String toString(ParenMode mode) {
         if (values[0].isCombinable()) {
             return toStringCombinable(mode);
-        } else {
-            return toStringDefault(mode);
-        }
+        } 
+        return toStringDefault(mode);
     }
 }

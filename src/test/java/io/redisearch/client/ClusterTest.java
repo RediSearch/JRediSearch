@@ -13,7 +13,7 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import java.util.HashMap;
 import java.util.Map;
 
-import static junit.framework.TestCase.*;
+import static org.junit.Assert.*;
 
 
 /**
@@ -48,7 +48,7 @@ public class ClusterTest {
     @Test
     public void getClusterClientWithPasswordTest(){
         try (ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, PROTECTD_CLUSTER_PASSWORD)){
-          try(Jedis conn = clusterClient._conn()){
+          try(Jedis conn = clusterClient.connection()){
             assertEquals("SUCCESS", conn.ping("SUCCESS"));
           }
         }
@@ -57,7 +57,7 @@ public class ClusterTest {
     @Test(expected = JedisConnectionException.class)
     public void getClusterClientWithWrongPasswordTest(){
         try(ClusterClient clusterClient = new ClusterClient(CLUSTER_INDEX, PROTECTED_CLUSTER_HOST, PROTECTED_CLUSTER_PORT, TIMEOUT, POOL_SIZE, WRONG_PASSWORD)){
-          try ( Jedis conn = clusterClient._conn()){
+          try ( Jedis conn = clusterClient.connection()){
               fail("Should throw JedisConnectionException as password is incorrect.");
           }
         }
@@ -97,7 +97,7 @@ public class ClusterTest {
         assertTrue(cl.dropIndex());
 
             res = cl.search(new Query("hello world"));
-        assertTrue(res.totalResults == 0);
+        assertEquals(0L, res.totalResults);
 
     }
 
@@ -236,7 +236,7 @@ public class ClusterTest {
 
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() != 1.0);
+            assertNotEquals(1.0, d.getScore());
             assertTrue(((String) d.get("title")).startsWith("hello world"));
         }
 
@@ -244,7 +244,7 @@ public class ClusterTest {
         res = cl.search(q);
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() == 1.0);
+            assertEquals(1.0, d.getScore(), 0);
             assertEquals(null, d.get("title"));
         }
 
@@ -263,7 +263,7 @@ public class ClusterTest {
 //    @Test
 //    public void testAddHash() throws Exception {
 //        Client cl = new Client("testung", "localhost", 6379);
-//        Jedis conn = cl._conn();
+//        Jedis conn = cl.connection();
 //        conn.flushDB();
 //        Schema sc = new Schema().addTextField("title", 1.0);
 //        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));
@@ -281,7 +281,7 @@ public class ClusterTest {
 //    @Test
 //    public void testDrop() throws Exception {
 //        Client cl = new Client("testung", "localhost", 6379);
-//        cl._conn().flushDB();
+//        cl.connection().flushDB();
 //
 //        Schema sc = new Schema().addTextField("title", 1.0);
 //
@@ -298,7 +298,7 @@ public class ClusterTest {
 //
 //        assertTrue(cl.dropIndex());
 //
-//        Jedis conn = cl._conn();
+//        Jedis conn = cl.connection();
 //
 //        Set<String> keys = conn.keys("*");
 //        assertTrue(keys.isEmpty());
@@ -309,7 +309,7 @@ public class ClusterTest {
 //    @Test
 //    public void testInfo() throws Exception {
 //        Client cl = new Client("testung", "localhost", 6379);
-//        cl._conn().flushDB();
+//        cl.connection().flushDB();
 //
 //        Schema sc = new Schema().addTextField("title", 1.0);
 //        assertTrue(cl.createIndex(sc, Client.IndexOptions.Default()));

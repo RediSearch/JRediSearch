@@ -13,7 +13,7 @@ import redis.clients.jedis.util.SafeEncoder;
 
 import java.util.*;
 
-import static junit.framework.TestCase.*;
+import static org.junit.Assert.*;
 
 
 /**
@@ -36,7 +36,52 @@ public class ClientTest {
 
     @Before
     public void setUp() {
-        getClient()._conn().flushDB();
+        getClient().connection().flushDB();
+    }
+    
+    
+    private static Map<String, String> toMap(String ...values){
+      Map<String, String> map = new HashMap<>();
+      for(int i=0; i<values.length; i+=2) {
+        map.put(values[i], values[i+1]);
+      }
+      return map;
+    }
+    
+    @Test
+    public void creatDefinion() throws Exception {
+      Client cl = getClient();
+      Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
+      IndexDefinition rule = new IndexDefinition()
+//          .setFilter("@age>16")
+          .setPrefixes(new String[] {"student:", "pupil:"});
+          
+      try {
+        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
+      }catch(JedisDataException e) {
+        // ON was only supported from RediSearch 2.0
+        assertEquals("Unknown argument `ON`", e.getMessage());
+        return;
+      }
+      
+      try(Jedis jedis = cl.connection()){
+        jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
+        jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
+        jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
+        jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
+        jedis.hset("pupil:4444", toMap("first", "Pat", "last", "Shu", "age", "21"));
+        jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
+        jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
+      }
+      
+      SearchResult res1 = cl.search(new Query("@first:Jo*"));
+      assertEquals(2, res1.totalResults);
+
+      SearchResult res2 = cl.search(new Query("@first:Pat"));
+      assertEquals(1, res2.totalResults);
+      
+//      SearchResult res3 = cl.search(new Query("@last:Rod"));
+//      assertEquals(0, res3.totalResults);
     }
     
     @Test
@@ -198,7 +243,7 @@ public class ClientTest {
         res = cl.search(new Query("foo bar"));
         assertEquals(0, res.totalResults);
 
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         assertTrue(cl.createIndex(sc,
                 Client.IndexOptions.defaultOptions().setNoStopwords()));
@@ -284,7 +329,7 @@ public class ClientTest {
 
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() != 1.0);
+            assertNotEquals(1.0, d.getScore());
             assertTrue(((String) d.get("title")).startsWith("hello world"));
         }
 
@@ -292,7 +337,7 @@ public class ClientTest {
         res = cl.search(q);
         for (Document d : res.docs) {
             assertTrue(d.getId().startsWith("doc"));
-            assertTrue(d.getScore() == 1.0);
+            assertEquals(1.0, d.getScore(), 0);
             assertEquals(null, d.get("title"));
         }
 
@@ -344,14 +389,19 @@ public class ClientTest {
     @Test
     public void testAddHash() throws Exception {
         Client cl = getClient();
-        Jedis conn = cl._conn();
+        Jedis conn = cl.connection();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
         HashMap<String, String> hm = new HashMap<>();
         hm.put("title", "hello world");
         conn.hmset("foo", hm);
 
-        assertTrue(cl.addHash("foo", 1, false));
+        try {
+          assertTrue(cl.addHash("foo", 1, false));
+        }catch(JedisDataException e) {
+          assertTrue(e.getMessage().startsWith("ERR unknown command `FT.ADDHASH`"));
+          return; // Starting from RediSearch 2.0 this command is not supported anymore
+        }
         SearchResult res = cl.search(new Query("hello world").setVerbatim());
         assertEquals(1, res.totalResults);
         assertEquals("foo", res.docs.get(0).getId());
@@ -417,7 +467,7 @@ public class ClientTest {
     @Test
     public void testDrop() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -433,7 +483,7 @@ public class ClientTest {
 
         assertTrue(cl.dropIndex());
 
-        Jedis conn = cl._conn();
+        Jedis conn = cl.connection();
 
         Set<String> keys = conn.keys("*");
         assertTrue(keys.isEmpty());
@@ -442,7 +492,7 @@ public class ClientTest {
     @Test
     public void testAlterAdd() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -475,7 +525,7 @@ public class ClientTest {
     @Test
     public void testNoStem() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -496,7 +546,7 @@ public class ClientTest {
     @Test
     public void testPhoneticMatch() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema()
             .addTextField("noPhonetic", 1.0)
             .addField(new Schema.TextField("withPhonetic", 1.0, false, false, false, "dm:en"));
@@ -908,11 +958,11 @@ public class ClientTest {
 
         long result = cl.deleteSuggestion("ANOTHER ENTRY");
         assertEquals("The delete of the suggestion should return 1", 1, result);
-        assertTrue(cl.getSuggestionLength() == 1);
+        assertEquals(1L, cl.getSuggestionLength().longValue());
 
         result = cl.deleteSuggestion("ANOTHER ENTRY THAT IS NOT PRESENT");
         assertEquals("The delete of the suggestion should return 0", 0, result);
-        assertTrue(cl.getSuggestionLength() == 1);
+        assertEquals(1L, cl.getSuggestionLength().longValue());
     }
 
     @Test
@@ -920,10 +970,10 @@ public class ClientTest {
         Client cl = getClient();
         cl.addSuggestion(Suggestion.builder().str("TOPIC OF WORDS").score(1).build(), true);
         cl.addSuggestion(Suggestion.builder().str("ANOTHER ENTRY").score(1).build(), true);
-        assertTrue(cl.getSuggestionLength() == 2);
+        assertEquals(2L, cl.getSuggestionLength().longValue());
 
         cl.addSuggestion(Suggestion.builder().str("FINAL ENTRY").score(1).build(), true);
-        assertTrue(cl.getSuggestionLength() == 3);
+        assertEquals(3L, cl.getSuggestionLength().longValue());
     }
 
 
@@ -1024,7 +1074,7 @@ public class ClientTest {
     @Test
     public void testReturnFields() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -1045,7 +1095,7 @@ public class ClientTest {
     @Test
     public void testInKeys() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -1068,7 +1118,7 @@ public class ClientTest {
     @Test
     public void testBlobField() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
@@ -1092,7 +1142,7 @@ public class ClientTest {
     @Test
     public void testConfig() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         boolean result = cl.setConfig(ConfigOption.TIMEOUT, "100");
         assertTrue(result);
@@ -1109,7 +1159,7 @@ public class ClientTest {
     @Test
     public void testAlias() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("field1", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -1147,25 +1197,34 @@ public class ClientTest {
     @Test
     public void testSyn() throws Exception {
         Client cl = getClient();
-        cl._conn().flushDB();
+        cl.connection().flushDB();
         
         Schema sc = new Schema().addTextField("name", 1.0).addTextField("addr", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
+        long group1, group2;
+        try {
+          group1 = cl.addSynonym("girl", "baby");
+          assertTrue(cl.updateSynonym(group1, "child"));
+          group2 = cl.addSynonym("child");
+          assertNotSame(group1, group2);
+        }catch(JedisDataException e) {
+          // TF.SYNADD is not supported since RediSearch 2.0
+          assertEquals( "No longer suppoted, use FT.SYNUPDATE", e.getMessage());
+          
+          group1 = 345L;
+          group2 = 789L;
+          assertTrue(cl.updateSynonym(group1, "girl", "baby"));
+          assertTrue(cl.updateSynonym(group1, "child"));
+          assertTrue(cl.updateSynonym(group2, "child"));
+        }
         
-        long group1 = cl.addSynonym("girl", "baby");
-        assertTrue(cl.updateSynonym(group1, "child"));
+        Map<String, List<String>> dump = cl.dumpSynonym();
         
-        long group2 = cl.addSynonym("child");
-        
-        assertNotSame(group1, group2);
-        
-        Map<String, List<Long>> dump = cl.dumpSynonym();
-        
-        Map<String, List<Long>> expected = new HashMap<>();
-        expected.put("girl", Arrays.asList(group1));
-        expected.put("baby", Arrays.asList(group1));
-        expected.put("child", Arrays.asList(group1, group2));
+        Map<String, List<String>> expected = new HashMap<>();
+        expected.put("girl", Arrays.asList(String.valueOf(group1)));
+        expected.put("baby", Arrays.asList(String.valueOf(group1)));
+        expected.put("child", Arrays.asList(String.valueOf(group1), String.valueOf(group2)));
         assertEquals(expected, dump);               
     }
 }

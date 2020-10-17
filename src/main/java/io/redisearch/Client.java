@@ -6,6 +6,7 @@ import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.client.AddOptions;
 import io.redisearch.client.ConfigOption;
 import io.redisearch.client.SuggestionOptions;
+import redis.clients.jedis.Jedis;
 import io.redisearch.client.Client.IndexOptions;
 
 import java.io.Closeable;
@@ -15,31 +16,31 @@ import java.util.Map;
 public interface Client extends Closeable{
   
     /**
-     * @Deprecated use {@link Keywords#INCR} instead 
+     * @deprecated use {@link Keywords#INCR} instead 
      */
     @Deprecated
     String INCREMENT_FLAG = "INCR";
     
     /**
-     * @Deprecated use {@link Keywords#PAYLOAD} instead 
+     * @deprecated use {@link Keywords#PAYLOAD} instead 
      */
     @Deprecated
     String PAYLOAD_FLAG = "PAYLOAD";
     
     /**
-     * @Deprecated use {@link Keywords#MAX} instead 
+     * @deprecated use {@link Keywords#MAX} instead 
      */
     @Deprecated
     String MAX_FLAG = "MAX";
     
     /**
-     * @Deprecated use {@link Keywords#FUZZY} instead 
+     * @deprecated use {@link Keywords#FUZZY} instead 
      */
     @Deprecated
     String FUZZY_FLAG = "FUZZY";
     
     /**
-     * @Deprecated use {@link Keywords#DD} instead 
+     * @deprecated use {@link Keywords#DD} instead 
      */
     @Deprecated
     String DELETE_DOCUMENT = "DD";
@@ -50,6 +51,7 @@ public interface Client extends Closeable{
      * @param schema  a schema definition, see {@link Schema}
      * @param options index option flags, see {@link IndexOptions}
      * @return true if successful
+     * @since 2.0
      */
     boolean createIndex(Schema schema, io.redisearch.client.Client.IndexOptions options);
 
@@ -230,7 +232,9 @@ public interface Client extends Closeable{
      * @param score   the document's index score, between 0 and 1
      * @param replace if set, and the document already exists, we reindex and update it
      * @return true on success
+     * @deprecated not supported since RediSeach 2 use {@link Jedis#hset(byte[], Map)} instead 
      */
+    @Deprecated
     boolean addHash(String docId, double score, boolean replace);
 
     /**
@@ -410,7 +414,9 @@ public interface Client extends Closeable{
      * @param terms
      * 
      * @return the synonym group id
+     * @deprecated not supported since RediSeach 2 use {@link #updateSynonym(String, String...) instead
      */
+    @Deprecated
     long addSynonym(String ...terms);
       
     /**
@@ -420,11 +426,28 @@ public interface Client extends Closeable{
      * @param terms
      * 
      * @return true on success
+     * @deprecated use {@link #updateSynonym(String, String...) instead
      */
+    @Deprecated
     boolean updateSynonym(long synonymGroupId, String ...terms);
+    
+    /**
+     * Updates a synonym group.
+     * 
+     * @param synonymGroupId
+     * @param terms
+     * 
+     * @return true on success
+     */
+    boolean updateSynonym(String synonymGroupId, String ...terms);
        
     /**
      * @return a map of synonym terms and their synonym group ids.
      */
-    Map<String, List<Long>> dumpSynonym();
+    Map<String, List<String>> dumpSynonym();
+
+    /**
+     * @return a connection from the connection pool
+     */
+    Jedis connection();
 }

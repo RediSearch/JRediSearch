@@ -15,8 +15,7 @@ public class OptionalNode extends IntersectNode {
         String ret = super.toString(ParenMode.NEVER);
         if (shouldUseParens(mode)) {
             return "~(" + ret + ")";
-        } else {
-            return "~" + ret;
         }
+        return "~" + ret;
     }
 }

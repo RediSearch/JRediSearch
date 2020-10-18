@@ -110,7 +110,7 @@ IndexDefinition def = new IndexDefinition()
 						.setPrefixes(new String[] {"item:", "product:"})
 						.setFilter("@price>100");
 
-client.createIndex(sc, Client.IndexOptions.defaultOptions().getDefinition(def));
+client.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(def));
 ```
  
 Adding documents to the index:

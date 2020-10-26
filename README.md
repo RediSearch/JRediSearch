@@ -16,7 +16,7 @@ A Java Client Library for [RediSearch](https://oss.redislabs.com/redisearch/)
 ## Overview 
 
 This project contains a Java library abstracting the API of the RediSearch Redis module, that implements a powerful 
-in-memory search engine inside Redis. 
+in-memory Secondary Index, Query Engine and Full-Text Search engine inside Redis. 
  
 ## Installing
 

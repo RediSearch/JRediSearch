@@ -1138,10 +1138,9 @@ public class ClientTest {
         assertEquals("fail", cl.getConfig(ConfigOption.ON_TIMEOUT));
 
         try {
-            cl.setConfig(ConfigOption.ON_TIMEOUT, "null");
+            assertFalse( cl.setConfig(ConfigOption.ON_TIMEOUT, "null"));
         }catch(JedisDataException e) {
-            assertTrue(false);
-            return;
+            // Should throw an exception after RediSearch 2.2
         }
     }
 

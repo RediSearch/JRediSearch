@@ -1140,8 +1140,8 @@ public class ClientTest {
         try {
             cl.setConfig(ConfigOption.ON_TIMEOUT, "null");
         }catch(JedisDataException e) {
-            assertTrue(true);
-            return; // Starting from RediSearch 2.0 this command is not supported anymore
+            assertTrue(false);
+            return;
         }
     }
 

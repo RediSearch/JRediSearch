@@ -518,8 +518,8 @@ public class ClientTest {
         
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
-        assertEquals("tags", SafeEncoder.encode(((List<List<byte[]>>)info.get("fields")).get(1).get(0)));
-        assertEquals("TAG", SafeEncoder.encode(((List<List<byte[]>>)info.get("fields")).get(1).get(2)));
+        assertEquals("tags",((List)((List)info.get("fields")).get(1)).get(0) );
+        assertEquals("TAG", ((List)((List)info.get("fields")).get(1)).get(2) );
     }
 
     @Test

@@ -11,7 +11,11 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.SafeEncoder;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static org.junit.Assert.*;
 
@@ -518,8 +522,8 @@ public class ClientTest {
         
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
-        assertEquals("tags",((List)((List)info.get("fields")).get(1)).get(0) );
-        assertEquals("TAG", ((List)((List)info.get("fields")).get(1)).get(2) );
+        assertEquals("tags",((List)((List)info.get("fields")).get(1)).get(0));
+        assertEquals("TAG", ((List)((List)info.get("fields")).get(1)).get(2));
     }
 
     @Test
@@ -599,10 +603,9 @@ public class ClientTest {
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
 
-        assertEquals(6, ((ArrayList)info.get("fields")).size());
-        assertEquals("global_idle", ((ArrayList)info.get("cursor_stats")).get(0));
-        assertEquals(0L, ((ArrayList)info.get("cursor_stats")).get(1));
-
+        assertEquals(6, ((List)info.get("fields")).size());
+        assertEquals("global_idle", ((List)info.get("cursor_stats")).get(0));
+        assertEquals(0L, ((List)info.get("cursor_stats")).get(1));
     }
 
     @Test

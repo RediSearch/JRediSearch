@@ -127,8 +127,8 @@ public class Client implements io.redisearch.Client {
         for (int i = 0; i < items.size(); i += 2) {
             String key = SafeEncoder.encode((byte[]) items.get(i));
             Object val = items.get(i + 1);
-            if (decode && val instanceof byte[]) {
-                val = SafeEncoder.encode((byte[]) val);
+            if (decode /*&& val instanceof byte[]*/) {
+                val = SafeEncoder.encodeObject(val);
             }
             handler.apply(key, val);
         }

@@ -522,8 +522,8 @@ public class ClientTest {
         
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
-        assertEquals("tags", SafeEncoder.encode(((List<List<byte[]>>)info.get("fields")).get(1).get(0)));
-        assertEquals("TAG", SafeEncoder.encode(((List<List<byte[]>>)info.get("fields")).get(1).get(2)));
+        assertEquals("tags",((List)((List)info.get("fields")).get(1)).get(0));
+        assertEquals("TAG", ((List)((List)info.get("fields")).get(1)).get(2));
     }
 
     @Test
@@ -581,12 +581,31 @@ public class ClientTest {
     public void testInfo() throws Exception {
         Client cl = getClient();
 
-        Schema sc = new Schema().addTextField("title", 1.0);
+        String MOVIE_ID = "movie_id";
+        String TITLE = "title";
+        String GENRE = "genre";
+        String VOTES = "votes";
+        String RATING = "rating";
+        String RELEASE_YEAR = "release_year";
+        String PLOT = "plot";
+        String POSTER = "poster";
+
+        Schema sc =  new Schema()
+                    .addTextField(TITLE, 5.0)
+                    .addSortableTextField(PLOT, 1.0)
+                    .addSortableTagField(GENRE, ",")
+                    .addSortableNumericField(RELEASE_YEAR)
+                    .addSortableNumericField(RATING)
+                    .addSortableNumericField(VOTES);
+
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
 
+        assertEquals(6, ((List)info.get("fields")).size());
+        assertEquals("global_idle", ((List)info.get("cursor_stats")).get(0));
+        assertEquals(0L, ((List)info.get("cursor_stats")).get(1));
     }
 
     @Test

@@ -39,6 +39,7 @@ import redis.clients.jedis.util.SafeEncoder;
             raw = SafeEncoder.encode(alt);
         }
 
+        @Override
         public byte[] getRaw() {
             return raw;
         }
@@ -78,6 +79,7 @@ import redis.clients.jedis.util.SafeEncoder;
             raw = SafeEncoder.encode(alt);
         }
 
+        @Override     
         public byte[] getRaw() {
             return raw;
         }

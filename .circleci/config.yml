@@ -34,14 +34,14 @@ jobs:
           paths:
             - ~/.m2
           key: jredisearch-{{ checksum "pom.xml" }}
-          
-      - run: mvn integration-test 
+
+      - run: mvn integration-test
 #     - run: mvn cobertura:cobertura
       - early_return_for_forked_pull_requests
       - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
       - run: mvn -s .circleci.settings.xml -DskipTests deploy
 
-  build_nightly:  # test nightly with redisearch:edge 
+  build_nightly:  # test nightly with redisearch:edge
     docker:
       - image: circleci/openjdk:8-jdk-browsers
       - image: redislabs/redisearch:edge
@@ -58,16 +58,18 @@ jobs:
           paths:
             - ~/.m2
           key: jredisearch-{{ checksum "pom.xml" }}
-          
-      - run: mvn integration-test 
-      
+
+      - run: mvn integration-test
+
       #no need for codecov on nightly
 
 workflows:
   version: 2
   commit:
     jobs:
-      - build
+      - build:
+          context:
+            - common
   nightly:
     triggers:
       - schedule:
@@ -77,4 +79,6 @@ workflows:
               only:
                 - master
     jobs:
-      - build_nightly
+      - build_nightly:
+          context:
+            - common

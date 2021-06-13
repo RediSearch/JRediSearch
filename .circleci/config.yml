@@ -20,7 +20,7 @@ jobs:
   build: # test with redisearch:latest
     docker:
       - image: circleci/openjdk:8-jdk-browsers
-      - image: redislabs/redisearch:latest
+      - image: redislabs/redismod:edge
 
     steps:
       - checkout

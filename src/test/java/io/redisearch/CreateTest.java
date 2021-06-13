@@ -60,7 +60,7 @@ public class CreateTest {
     indexRule.setPrefixes("person:");
     indexRule.setScore(0.818656);
     indexRule.setScoreFiled("myScore");
-    indexRule.setType(IndexDefinition.Type.HASH);
+    // indexRule.setType(IndexDefinition.Type.HASH); // Deprecated; moved in constructor
 
     List<String> arrayList = new ArrayList<>();
     indexRule.serializeRedisArgs(arrayList);

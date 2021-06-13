@@ -160,6 +160,10 @@ public class Query {
     protected boolean wantsSummarize = false;
     protected String _scorer = null;
 
+    public Query() {
+        this("*");
+    }
+
     /**
      * Create a new index
      *

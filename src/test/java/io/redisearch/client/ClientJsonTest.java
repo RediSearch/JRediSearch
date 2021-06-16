@@ -55,8 +55,8 @@ public class ClientJsonTest {
 
     @Test
     public void create() throws Exception {
-        Schema schema = new Schema().addTextField("first", 1.0).addTextField("last", 1.0)
-                .addNumericField("age");
+        Schema schema = new Schema().addTextField("$.first", 1.0).addTextField("$.last", 1.0)
+                .addNumericField("$.age");
         IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON)
                 .setPrefixes(new String[]{"student:", "pupil:"});
 
@@ -75,16 +75,15 @@ public class ClientJsonTest {
         SearchResult noFilters = search.search(new Query());
         assertEquals(5, noFilters.totalResults);
 
-        // TODO
-//        SearchResult res1 = search.search(new Query("@first:Jo*"));
-//        assertEquals(2, res1.totalResults);
-//
-//        SearchResult res2 = search.search(new Query("@first:Pat"));
-//        assertEquals(1, res2.totalResults);
+        SearchResult res1 = search.search(new Query("@\\$\\.first:Jo*"));
+        assertEquals(2, res1.totalResults);
+
+        SearchResult res2 = search.search(new Query("@\\$\\.first:Pat"));
+        assertEquals(1, res2.totalResults);
     }
 
     @Test
-    public void parseQuery() throws Exception {
+    public void parse() throws Exception {
         Schema schema = new Schema().addTextField("first", 1.0).addTextField("last", 1.0)
                 .addNumericField("age");
         IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON)

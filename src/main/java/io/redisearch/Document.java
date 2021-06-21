@@ -53,6 +53,7 @@ public class Document implements Serializable {
         return properties.entrySet();
     }
 
+    @Deprecated
     public static Document load(String id, Double score, byte[] payload, List<byte[]> fields) {
         return Document.load(id, (double) score, payload, fields);
     }
@@ -60,7 +61,8 @@ public class Document implements Serializable {
     public static Document load(String id, double score, byte[] payload, List<byte[]> fields) {
         return Document.load(id, score, payload, fields, true);
     }
-    
+
+    @Deprecated
     public static Document load(String id, Double score, byte[] payload, List<byte[]> fields, boolean decode) {
         return load(id, (double) score, payload, fields, decode);
     }
@@ -75,7 +77,6 @@ public class Document implements Serializable {
         }
         return ret;
     }
-
 
     public Document set(String key, Object value) {
         properties.put(key, value);
@@ -107,7 +108,6 @@ public class Document implements Serializable {
         }
         return value instanceof byte[] ? SafeEncoder.encode((byte[])value) : value.toString();
     }
-    
 
     /**
      * @return the document's score

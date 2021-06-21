@@ -14,6 +14,8 @@ import static org.junit.Assert.*;
 
 public class ClientJsonTest {
 
+    public static final String JSON_ROOT = "$";
+
     private enum JsonCommands implements ProtocolCommand {
 
         SET;
@@ -42,7 +44,7 @@ public class ClientJsonTest {
     }
 
     private static void setJson(Jedis jedis, String key, JSONObject json) {
-        jedis.sendCommand(JsonCommands.SET, key, ".", json.toString());
+        jedis.sendCommand(JsonCommands.SET, key, JSON_ROOT, json.toString());
     }
 
     private static JSONObject toJson(Object... values) {
@@ -83,11 +85,9 @@ public class ClientJsonTest {
     }
 
     @Test
-    public void parse() throws Exception {
-        Schema schema = new Schema().addTextField("first", 1.0).addTextField("last", 1.0)
-                .addNumericField("age");
-        IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON)
-                .setPrefixes(new String[]{"student:", "pupil:"});
+    public void parseJson() throws Exception {
+        Schema schema = new Schema();
+        IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON);
 
         assertTrue(search.createIndex(schema, Client.IndexOptions.defaultOptions().setDefinition(rule)));
 
@@ -97,12 +97,65 @@ public class ClientJsonTest {
             setJson(jedis, id, json);
         }
 
-        SearchResult sr = search.search(new Query().setWithScores().setWithPayload());
+        SearchResult sr;
+        Document doc;
+        JSONObject jsonRead;
+
+        // query
+        sr = search.search(new Query().setWithScores().setWithPayload());
         assertEquals(1, sr.totalResults);
 
-        Document doc = sr.docs.get(0);
+        doc = sr.docs.get(0);
         assertEquals(Double.POSITIVE_INFINITY, doc.getScore(), 0);
         assertNull(doc.getPayload());
-        assertEquals(json.toString(), doc.getJsonProperties().toString());
+        assertEquals(json.toString(), doc.get(JSON_ROOT));
+
+        // query repeat
+        sr = search.search(new Query().setWithScores().setWithPayload());
+
+        doc = sr.docs.get(0);
+        jsonRead = new JSONObject((String) doc.get(JSON_ROOT));
+        assertEquals(json.toString(), jsonRead.toString());
+
+        // query repeat
+        sr = search.search(new Query().setWithScores().setWithPayload());
+
+        doc = sr.docs.get(0);
+        jsonRead = new JSONObject(doc.getString(JSON_ROOT));
+        assertEquals(json.toString(), jsonRead.toString());
+    }
+
+    @Test
+    public void parseJsonPartial() throws Exception {
+        Schema schema = new Schema();
+        IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON);
+
+        assertTrue(search.createIndex(schema, Client.IndexOptions.defaultOptions().setDefinition(rule)));
+
+        String id = "student:1111";
+        JSONObject json = toJson("first", "Joe", "last", "Dod", "age", 18);
+        try (Jedis jedis = search.connection()) {
+            setJson(jedis, id, json);
+        }
+
+        SearchResult sr;
+        Document doc;
+
+        // query
+        sr = search.search(new Query().returnFields("$.first", "$.last", "$.age"));
+        assertEquals(1, sr.totalResults);
+
+        doc = sr.docs.get(0);
+        assertEquals("\"Dod\"", doc.get("$.last"));
+        assertEquals("\"Joe\"", doc.get("$.first"));
+        assertEquals(Integer.toString(18), doc.get("$.age"));
+
+        // query repeat
+        sr = search.search(new Query().returnFields("$.first", "$.last", "$.age"));
+
+        doc = sr.docs.get(0);
+        assertEquals("\"Joe\"", doc.getString("$.first"));
+        assertEquals("\"Dod\"", doc.getString("$.last"));
+        assertEquals(18, Integer.parseInt((String) doc.get("$.age")));
     }
 }

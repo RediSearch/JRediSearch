@@ -8,14 +8,11 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.json.JSONObject;
 
 /**
  * Document represents a single indexed document or entity in the engine
  */
 public class Document implements Serializable {
-
-    private static final String JSON_INDICATOR = "$";
 
     private static final Gson gson = new Gson();
   
@@ -23,7 +20,6 @@ public class Document implements Serializable {
     private double score;
     private byte[] payload;
     private Map<String, Object> properties;
-    private JSONObject json;
 
     @Deprecated
     public Document(String id, Double score) {
@@ -57,10 +53,6 @@ public class Document implements Serializable {
         return properties.entrySet();
     }
 
-    public JSONObject getJsonProperties() {
-        return json;
-    }
-
     public static Document load(String id, Double score, byte[] payload, List<byte[]> fields) {
         return Document.load(id, (double) score, payload, fields);
     }
@@ -79,13 +71,6 @@ public class Document implements Serializable {
         if (fields != null) {
             for (int i = 0; i < fields.size(); i += 2) {
                 ret.set(SafeEncoder.encode(fields.get(i)), decode ? SafeEncoder.encode(fields.get(i + 1)) : fields.get(i + 1));
-            }
-            if (decode && ret.properties.size() == 1 && ret.properties.containsKey(JSON_INDICATOR)) {
-                try {
-                    ret.json = new JSONObject((String) ret.properties.get(JSON_INDICATOR));
-                } catch(Exception e) {
-                    // do nothing
-                }
             }
         }
         return ret;

@@ -6,8 +6,9 @@ import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 import org.json.JSONObject;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -30,16 +31,20 @@ public class ClientJsonTest {
 
     private static Client search;
 
+    @BeforeClass
+    public static void prepare() {
+        search = new Client(INDEX_NAME, Protocol.DEFAULT_HOST, Protocol.DEFAULT_PORT);
+    }
+
     @Before
     public void setUp() {
-        search = new Client(INDEX_NAME, Protocol.DEFAULT_HOST, Protocol.DEFAULT_PORT);
         try (Jedis j = search.connection()) {
             j.flushAll();
         }
     }
 
-    @After
-    public void tearDown() {
+    @AfterClass
+    public static void tearDown() {
         search.close();
     }
 

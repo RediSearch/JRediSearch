@@ -21,6 +21,9 @@ public class Document implements Serializable {
     private byte[] payload;
     private Map<String, Object> properties;
 
+    /**
+     * @deprecated Use {@link #Document(java.lang.String, double)}.
+     */
     @Deprecated
     public Document(String id, Double score) {
         this(id, new HashMap<>(), (double) score);
@@ -53,6 +56,9 @@ public class Document implements Serializable {
         return properties.entrySet();
     }
 
+    /**
+     * @deprecated Use {@link #load(java.lang.String, double, byte[], java.util.List)}.
+     */
     @Deprecated
     public static Document load(String id, Double score, byte[] payload, List<byte[]> fields) {
         return Document.load(id, (double) score, payload, fields);
@@ -62,6 +68,9 @@ public class Document implements Serializable {
         return Document.load(id, score, payload, fields, true);
     }
 
+    /**
+     * @deprecated Use {@link #load(java.lang.String, double, byte[], java.util.List, boolean)}.
+     */
     @Deprecated
     public static Document load(String id, Double score, byte[] payload, List<byte[]> fields, boolean decode) {
         return load(id, (double) score, payload, fields, decode);

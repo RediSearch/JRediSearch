@@ -102,15 +102,11 @@ public class ClientJsonTest {
             setJson(jedis, id, json);
         }
 
-        SearchResult sr;
-        Document doc;
-        JSONObject jsonRead;
-
         // query
-        sr = search.search(new Query().setWithScores().setWithPayload());
+        SearchResult sr = search.search(new Query().setWithScores().setWithPayload());
         assertEquals(1, sr.totalResults);
 
-        doc = sr.docs.get(0);
+        Document doc = sr.docs.get(0);
         assertEquals(Double.POSITIVE_INFINITY, doc.getScore(), 0);
         assertNull(doc.getPayload());
         assertEquals(json.toString(), doc.get(JSON_ROOT));
@@ -119,7 +115,7 @@ public class ClientJsonTest {
         sr = search.search(new Query().setWithScores().setWithPayload());
 
         doc = sr.docs.get(0);
-        jsonRead = new JSONObject((String) doc.get(JSON_ROOT));
+        JSONObject jsonRead = new JSONObject((String) doc.get(JSON_ROOT));
         assertEquals(json.toString(), jsonRead.toString());
 
         // query repeat
@@ -143,14 +139,11 @@ public class ClientJsonTest {
             setJson(jedis, id, json);
         }
 
-        SearchResult sr;
-        Document doc;
-
         // query
-        sr = search.search(new Query().returnFields("$.first", "$.last", "$.age"));
+        SearchResult sr = search.search(new Query().returnFields("$.first", "$.last", "$.age"));
         assertEquals(1, sr.totalResults);
 
-        doc = sr.docs.get(0);
+        Document doc = sr.docs.get(0);
         assertEquals("\"Dod\"", doc.get("$.last"));
         assertEquals("\"Joe\"", doc.get("$.first"));
         assertEquals(Integer.toString(18), doc.get("$.age"));

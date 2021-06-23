@@ -77,7 +77,10 @@ public class ClientTest {
         jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
         jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
       }
-      
+
+      SearchResult noFilters = cl.search(new Query());
+      assertEquals(5, noFilters.totalResults);
+
       SearchResult res1 = cl.search(new Query("@first:Jo*"));
       assertEquals(2, res1.totalResults);
 

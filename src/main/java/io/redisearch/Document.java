@@ -21,8 +21,16 @@ public class Document implements Serializable {
     private byte[] payload;
     private Map<String, Object> properties;
 
+    /**
+     * @deprecated Use {@link #Document(java.lang.String, double)}.
+     */
+    @Deprecated
     public Document(String id, Double score) {
-        this(id, new HashMap<>(), score.floatValue());
+        this(id, new HashMap<>(), (double) score);
+    }
+
+    public Document(String id, double score) {
+        this(id, new HashMap<>(), score);
     }
 
     public Document(String id) {
@@ -48,12 +56,27 @@ public class Document implements Serializable {
         return properties.entrySet();
     }
 
-
+    /**
+     * @deprecated Use {@link #load(java.lang.String, double, byte[], java.util.List)}.
+     */
+    @Deprecated
     public static Document load(String id, Double score, byte[] payload, List<byte[]> fields) {
+        return Document.load(id, (double) score, payload, fields);
+    }
+
+    public static Document load(String id, double score, byte[] payload, List<byte[]> fields) {
         return Document.load(id, score, payload, fields, true);
     }
-    
+
+    /**
+     * @deprecated Use {@link #load(java.lang.String, double, byte[], java.util.List, boolean)}.
+     */
+    @Deprecated
     public static Document load(String id, Double score, byte[] payload, List<byte[]> fields, boolean decode) {
+        return load(id, (double) score, payload, fields, decode);
+    }
+
+    public static Document load(String id, double score, byte[] payload, List<byte[]> fields, boolean decode) {
         Document ret = new Document(id, score);
         ret.payload = payload;
         if (fields != null) {
@@ -63,7 +86,6 @@ public class Document implements Serializable {
         }
         return ret;
     }
-
 
     public Document set(String key, Object value) {
         properties.put(key, value);
@@ -95,7 +117,6 @@ public class Document implements Serializable {
         }
         return value instanceof byte[] ? SafeEncoder.encode((byte[])value) : value.toString();
     }
-    
 
     /**
      * @return the document's score

@@ -34,23 +34,13 @@ public class CreateTest {
     defaultOptions.serializeRedisArgs(arrayList);
 
     assertEquals(
-        Arrays.asList("ON", "HASH", "NOOFFSETS", "NOFIELDS", "NOFREQS", "TEMPORARY", "1234", "STOPWORDS", "2", "stop", "run"),
+        Arrays.asList("NOOFFSETS", "NOFIELDS", "NOFREQS", "TEMPORARY", "1234", "STOPWORDS", "2", "stop", "run"),
         arrayList);
   }
 
   @Test
-  public void emptyIndexDefinition() throws Exception {
-    IndexDefinition indexRule = new IndexDefinition();
-
-    List<String> arrayList = new ArrayList<>();
-    indexRule.serializeRedisArgs(arrayList);
-
-    assertEquals(Arrays.asList("ON", "HASH"), arrayList);
-  }
-
-  @Test
   public void allIndexDefinition() throws Exception {
-    IndexDefinition indexRule = new IndexDefinition();
+    IndexDefinition indexRule = new IndexDefinition(IndexDefinition.Type.HASH);
 
     indexRule.setAsync(true);
     indexRule.setFilter("@sum<30");
@@ -60,7 +50,6 @@ public class CreateTest {
     indexRule.setPrefixes("person:");
     indexRule.setScore(0.818656);
     indexRule.setScoreFiled("myScore");
-    indexRule.setType(IndexDefinition.Type.HASH);
 
     List<String> arrayList = new ArrayList<>();
     indexRule.serializeRedisArgs(arrayList);

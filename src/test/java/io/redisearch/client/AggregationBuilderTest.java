@@ -9,17 +9,28 @@ import io.redisearch.aggregation.SortedField;
 import io.redisearch.aggregation.reducers.Reducers;
 import redis.clients.jedis.exceptions.JedisDataException;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static junit.framework.TestCase.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Created by mnunberg on 5/17/18.
- */
-public class AggregationBuilderTest extends ClientTest {
+import static org.junit.Assert.*;
+
+public class AggregationBuilderTest extends TestBase {
+
+  @BeforeClass
+  public static void prepare() {
+      TEST_INDEX = "aggregation-builder";
+      TestBase.prepare();
+  }
+
+  @AfterClass
+  public static void tearDown() {
+      TestBase.tearDown();
+  }
+
   @Test
   public void testAggregations() {
     /**
@@ -32,7 +43,7 @@ public class AggregationBuilderTest extends ClientTest {
          127.0.0.1:6379> FT.ADD test_index data3 1.0 FIELDS name def count 25
      */
 
-    Client cl = getClient();
+    Client cl = getDefaultClient();
     Schema sc = new Schema();
     sc.addSortableTextField("name", 1.0);
     sc.addSortableNumericField("count");
@@ -54,11 +65,11 @@ public class AggregationBuilderTest extends ClientTest {
     assertNotNull(r1);
     assertEquals("def", r1.getString("name"));
     assertEquals(30, r1.getLong("sum"));
-    assertEquals(30., r1.getDouble("sum"));
+    assertEquals(30., r1.getDouble("sum"), 0);
 
 
     assertEquals(0L, r1.getLong("nosuchcol"));
-    assertEquals(0.0, r1.getDouble("nosuchcol"));
+    assertEquals(0.0, r1.getDouble("nosuchcol"), 0);
     assertEquals("", r1.getString("nosuchcol"));
 
 
@@ -87,7 +98,7 @@ public class AggregationBuilderTest extends ClientTest {
          OK
      */
 
-    Client cl = getClient();
+    Client cl = getDefaultClient();
     Schema sc = new Schema();
     sc.addSortableTextField("name", 1.0);
     sc.addSortableNumericField("subj1");
@@ -113,14 +124,15 @@ public class AggregationBuilderTest extends ClientTest {
     Row r1 = res.getRow(0);
     assertNotNull(r1);
     assertEquals("def", r1.getString("name"));
-    assertEquals(52.5, r1.getDouble("avgscore"));
+    assertEquals(52.5, r1.getDouble("avgscore"), 0);
 
 
     Row r2 = res.getRow(1);
     assertNotNull(r2);
     assertEquals("ghi", r2.getString("name"));
-    assertEquals(67.5, r2.getDouble("avgscore"));
+    assertEquals(67.5, r2.getDouble("avgscore"), 0);
   }
+
   @Test
   public void testCursor() throws InterruptedException {
     /**
@@ -133,7 +145,7 @@ public class AggregationBuilderTest extends ClientTest {
          127.0.0.1:6379> FT.ADD test_index data3 1.0 FIELDS name def count 25
      */
 
-    Client cl = getClient();
+    Client cl = getDefaultClient();
     Schema sc = new Schema();
     sc.addSortableTextField("name", 1.0);
     sc.addSortableNumericField("count");
@@ -155,10 +167,10 @@ public class AggregationBuilderTest extends ClientTest {
     assertNotNull(row);
     assertEquals("def", row.getString("name"));
     assertEquals(30, row.getLong("sum"));
-    assertEquals(30., row.getDouble("sum"));
+    assertEquals(30., row.getDouble("sum"), 0);
 
     assertEquals(0L, row.getLong("nosuchcol"));
-    assertEquals(0.0, row.getDouble("nosuchcol"));
+    assertEquals(0.0, row.getDouble("nosuchcol"), 0);
     assertEquals("", row.getString("nosuchcol"));
 
     res = cl.cursorRead(res.getCursorId(), 1);        
@@ -190,7 +202,7 @@ public class AggregationBuilderTest extends ClientTest {
   @Test
   public void testWrongAggregation() throws InterruptedException {
 
-    Client cl = getClient();
+    Client cl = getDefaultClient();
     Schema sc = new Schema()
         .addTextField("title", 5.0)
         .addTextField("body", 1.0)

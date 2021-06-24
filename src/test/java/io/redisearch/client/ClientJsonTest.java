@@ -2,18 +2,16 @@ package io.redisearch.client;
 
 import io.redisearch.*;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Protocol;
 import redis.clients.jedis.commands.ProtocolCommand;
 
 import org.json.JSONObject;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-public class ClientJsonTest {
+public class ClientJsonTest extends TestBase {
 
     public static final String JSON_ROOT = "$";
 
@@ -27,25 +25,15 @@ public class ClientJsonTest {
         }
     }
 
-    private static final String INDEX_NAME = "json-index";
-
-    private static Client search;
-
     @BeforeClass
     public static void prepare() {
-        search = new Client(INDEX_NAME, Protocol.DEFAULT_HOST, Protocol.DEFAULT_PORT);
-    }
-
-    @Before
-    public void setUp() {
-        try (Jedis j = search.connection()) {
-            j.flushAll();
-        }
+        TEST_INDEX = "json-index";
+        TestBase.prepare();
     }
 
     @AfterClass
     public static void tearDown() {
-        search.close();
+        TestBase.tearDown();
     }
 
     private static void setJson(Jedis jedis, String key, JSONObject json) {

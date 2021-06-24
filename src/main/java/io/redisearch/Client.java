@@ -46,6 +46,13 @@ public interface Client extends Closeable{
     String DELETE_DOCUMENT = "DD";
 
     /**
+     * @see Client#createIndex(io.redisearch.Schema, io.redisearch.client.Client.IndexOptions)
+     */
+    default boolean createIndex(Schema schema) {
+        return createIndex(schema, IndexOptions.defaultOptions());
+    }
+
+    /**
      * Create the index definition in redis
      *
      * @param schema  a schema definition, see {@link Schema}

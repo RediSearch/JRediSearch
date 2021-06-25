@@ -35,6 +35,10 @@ public class Schema {
             this(FieldName.of(name), type, sortable, noindex);
         }
 
+        public Field(FieldName name, FieldType type) {
+            this(name, type, false, false);
+        }
+
         public Field(FieldName name, FieldType type, boolean sortable, boolean noIndex) {
             this.fieldName = name;
             this.name = this.fieldName.getName();

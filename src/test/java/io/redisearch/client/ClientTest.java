@@ -81,16 +81,15 @@ public class ClientTest extends TestBase {
 
     @Test
     public void createWithFieldNames() throws Exception {
-        Client cl = getDefaultClient();
         Schema sc = new Schema().addField(new TextField(FieldName.of("first", "given")))
                 .addField(new TextField(FieldName.of("last")));
         IndexDefinition rule = new IndexDefinition()
                 //.setFilter("@age>16")
                 .setPrefixes(new String[]{"student:", "pupil:"});
 
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
+        assertTrue(search.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
 
-        try (Jedis jedis = cl.connection()) {
+        try (Jedis jedis = search.connection()) {
             jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
             jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
             jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
@@ -100,16 +99,16 @@ public class ClientTest extends TestBase {
             jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
         }
 
-        SearchResult noFilters = cl.search(new Query());
+        SearchResult noFilters = search.search(new Query());
         assertEquals(5, noFilters.totalResults);
 
-        SearchResult asOriginal = cl.search(new Query("@first:Jo*"));
+        SearchResult asOriginal = search.search(new Query("@first:Jo*"));
         assertEquals(0, asOriginal.totalResults);
 
-        SearchResult asAlias = cl.search(new Query("@given:Jo*"));
+        SearchResult asAlias = search.search(new Query("@given:Jo*"));
         assertEquals(2, asAlias.totalResults);
 
-        SearchResult noAlias = cl.search(new Query("@last:Rod"));
+        SearchResult noAlias = search.search(new Query("@last:Rod"));
         assertEquals(1, noAlias.totalResults);
     }
 
@@ -1120,9 +1119,8 @@ public class ClientTest extends TestBase {
 
     @Test
     public void returnWithFieldNames() throws Exception {
-        Client search = getDefaultClient();
         Schema sc = new Schema().addTextField("a", 1).addTextField("b", 1).addTextField("c", 1);
-        assertTrue(search.createIndex(sc));
+        assertTrue(search.createIndex(sc, Client.IndexOptions.defaultOptions()));
 
         Map<String, Object> map = new HashMap<>();
         map.put("a", "value1");

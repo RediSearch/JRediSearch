@@ -39,7 +39,7 @@ jobs:
 #     - run: mvn cobertura:cobertura
       - early_return_for_forked_pull_requests
       - run: bash <(curl -s https://codecov.io/bash) -t ${CODECOV_TOKEN}
-      - run: mvn -s .circleci.settings.xml -DskipTests deploy
+      - run: mvn -s .circleci.settings.xml -DskipTests -Dgpg.skip deploy
 
   build_nightly:  # test nightly with redisearch:edge
     docker:

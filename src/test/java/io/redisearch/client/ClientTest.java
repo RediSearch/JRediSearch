@@ -45,7 +45,7 @@ public class ClientTest extends TestBase {
       Client cl = getDefaultClient();
       Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
       IndexDefinition rule = new IndexDefinition()
-//          .setFilter("@age>16")
+          .setFilter("@age>16")
           .setPrefixes(new String[] {"student:", "pupil:"});
           
       try {
@@ -67,7 +67,7 @@ public class ClientTest extends TestBase {
       }
 
       SearchResult noFilters = cl.search(new Query());
-      assertEquals(5, noFilters.totalResults);
+      assertEquals(4, noFilters.totalResults);
 
       SearchResult res1 = cl.search(new Query("@first:Jo*"));
       assertEquals(2, res1.totalResults);
@@ -75,8 +75,8 @@ public class ClientTest extends TestBase {
       SearchResult res2 = cl.search(new Query("@first:Pat"));
       assertEquals(1, res2.totalResults);
       
-//      SearchResult res3 = cl.search(new Query("@last:Rod"));
-//      assertEquals(0, res3.totalResults);
+      SearchResult res3 = cl.search(new Query("@last:Rod"));
+      assertEquals(0, res3.totalResults);
     }
     
     @Test

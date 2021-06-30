@@ -81,7 +81,7 @@ public class ClientTest extends TestBase {
 
     @Test
     public void createWithFieldNames() throws Exception {
-        Schema sc = new Schema().addField(new TextField(FieldName.of("first", "given")))
+        Schema sc = new Schema().addField(new TextField(FieldName.of("first").as("given")))
                 .addField(new TextField(FieldName.of("last")));
         IndexDefinition rule = new IndexDefinition()
                 //.setFilter("@age>16")
@@ -1129,7 +1129,8 @@ public class ClientTest extends TestBase {
         assertTrue(search.addDocument("doc", map));
 
         // Query
-        SearchResult res = search.search(new Query().returnFields(FieldName.of("a"), FieldName.of("b", "d")));
+        SearchResult res = search.search(new Query()
+            .returnFields(FieldName.of("a"), FieldName.of("b").as("d")));
         assertEquals(1, res.totalResults);
         Document doc = res.docs.get(0);
         assertEquals("value1", doc.get("a"));

@@ -81,9 +81,9 @@ public class ClientJsonTest extends TestBase {
     @Test
     public void createWithFieldNames() {
         Schema schema = new Schema()
-                .addField(new TextField(FieldName.of("$.first", "first")))
+                .addField(new TextField(FieldName.of("$.first").as("first")))
                 .addField(new TextField(FieldName.of("$.last")))
-                .addField(new Field(FieldName.of("$.age", "age"), FieldType.Numeric));
+                .addField(new Field(FieldName.of("$.age").as("age"), FieldType.Numeric));
         IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON)
                 .setPrefixes(new String[]{"student:", "pupil:"});
 
@@ -194,8 +194,8 @@ public class ClientJsonTest extends TestBase {
         }
 
         // query
-        SearchResult sr = search.search(new Query().returnFields(FieldName.of("$.first", "first"),
-                FieldName.of("$.last", "last"), FieldName.of("$.age")));
+        SearchResult sr = search.search(new Query().returnFields(FieldName.of("$.first").as("first"),
+                FieldName.of("$.last").as("last"), FieldName.of("$.age")));
         assertEquals(1, sr.totalResults);
 
         Document doc = sr.docs.get(0);

@@ -42,43 +42,43 @@ public class ClientTest extends TestBase {
 
     @Test
     public void creatDefinion() throws Exception {
-      Client cl = getDefaultClient();
-      Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
-      IndexDefinition rule = new IndexDefinition()
-          .setFilter("@age>16")
-          .setPrefixes(new String[] {"student:", "pupil:"});
-          
-      try {
-        assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
-      }catch(JedisDataException e) {
-        // ON was only supported from RediSearch 2.0
-        assertEquals("Unknown argument `ON`", e.getMessage());
-        return;
-      }
-      
-      try(Jedis jedis = cl.connection()){
-        jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
-        jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
-        jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
-        jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
-        jedis.hset("pupil:4444", toMap("first", "Pat", "last", "Shu", "age", "21"));
-        jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
-        jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
-      }
+        Client cl = getDefaultClient();
+        Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
+        IndexDefinition rule = new IndexDefinition()
+                .setFilter("@age>16")
+                .setPrefixes(new String[]{"student:", "pupil:"});
 
-      SearchResult noFilters = cl.search(new Query());
-      assertEquals(4, noFilters.totalResults);
+        try {
+            assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
+        } catch (JedisDataException e) {
+            // ON was only supported from RediSearch 2.0
+            assertEquals("Unknown argument `ON`", e.getMessage());
+            return;
+        }
 
-      SearchResult res1 = cl.search(new Query("@first:Jo*"));
-      assertEquals(2, res1.totalResults);
+        try (Jedis jedis = cl.connection()) {
+            jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
+            jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
+            jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
+            jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
+            jedis.hset("pupil:4444", toMap("first", "Pat", "last", "Shu", "age", "21"));
+            jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
+            jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
+        }
 
-      SearchResult res2 = cl.search(new Query("@first:Pat"));
-      assertEquals(1, res2.totalResults);
-      
-      SearchResult res3 = cl.search(new Query("@last:Rod"));
-      assertEquals(0, res3.totalResults);
+        SearchResult noFilters = cl.search(new Query());
+        assertEquals(4, noFilters.totalResults);
+
+        SearchResult res1 = cl.search(new Query("@first:Jo*"));
+        assertEquals(2, res1.totalResults);
+
+        SearchResult res2 = cl.search(new Query("@first:Pat"));
+        assertEquals(1, res2.totalResults);
+
+        SearchResult res3 = cl.search(new Query("@last:Rod"));
+        assertEquals(0, res3.totalResults);
     }
-    
+
     @Test
     public void search() throws Exception {
         Client cl = getDefaultClient();

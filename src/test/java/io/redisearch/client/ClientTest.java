@@ -3,10 +3,6 @@ package io.redisearch.client;
 import io.redisearch.*;
 import io.redisearch.Schema.TagField;
 import io.redisearch.Schema.TextField;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.SafeEncoder;
@@ -17,44 +13,36 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
 import static org.junit.Assert.*;
 
+public class ClientTest extends TestBase {
 
-/**
- * Created by dvirsky on 09/02/17.
- */
-public class ClientTest {
-    // NOTE: My IDEA config hard-codes this property to 7777! - don't modify this line, rather change it in the
-    // configuration settings
-    static private final int TEST_PORT = Integer.parseInt(System.getProperty("redis.port", "6379"));
-    static private final String TEST_HOST = System.getProperty("redis.host", "localhost");
-    static private final String TEST_INDEX = System.getProperty("redis.rsIndex", "testung");
-
-    protected Client getClient(String indexName) {
-        return new Client(indexName, TEST_HOST, TEST_PORT);
+    @BeforeClass
+    public static void prepare() {
+        TEST_INDEX = "aggregation-builder";
+        TestBase.prepare();
     }
 
-    protected Client getClient() {
-        return getClient(TEST_INDEX);
+    @AfterClass
+    public static void tearDown() {
+        TestBase.tearDown();
     }
 
-    @Before
-    public void setUp() {
-        getClient().connection().flushDB();
+    private static Map<String, String> toMap(String... values) {
+        Map<String, String> map = new HashMap<>();
+        for (int i = 0; i < values.length; i += 2) {
+            map.put(values[i], values[i + 1]);
+        }
+        return map;
     }
-    
-    
-    private static Map<String, String> toMap(String ...values){
-      Map<String, String> map = new HashMap<>();
-      for(int i=0; i<values.length; i+=2) {
-        map.put(values[i], values[i+1]);
-      }
-      return map;
-    }
-    
+
     @Test
     public void creatDefinion() throws Exception {
-      Client cl = getClient();
+      Client cl = getDefaultClient();
       Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
       IndexDefinition rule = new IndexDefinition()
 //          .setFilter("@age>16")
@@ -93,7 +81,7 @@ public class ClientTest {
     
     @Test
     public void search() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
 
@@ -137,7 +125,7 @@ public class ClientTest {
     
     @Test
     public void searchBatch() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
 
@@ -178,7 +166,7 @@ public class ClientTest {
 
     @Test
     public void testNumericFilter() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addNumericField("price");
 
@@ -234,7 +222,7 @@ public class ClientTest {
 
     @Test
     public void testStopwords() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -265,7 +253,7 @@ public class ClientTest {
 
     @Test
     public void testGeoFilter() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema().addTextField("title", 1.0).addGeoField("loc");
 
@@ -295,7 +283,7 @@ public class ClientTest {
     // TODO: This test was broken in master branch
     @Test
     public void testPayloads() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -315,7 +303,7 @@ public class ClientTest {
 
     @Test
     public void testQueryFlags() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema().addTextField("title", 1.0);
 
@@ -364,7 +352,7 @@ public class ClientTest {
 
     @Test
     public void testSortQueryFlags() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Schema sc = new Schema().addSortableTextField("title", 1.0);
 
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -395,7 +383,7 @@ public class ClientTest {
 
     @Test
     public void testAddHash() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Jedis conn = cl.connection();
         Schema sc = new Schema().addTextField("title", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -416,7 +404,7 @@ public class ClientTest {
 
     @Test
     public void testNullField() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Schema sc = new Schema()
                 .addTextField("title", 1.0)
                 .addTextField("genre", 1.0)
@@ -473,7 +461,7 @@ public class ClientTest {
 
     @Test
     public void testDrop() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
@@ -498,7 +486,7 @@ public class ClientTest {
     
     @Test
     public void testAlterAdd() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("title", 1.0);
@@ -531,7 +519,7 @@ public class ClientTest {
 
     @Test
     public void testNoStem() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
         Schema sc = new Schema().addTextField("stemmed", 1.0).addField(new Schema.TextField("notStemmed", 1.0, false, true));
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -552,7 +540,7 @@ public class ClientTest {
     
     @Test
     public void testPhoneticMatch() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
         Schema sc = new Schema()
             .addTextField("noPhonetic", 1.0)
@@ -573,7 +561,7 @@ public class ClientTest {
 
         try {
           cl.search(new Query("@noPhonetic:morphix=>{$phonetic:true}"));
-          Assert.fail();
+          fail();
         }catch( JedisDataException e) {/*field does not support phonetics*/}       
         
         SearchResult res3 = cl.search(new Query("@withPhonetic:morphix=>{$phonetic:false}"));
@@ -582,7 +570,7 @@ public class ClientTest {
 
     @Test
     public void testInfo() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         String MOVIE_ID = "movie_id";
         String TITLE = "title";
@@ -613,7 +601,7 @@ public class ClientTest {
 
     @Test
     public void testNoIndex() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema()
                 .addField(new Schema.TextField("f1", 1.0, true, false, true))
@@ -653,7 +641,7 @@ public class ClientTest {
 
     @Test
     public void testReplacePartial() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
@@ -684,7 +672,7 @@ public class ClientTest {
     
     @Test
     public void testReplaceIf() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
@@ -727,7 +715,7 @@ public class ClientTest {
 
     @Test
     public void testExplain() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Schema sc = new Schema()
                 .addTextField("f1", 1.0)
@@ -742,7 +730,7 @@ public class ClientTest {
 
     @Test
     public void testHighlightSummarize() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Schema sc = new Schema().addTextField("text", 1.0);
         cl.createIndex(sc, Client.IndexOptions.defaultOptions());
 
@@ -766,7 +754,7 @@ public class ClientTest {
 
     @Test
     public void testLanguage() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Schema sc = new Schema().addTextField("text", 1.0);
         cl.createIndex(sc, Client.IndexOptions.defaultOptions());
 
@@ -788,7 +776,7 @@ public class ClientTest {
 
     @Test
     public void testDropMissing() throws Exception {
-        Client cl = getClient("dummyIndexNotExist");
+        Client cl = createClient("dummyIndexNotExist");
         assertFalse(cl.dropIndex(true));
         boolean caught = false;
         try {
@@ -801,7 +789,7 @@ public class ClientTest {
 
     @Test
     public void testGet() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.defaultOptions());
         cl.addDocument(new Document("doc1").set("txt1", "Hello World!"), new AddOptions());
         Document d = cl.getDocument("doc1");
@@ -819,7 +807,7 @@ public class ClientTest {
     
     @Test
     public void testMGet() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.defaultOptions());
         cl.addDocument(new Document("doc1").set("txt1", "Hello World!1"), new AddOptions());
         cl.addDocument(new Document("doc2").set("txt1", "Hello World!2"), new AddOptions());
@@ -843,7 +831,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionFuzzy() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Suggestion suggestion = Suggestion.builder().str("TOPIC OF WORDS").score(1).build();
         // test can add a suggestion string
         assertTrue(suggestion.toString() + " insert should of returned at least 1", cl.addSuggestion(suggestion, true) > 0);
@@ -855,7 +843,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestion() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         
         try {
           Suggestion.builder().str("ANOTHER_WORD").score(3).build();
@@ -885,7 +873,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionPayloadScores() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         Suggestion suggestion = Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ").score(0.2).build();
         assertTrue(suggestion.toString() + " insert should of at least returned 1", cl.addSuggestion(suggestion, false) > 0);
@@ -907,7 +895,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionPayload() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.addSuggestion(Suggestion.builder().str("COUNT_ME TOO").payload("PAYLOADS ROCK ").build(), false);
         cl.addSuggestion(Suggestion.builder().str("COUNT").payload("ANOTHER PAYLOAD ").build(), false);
         cl.addSuggestion(Suggestion.builder().str("COUNTNO PAYLOAD OR COUNT").build(), false);
@@ -921,7 +909,7 @@ public class ClientTest {
 
     @Test
     public void testGetSuggestionNoPayloadTwoOnly() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         cl.addSuggestion(Suggestion.builder().str("DIFF_WORD").score(0.4).payload("PAYLOADS ROCK ").build(), false);
         cl.addSuggestion(Suggestion.builder().str("DIFF wording").score(0.5).payload("ANOTHER PAYLOAD ").build(), false);
@@ -937,7 +925,7 @@ public class ClientTest {
 
     @Test
     public void testGetSuggestionWithScore() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         cl.addSuggestion(Suggestion.builder().str("DIFF_WORD").score(0.4).payload("PAYLOADS ROCK ").build(), true);
         List<Suggestion> list = cl.getSuggestion("DIF", SuggestionOptions.builder().max(2).with(SuggestionOptions.With.SCORES).build());
@@ -947,7 +935,7 @@ public class ClientTest {
 
     @Test
     public void testGetSuggestionAllNoHit() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
 
         cl.addSuggestion(Suggestion.builder().str("NO WORD").score(0.4).build(), false);
 
@@ -958,7 +946,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionDeleteSuggestionLength() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.addSuggestion(Suggestion.builder().str("TOPIC OF WORDS").score(1).build(), true);
         cl.addSuggestion(Suggestion.builder().str("ANOTHER ENTRY").score(1).build(), true);
 
@@ -973,7 +961,7 @@ public class ClientTest {
 
     @Test
     public void testAddSuggestionGetSuggestionLength() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.addSuggestion(Suggestion.builder().str("TOPIC OF WORDS").score(1).build(), true);
         cl.addSuggestion(Suggestion.builder().str("ANOTHER ENTRY").score(1).build(), true);
         assertEquals(2L, cl.getSuggestionLength().longValue());
@@ -985,7 +973,7 @@ public class ClientTest {
 
     @Test
     public void testGetTagField() {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Schema sc = new Schema()
                 .addTextField("title", 1.0)
                 .addTagField("category");
@@ -1020,7 +1008,7 @@ public class ClientTest {
 
     @Test
     public void testGetTagFieldWithNonDefaultSeparator() {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         Schema sc = new Schema()
                 .addTextField("title", 1.0)
                 .addTagField("category", ";");
@@ -1055,7 +1043,7 @@ public class ClientTest {
     
     @Test
     public void testMultiDocuments() {
-    	 Client cl = getClient();
+    	 Client cl = getDefaultClient();
          Schema sc = new Schema().addTextField("title", 1.0).addTextField("body", 1.0);
          
          assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -1066,20 +1054,20 @@ public class ClientTest {
 
          boolean[] results = cl.addDocuments(new Document("doc1",fields), new Document("doc2",fields), new Document("doc3",fields));
          
-         Assert.assertArrayEquals(new boolean[]{true, true, true}, results);   
+         assertArrayEquals(new boolean[]{true, true, true}, results);   
          
          assertEquals(3, cl.search(new Query("hello world")).totalResults);
          
          results = cl.addDocuments(new Document("doc4",fields), new Document("doc2",fields), new Document("doc5",fields));
-         Assert.assertArrayEquals(new boolean[]{true, false, true}, results);   
+         assertArrayEquals(new boolean[]{true, false, true}, results);   
          
          results = cl.deleteDocuments(true, "doc1", "doc2", "doc36");
-         Assert.assertArrayEquals(new boolean[]{true, true, false}, results);   
+         assertArrayEquals(new boolean[]{true, true, false}, results);   
     }
     
     @Test
     public void testReturnFields() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -1100,7 +1088,7 @@ public class ClientTest {
     
     @Test
     public void testInKeys() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -1123,7 +1111,7 @@ public class ClientTest {
 
     @Test
     public void testBlobField() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
@@ -1147,7 +1135,7 @@ public class ClientTest {
 
     @Test
     public void testConfig() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
 
         boolean result = cl.setConfig(ConfigOption.TIMEOUT, "100");
@@ -1168,7 +1156,7 @@ public class ClientTest {
 
     @Test
     public void testAlias() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
 
         Schema sc = new Schema().addTextField("field1", 1.0);
@@ -1178,27 +1166,27 @@ public class ClientTest {
         assertTrue(cl.addDocument("doc1", doc));
 
         assertTrue(cl.addAlias("ALIAS1"));
-        Client alias1 = getClient("ALIAS1");
+        Client alias1 = createClient("ALIAS1");
         SearchResult res1 = alias1.search(new Query("*").returnFields("field1"));
         assertEquals(1, res1.totalResults);
         assertEquals("value", res1.docs.get(0).get("field1"));
 
         assertTrue(cl.updateAlias("ALIAS2"));
-        Client alias2 = getClient("ALIAS2");
+        Client alias2 = createClient("ALIAS2");
         SearchResult res2 = alias2.search(new Query("*").returnFields("field1"));
         assertEquals(1, res2.totalResults);
         assertEquals("value", res2.docs.get(0).get("field1"));
 
         try {
             cl.deleteAlias("ALIAS3");
-            Assert.fail("Should throw JedisDataException");
+            fail("Should throw JedisDataException");
         } catch (JedisDataException e) {
             // Alias does not exist
         }
         assertTrue(cl.deleteAlias("ALIAS2"));
         try {
             cl.deleteAlias("ALIAS2");
-            Assert.fail("Should throw JedisDataException");
+            fail("Should throw JedisDataException");
         } catch (JedisDataException e) {
             // Alias does not exist
         }
@@ -1206,7 +1194,7 @@ public class ClientTest {
   
     @Test
     public void testSyn() throws Exception {
-        Client cl = getClient();
+        Client cl = getDefaultClient();
         cl.connection().flushDB();
         
         Schema sc = new Schema().addTextField("name", 1.0).addTextField("addr", 1.0);

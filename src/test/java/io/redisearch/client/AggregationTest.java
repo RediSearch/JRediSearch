@@ -9,15 +9,25 @@ import io.redisearch.aggregation.SortedField;
 import io.redisearch.aggregation.reducers.Reducers;
 import redis.clients.jedis.exceptions.JedisDataException;
 
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-/**
- * Created by mnunberg on 5/17/18.
- */
-@SuppressWarnings("deprecation")
-public class AggregationTest extends ClientTest {
+public class AggregationTest extends TestBase {
+
+  @BeforeClass
+  public static void prepare() {
+      TEST_INDEX = "test-index";
+      TestBase.prepare();
+  }
+
+  @AfterClass
+  public static void tearDown() {
+      TestBase.tearDown();
+  }
+
   @Test
   public void testAggregations() {
     /**
@@ -30,7 +40,7 @@ public class AggregationTest extends ClientTest {
          127.0.0.1:6379> FT.ADD test_index data3 1.0 FIELDS name def count 25
      */
 
-    Client cl = getClient();
+    Client cl = getDefaultClient();
     Schema sc = new Schema();
     sc.addSortableTextField("name", 1.0);
     sc.addSortableNumericField("count");
@@ -85,7 +95,7 @@ public class AggregationTest extends ClientTest {
          OK
      */
 
-    Client cl = getClient();
+    Client cl = getDefaultClient();
     Schema sc = new Schema();
     sc.addSortableTextField("name", 1.0);
     sc.addSortableNumericField("subj1");
@@ -119,6 +129,7 @@ public class AggregationTest extends ClientTest {
     assertEquals("ghi", r2.getString("name"));
     assertEquals(67.5, r2.getDouble("avgscore"), 0);
   }
+
   @Test
   public void testCursor() throws InterruptedException {
     /**
@@ -131,7 +142,7 @@ public class AggregationTest extends ClientTest {
          127.0.0.1:6379> FT.ADD test_index data3 1.0 FIELDS name def count 25
      */
 
-    Client cl = getClient();
+    Client cl = getDefaultClient();
     Schema sc = new Schema();
     sc.addSortableTextField("name", 1.0);
     sc.addSortableNumericField("count");

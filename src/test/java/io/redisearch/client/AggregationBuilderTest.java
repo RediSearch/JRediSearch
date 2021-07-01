@@ -22,7 +22,7 @@ public class AggregationBuilderTest extends TestBase {
 
   @BeforeClass
   public static void prepare() {
-      TEST_INDEX = "aggregation-builder";
+      TEST_INDEX = "aggbindex";
       TestBase.prepare();
   }
 

@@ -19,7 +19,7 @@ public class AggregationTest extends TestBase {
 
   @BeforeClass
   public static void prepare() {
-      TEST_INDEX = "test-index";
+      TEST_INDEX = "aggindex";
       TestBase.prepare();
   }
 

@@ -23,10 +23,7 @@ public class AggregationBuilder {
   }
 
   public AggregationBuilder load(String... fields) {
-    args.add("LOAD");
-    args.add(Integer.toString(fields.length));
-    args.addAll(Arrays.asList(fields));
-    return this;
+    return load(FieldName.convert(fields));
   }
 
   public AggregationBuilder load(FieldName... fields) {

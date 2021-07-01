@@ -13,8 +13,7 @@ import java.util.*;
 @Deprecated
 public class AggregationRequest {
     private String query;
-    private final List<String> load = new ArrayList<>();
-    private final List<FieldName> loadFieldNames = new ArrayList<>();
+    private final List<FieldName> load = new ArrayList<>();
     private final List<Group> groups = new ArrayList<>();
     private final List<SortedField> sortby = new ArrayList<>();
     private final Map<String, String> projections = new HashMap<>();
@@ -36,14 +35,11 @@ public class AggregationRequest {
     }
 
     public AggregationRequest load(String... fields) {
-        load.addAll(Arrays.asList(fields));
-        loadFieldNames.clear();
-        return this;
+        return load(FieldName.convert(fields));
     }
 
     public AggregationRequest load(FieldName... fields) {
-        loadFieldNames.addAll(Arrays.asList(fields));
-        load.clear();
+        load.addAll(Arrays.asList(fields));
         return this;
     }
 
@@ -140,14 +136,10 @@ public class AggregationRequest {
 
         if (!load.isEmpty()) {
             args.add("LOAD");
-            args.add(Integer.toString(load.size()));
-            args.addAll(load);
-        } else if (!loadFieldNames.isEmpty()) {
-            args.add("LOAD");
             final int loadCountIndex = args.size();
             args.add(null);
             int loadCount = 0;
-            for (FieldName fn : loadFieldNames) {
+            for (FieldName fn : load) {
                 loadCount += fn.addCommandEncodedArguments(args);
             }
             args.set(loadCountIndex, Integer.toString(loadCount));

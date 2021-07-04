@@ -132,16 +132,16 @@ public class ClientJsonTest extends TestBase {
         assertEquals(1, sr.totalResults);
 
         Document doc = sr.docs.get(0);
-        assertEquals("\"Dod\"", doc.get("$.last"));
-        assertEquals("\"Joe\"", doc.get("$.first"));
+        assertEquals("Dod", doc.get("$.last"));
+        assertEquals("Joe", doc.get("$.first"));
         assertEquals(Integer.toString(18), doc.get("$.age"));
 
         // query repeat
         sr = search.search(new Query().returnFields("$.first", "$.last", "$.age"));
 
         doc = sr.docs.get(0);
-        assertEquals("\"Joe\"", doc.getString("$.first"));
-        assertEquals("\"Dod\"", doc.getString("$.last"));
+        assertEquals("Joe", doc.getString("$.first"));
+        assertEquals("Dod", doc.getString("$.last"));
         assertEquals(18, Integer.parseInt((String) doc.get("$.age")));
     }
 }

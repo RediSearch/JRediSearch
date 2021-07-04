@@ -11,12 +11,12 @@
 	<name>JRediSearch</name>
 	<description>Official client for Redis Search</description>
 	<url>https://redisearch.io</url>
-	
+
 	<organization>
 		<name>RedisLabs</name>
 		<url>www.redislabs.com</url>
 	</organization>
-	
+
 	<ciManagement>
 		<system>CircleCI</system>
 		<url>https://circleci.com/gh/RediSearch/JRediSearch</url>
@@ -25,7 +25,7 @@
 		<url>https://github.com/RediSearch/JRediSearch/issues</url>
 		<system>Github</system>
 	</issueManagement>
-	
+
 	<scm>
 		<url>https://github.com/RediSearch/JRediSearch</url>
 		<connection>scm:git:git://github.com/RediSearch/JRediSearch.git</connection>
@@ -197,7 +197,13 @@
 					<plugin>
 						<groupId>org.apache.maven.plugins</groupId>
 						<artifactId>maven-gpg-plugin</artifactId>
-						<version>1.5</version>
+						<version>3.0.1</version>
+						<configuration>
+							<gpgArguments>
+								<arg>--pinentry-mode</arg>
+								<arg>loopback</arg>
+								</gpgArguments>
+						</configuration>
 						<executions>
 							<execution>
 								<id>sign-artifacts</id>

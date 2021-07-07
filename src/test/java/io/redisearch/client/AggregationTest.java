@@ -180,7 +180,7 @@ public class AggregationTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
 
     AggregationRequest r2 = new AggregationRequest()
@@ -192,7 +192,7 @@ public class AggregationTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
   }
 }

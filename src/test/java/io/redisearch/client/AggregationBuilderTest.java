@@ -213,7 +213,7 @@ public class AggregationBuilderTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
 
     AggregationBuilder r2 = new AggregationBuilder()
@@ -225,7 +225,7 @@ public class AggregationBuilderTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
   }
   

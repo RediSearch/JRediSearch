@@ -10,36 +10,36 @@ public class FieldName {
     private static final byte[] AS_BINARY = SafeEncoder.encode(AS_ENCODED);
 
     private final String name;
-    private String alias;
+    private String attribute;
 
     public FieldName(String name) {
         this(name, null);
     }
 
-    public FieldName(String name, String alias) {
+    public FieldName(String name, String attribute) {
         this.name = name;
-        this.alias = alias;
+        this.attribute = attribute;
     }
 
     public int addCommandEncodedArguments(Collection<String> args) {
         args.add(name);
-        if (alias == null) {
+        if (attribute == null) {
             return 1;
         }
 
         args.add(AS_ENCODED);
-        args.add(alias);
+        args.add(attribute);
         return 3;
     }
 
     public int addCommandBinaryArguments(Collection<byte[]> args) {
         args.add(SafeEncoder.encode(name));
-        if (alias == null) {
+        if (attribute == null) {
             return 1;
         }
 
         args.add(AS_BINARY);
-        args.add(SafeEncoder.encode(alias));
+        args.add(SafeEncoder.encode(attribute));
         return 3;
     }
 
@@ -49,15 +49,15 @@ public class FieldName {
 
     @Override
     public String toString() {
-        return alias == null ? name : (name + " AS " + alias);
+        return attribute == null ? name : (name + " AS " + attribute);
     }
 
     public static FieldName of(String name) {
         return new FieldName(name);
     }
 
-    public FieldName as(String alias) {
-        this.alias = alias;
+    public FieldName as(String attribute) {
+        this.attribute = attribute;
         return this;
     }
 

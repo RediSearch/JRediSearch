@@ -105,11 +105,11 @@ public class ClientTest extends TestBase {
         SearchResult asOriginal = search.search(new Query("@first:Jo*"));
         assertEquals(0, asOriginal.totalResults);
 
-        SearchResult asAlias = search.search(new Query("@given:Jo*"));
-        assertEquals(2, asAlias.totalResults);
+        SearchResult asAttribute = search.search(new Query("@given:Jo*"));
+        assertEquals(2, asAttribute.totalResults);
 
-        SearchResult noAlias = search.search(new Query("@last:Rod"));
-        assertEquals(1, noAlias.totalResults);
+        SearchResult nonAttribute = search.search(new Query("@last:Rod"));
+        assertEquals(1, nonAttribute.totalResults);
     }
 
     @Test

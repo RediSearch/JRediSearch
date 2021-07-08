@@ -1,5 +1,6 @@
 package io.redisearch.aggregation;
 
+import io.redisearch.FieldName;
 import io.redisearch.aggregation.reducers.Reducer;
 import redis.clients.jedis.util.SafeEncoder;
 
@@ -21,8 +22,19 @@ public class AggregationBuilder {
     this("*");
   }
 
-  public AggregationBuilder load(String ...fields) {
-    addCmdArgs(args, "LOAD", Arrays.asList(fields));
+  public AggregationBuilder load(String... fields) {
+    return load(FieldName.convert(fields));
+  }
+
+  public AggregationBuilder load(FieldName... fields) {
+    args.add("LOAD");
+    final int loadCountIndex = args.size();
+    args.add(null);
+    int loadCount = 0;
+    for (FieldName fn : fields) {
+      loadCount += fn.addCommandEncodedArguments(args);
+    }
+    args.set(loadCountIndex, Integer.toString(loadCount));
     return this;
   }
 
@@ -110,16 +122,6 @@ public class AggregationBuilder {
       }
     }
     return this;
-  }
-
-  private static void addCmdLen(List<String> list, String cmd, int len) {
-    list.add(cmd);
-    list.add(Integer.toString(len));
-
-  }
-  private static void addCmdArgs(List<String> dst, String cmd, List<String> src) {
-    addCmdLen(dst, cmd, src.size());
-    dst.addAll(src);
   }
 
   public List<String> getArgs() {

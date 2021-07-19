@@ -17,6 +17,7 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static io.redisearch.client.util.ClientUtil.toStringMap;
 import static org.junit.Assert.*;
 
 public class ClientTest extends TestBase {
@@ -30,6 +31,14 @@ public class ClientTest extends TestBase {
     @AfterClass
     public static void tearDown() {
         TestBase.tearDown();
+    }
+
+    private static Map<String, Object> toMap(Object... values) {
+        Map<String, Object> map = new HashMap<>();
+        for (int i = 0; i < values.length; i += 2) {
+            map.put((String) values[i], values[i + 1]);
+        }
+        return map;
     }
 
     private static Map<String, String> toMap(String... values) {
@@ -76,6 +85,31 @@ public class ClientTest extends TestBase {
         assertEquals(1, res2.totalResults);
 
         SearchResult res3 = cl.search(new Query("@last:Rod"));
+        assertEquals(0, res3.totalResults);
+    }
+
+    @Test
+    public void withObjectMap() throws Exception {
+        Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
+        assertTrue(search.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        try (Jedis jedis = search.connection()) {
+            jedis.hset("student:1111", toStringMap(toMap("first", "Joe", "last", "Dod", "age", 18)));
+            jedis.hset("student:3333", toStringMap(toMap("first", "El", "last", "Mark", "age", 17)));
+            jedis.hset("pupil:4444", toStringMap(toMap("first", "Pat", "last", "Shu", "age", 21)));
+            jedis.hset("student:5555", toStringMap(toMap("first", "Joen", "last", "Ko", "age", 20)));
+        }
+
+        SearchResult noFilters = search.search(new Query());
+        assertEquals(4, noFilters.totalResults);
+
+        SearchResult res1 = search.search(new Query("@first:Jo*"));
+        assertEquals(2, res1.totalResults);
+
+        SearchResult res2 = search.search(new Query("@first:Pat"));
+        assertEquals(1, res2.totalResults);
+
+        SearchResult res3 = search.search(new Query("@last:Rod"));
         assertEquals(0, res3.totalResults);
     }
 

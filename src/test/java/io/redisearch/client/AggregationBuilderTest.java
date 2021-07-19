@@ -9,7 +9,6 @@ import io.redisearch.aggregation.Row;
 import io.redisearch.aggregation.SortedField;
 import io.redisearch.aggregation.reducers.Reducers;
 import redis.clients.jedis.exceptions.JedisDataException;
-import redis.clients.jedis.util.SafeEncoder;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -19,6 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import redis.clients.jedis.util.SafeEncoder;
 
 public class AggregationBuilderTest extends TestBase {
 
@@ -148,19 +148,11 @@ public class AggregationBuilderTest extends TestBase {
 
     AggregationBuilder builder = new AggregationBuilder()
         .load(FieldName.of("@subj1").as("a"), FieldName.of("@subj2").as("b"))
-        .apply("(@a+@b)/2", "avg");
+        .apply("(@a+@b)/2", "avg").sortByDesc("@avg");
 
     AggregationResult result = cl.aggregate(builder);
-    // TODO: assert
-//    System.out.println(result.totalResults);
-//    for (Map<String, Object> map : result.getResults()) {
-//      for (Map.Entry<String, Object> entry : map.entrySet()) {
-//        String key = entry.getKey();
-//        Object value = entry.getValue();
-//        System.out.println(key);
-//        System.out.println(SafeEncoder.encode((byte[]) value));
-//      }
-//    }
+    assertEquals(50.0, result.getRow(0).getDouble("avg"), 0d);
+    assertEquals(45.0, result.getRow(1).getDouble("avg"), 0d);
   }
 
   @Test

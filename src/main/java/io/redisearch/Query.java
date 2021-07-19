@@ -290,7 +290,7 @@ public class Query {
         } else if (returnFieldNames != null && returnFieldNames.length > 0) {
             args.add(Keywords.RETURN.getRaw());
             final int returnCountIndex = args.size();
-            args.add(null);
+            args.add(null); // holding a place for setting the total count later.
             int returnCount = 0;
             for (FieldName fn : returnFieldNames) {
                 returnCount += fn.addCommandBinaryArguments(args);

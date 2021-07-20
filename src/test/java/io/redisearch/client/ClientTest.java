@@ -513,8 +513,8 @@ public class ClientTest extends TestBase {
         
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
-        assertEquals("tags",((List)((List)info.get("fields")).get(1)).get(0));
-        assertEquals("TAG", ((List)((List)info.get("fields")).get(1)).get(2));
+        assertEquals("identifier",((List)((List)info.get("attributes")).get(1)).get(0));
+        assertEquals("attribute", ((List)((List)info.get("attributes")).get(1)).get(2));
     }
 
     @Test
@@ -594,7 +594,7 @@ public class ClientTest extends TestBase {
         Map<String, Object> info = cl.getInfo();
         assertEquals(TEST_INDEX, info.get("index_name"));
 
-        assertEquals(6, ((List)info.get("fields")).size());
+        assertEquals(6, ((List)info.get("attributes")).size());
         assertEquals("global_idle", ((List)info.get("cursor_stats")).get(0));
         assertEquals(0L, ((List)info.get("cursor_stats")).get(1));
     }

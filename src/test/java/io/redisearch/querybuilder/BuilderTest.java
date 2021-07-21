@@ -1,5 +1,6 @@
 package io.redisearch.querybuilder;
 
+import io.redisearch.FieldName;
 import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.AggregationRequest;
 import io.redisearch.aggregation.Group;
@@ -135,6 +136,13 @@ public class BuilderTest {
             .sortBy(desc("@count"))
             .limit(0, 2);
         assertEquals("* LOAD 1 @count APPLY @count%1000 AS thousands SORTBY 2 @count DESC LIMIT 0 2", r3.getArgsString());
+
+        AggregationRequest r4 = new AggregationRequest()
+            .load(FieldName.of("@fakecount").as("count"))
+            .apply("@count%1000", "thousands")
+            .sortBy(desc("@count"))
+            .limit(0, 2);
+        assertEquals("* LOAD 3 @fakecount AS count APPLY @count%1000 AS thousands SORTBY 2 @count DESC LIMIT 0 2", r4.getArgsString());
     }
     
     @Test
@@ -159,16 +167,22 @@ public class BuilderTest {
         
         assertEquals("* GROUPBY 1 @brand REDUCE QUANTILE 2 @price 0.5 AS q50 REDUCE QUANTILE 2 @price 0.9 AS q90 REDUCE QUANTILE 2 @price 0.95 AS @price REDUCE AVG 1 @price REDUCE COUNT 0 AS count LIMIT 0 10 SORTBY 2 @count DESC",
                 r2.getArgsString());
-        
-        
+
         AggregationBuilder r3 = new AggregationBuilder()
-            .load("@count")
-            .apply("@count%1000", "thousands")
-            .sortBy(desc("@count"))
-            .limit(0, 2);
+                .load("@count")
+                .apply("@count%1000", "thousands")
+                .sortBy(desc("@count"))
+                .limit(0, 2);
         assertEquals("* LOAD 1 @count APPLY @count%1000 AS thousands SORTBY 2 @count DESC LIMIT 0 2", r3.getArgsString());
-        
+
         AggregationBuilder r4 = new AggregationBuilder()
+                .load(FieldName.of("@fakecount").as("count"))
+                .apply("@count%1000", "thousands")
+                .sortBy(desc("@count"))
+                .limit(0, 2);
+        assertEquals("* LOAD 3 @fakecount AS count APPLY @count%1000 AS thousands SORTBY 2 @count DESC LIMIT 0 2", r4.getArgsString());
+
+        AggregationBuilder r5 = new AggregationBuilder()
             .groupBy("@actor", 
                 count_distinct("@show"), 
                 count_distinctish("@price"),
@@ -191,7 +205,7 @@ public class BuilderTest {
             + "REDUCE TOLIST 1 @screen "
             + "REDUCE RANDOM_SAMPLE 2 @joke 5 "
             + "SORTBY 2 @cnt DESC", 
-            r4.getArgsString());
+            r5.getArgsString());
     }
     
 }

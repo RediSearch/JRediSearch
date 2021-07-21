@@ -2,6 +2,7 @@ package io.redisearch.client;
 
 import io.redisearch.AggregationResult;
 import io.redisearch.Document;
+import io.redisearch.FieldName;
 import io.redisearch.Schema;
 import io.redisearch.aggregation.AggregationBuilder;
 import io.redisearch.aggregation.Row;
@@ -17,12 +18,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.Assert.*;
+import redis.clients.jedis.util.SafeEncoder;
 
 public class AggregationBuilderTest extends TestBase {
 
   @BeforeClass
   public static void prepare() {
-      TEST_INDEX = "aggregation-builder";
+      TEST_INDEX = "aggbindex";
       TestBase.prepare();
   }
 
@@ -134,6 +136,26 @@ public class AggregationBuilderTest extends TestBase {
   }
 
   @Test
+  public void testLoadAsAggregations() {
+    Client cl = getDefaultClient();
+    Schema sc = new Schema();
+    sc.addSortableTextField("name", 1.0);
+    sc.addSortableNumericField("subj1");
+    sc.addSortableNumericField("subj2");
+    cl.createIndex(sc, Client.IndexOptions.defaultOptions());
+    cl.addDocument(new Document("data1").set("name", "abc").set("subj1", 20).set("subj2", 70));
+    cl.addDocument(new Document("data2").set("name", "def").set("subj1", 60).set("subj2", 40));
+
+    AggregationBuilder builder = new AggregationBuilder()
+        .load(FieldName.of("@subj1").as("a"), FieldName.of("@subj2").as("b"))
+        .apply("(@a+@b)/2", "avg").sortByDesc("@avg");
+
+    AggregationResult result = cl.aggregate(builder);
+    assertEquals(50.0, result.getRow(0).getDouble("avg"), 0d);
+    assertEquals(45.0, result.getRow(1).getDouble("avg"), 0d);
+  }
+
+  @Test
   public void testCursor() throws InterruptedException {
     /**
          127.0.0.1:6379> FT.CREATE test_index SCHEMA name TEXT SORTABLE count NUMERIC SORTABLE
@@ -183,7 +205,7 @@ public class AggregationBuilderTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
 
     AggregationBuilder r2 = new AggregationBuilder()
@@ -195,7 +217,7 @@ public class AggregationBuilderTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
   }
   

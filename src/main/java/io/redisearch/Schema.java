@@ -21,25 +21,40 @@ public class Schema {
     }
 
     public static class Field {
+        private final FieldName fieldName;
         public final String name;
         public final FieldType type;
         public final boolean sortable;
         public final boolean noindex;
 
         public Field(String name, FieldType type, boolean sortable) {
-        	this(name, type, sortable, false);
+            this(name, type, sortable, false);
         }
 
         public Field(String name, FieldType type, boolean sortable, boolean noindex) {
-            this.name = name;
-            this.type = type;
-            this.sortable = sortable;
-            this.noindex = noindex;
+            this(FieldName.of(name), type, sortable, noindex);
         }
 
+        public Field(FieldName name, FieldType type) {
+            this(name, type, false, false);
+        }
+
+        public Field(FieldName name, FieldType type, boolean sortable, boolean noIndex) {
+            this.fieldName = name;
+            this.name = this.fieldName.getName();
+            this.type = type;
+            this.sortable = sortable;
+            this.noindex = noIndex;
+        }
+
+        /**
+         * Sub-classes should not override this method.
+         * @param args 
+         */
         public void serializeRedisArgs(List<String> args) {
-            args.add(name);
+            this.fieldName.addCommandEncodedArguments(args);
             args.add(type.str);
+            serializeTypeArgs(args);
             if (sortable) {
                 args.add("SORTABLE");
             }
@@ -47,6 +62,12 @@ public class Schema {
                 args.add("NOINDEX");
             }
         }
+
+        /**
+         * Sub-classes should override this method.
+         * @param args
+         */
+        protected void serializeTypeArgs(List<String> args) { }
 
         @Override public String toString() {
             return "Field{name='" + name + "', type=" + type + ", sortable=" + sortable + ", noindex=" + noindex + "}";
@@ -58,14 +79,18 @@ public class Schema {
      */
     public static class TextField extends Field {
 
-    	private final double weight;
+        private final double weight;
         private final boolean nostem;
         private final String phonetic;
 
         public TextField(String name) {
             this(name, 1.0);
         }
-        
+
+        public TextField(FieldName name) {
+            this(name, 1.0, false, false, false, null);
+        }
+
         public TextField(String name, double weight) {
             this(name, weight, false);
         }
@@ -79,21 +104,25 @@ public class Schema {
         }
 
         public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex) {
-        	this(name, weight, sortable, nostem, noindex, null);
+            this(name, weight, sortable, nostem, noindex, null);
         }
-        
-        public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex, String phonetic) {
-          super(name, FieldType.FullText, sortable, noindex);
-          this.weight = weight;
-          this.nostem = nostem;
-          this.phonetic = phonetic;
-      }
 
+        public TextField(String name, double weight, boolean sortable, boolean nostem, boolean noindex, String phonetic) {
+            super(name, FieldType.FullText, sortable, noindex);
+            this.weight = weight;
+            this.nostem = nostem;
+            this.phonetic = phonetic;
+        }
+
+        public TextField(FieldName name, double weight, boolean sortable, boolean nostem, boolean noindex, String phonetic) {
+            super(name, FieldType.FullText, sortable, noindex);
+            this.weight = weight;
+            this.nostem = nostem;
+            this.phonetic = phonetic;
+        }
 
         @Override
-        public void serializeRedisArgs(List<String> args) {
-            args.add(name);
-            args.add(type.str);
+        protected void serializeTypeArgs(List<String> args) {
             if (weight != 1.0) {
                 args.add("WEIGHT");
                 args.add(Double.toString(weight));
@@ -101,15 +130,9 @@ public class Schema {
             if (nostem) {
                 args.add("NOSTEM");
             }
-            if (sortable) {
-                args.add("SORTABLE");
-            }
-            if (noindex) {
-                args.add("NOINDEX");
-            }
             if (phonetic != null) {
-              args.add("PHONETIC");
-              args.add(this.phonetic);
+                args.add("PHONETIC");
+                args.add(this.phonetic);
             }
         }
 
@@ -121,32 +144,34 @@ public class Schema {
     }
 
     public static class TagField extends Field {
-        private static final String DEFAULT_SEPARATOR = ",";
-        
+
         private final String separator;
 
         public TagField(String name) {
-        	this(name, DEFAULT_SEPARATOR);
+            this(name, null);
         }
 
         public TagField(String name, String separator) {
-        	this(name, separator, false);
+            this(name, separator, false);
         }
 
         public TagField(String name, boolean sortable) {
-        	this(name, DEFAULT_SEPARATOR, sortable);
+            this(name, null, sortable);
         }
 
         public TagField(String name, String separator, boolean sortable) {
-        	super(name, FieldType.Tag, sortable);
+            super(name, FieldType.Tag, sortable);
+            this.separator = separator;
+        }
+
+        public TagField(FieldName name, String separator, boolean sortable) {
+            super(name, FieldType.Tag, sortable, false);
             this.separator = separator;
         }
 
         @Override
-        public void serializeRedisArgs(List<String> args) {
-            args.add(name);
-            args.add(type.str);
-            if (!separator.equals(DEFAULT_SEPARATOR)) {
+        public void serializeTypeArgs(List<String> args) {
+            if (separator != null) {
                 args.add("SEPARATOR");
                 args.add(separator);
             }
@@ -222,10 +247,10 @@ public class Schema {
         fields.add(new TagField(name, separator));
         return this;
     }
-    
+
     public Schema addSortableTagField(String name, String separator) {
-      fields.add(new TagField(name, separator, true));
-      return this;
+        fields.add(new TagField(name, separator, true));
+        return this;
     }
 
     public Schema addField(Field field) {

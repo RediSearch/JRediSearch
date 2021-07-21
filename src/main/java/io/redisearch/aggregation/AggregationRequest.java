@@ -1,5 +1,6 @@
 package io.redisearch.aggregation;
 
+import io.redisearch.FieldName;
 import io.redisearch.aggregation.reducers.Reducer;
 import redis.clients.jedis.util.SafeEncoder;
 
@@ -12,7 +13,7 @@ import java.util.*;
 @Deprecated
 public class AggregationRequest {
     private String query;
-    private final List<String> load = new ArrayList<>();
+    private final List<FieldName> load = new ArrayList<>();
     private final List<Group> groups = new ArrayList<>();
     private final List<SortedField> sortby = new ArrayList<>();
     private final Map<String, String> projections = new HashMap<>();
@@ -33,7 +34,11 @@ public class AggregationRequest {
         this("*");
     }
 
-    public AggregationRequest load(String ...fields) {
+    public AggregationRequest load(String... fields) {
+        return load(FieldName.convert(fields));
+    }
+
+    public AggregationRequest load(FieldName... fields) {
         load.addAll(Arrays.asList(fields));
         return this;
     }
@@ -125,22 +130,19 @@ public class AggregationRequest {
       return this;
     }
 
-    private static void addCmdLen(List<String> list, String cmd, int len) {
-        list.add(cmd);
-        list.add(Integer.toString(len));
-
-    }
-    private static void addCmdArgs(List<String> dst, String cmd, List<String> src) {
-        addCmdLen(dst, cmd, src.size());
-        dst.addAll(src);
-    }
-
     public List<String> getArgs() {
         List<String> args = new ArrayList<>();
         args.add(query);
 
         if (!load.isEmpty()) {
-            addCmdArgs(args, "LOAD", load);
+            args.add("LOAD");
+            final int loadCountIndex = args.size();
+            args.add(null);
+            int loadCount = 0;
+            for (FieldName fn : load) {
+                loadCount += fn.addCommandEncodedArguments(args);
+            }
+            args.set(loadCountIndex, Integer.toString(loadCount));
         }
 
         if (!queryProjections.isEmpty()) {

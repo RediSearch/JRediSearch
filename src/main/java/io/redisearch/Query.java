@@ -147,6 +147,7 @@ public class Query {
     protected String[] _fields = null;
     protected String[] _keys = null;
     protected String[] _returnFields = null;
+    private FieldName[] returnFieldNames = null;
     protected String[] highlightFields = null;
     protected String[] summarizeFields = null;
     protected String[] highlightTags = null;
@@ -286,6 +287,15 @@ public class Query {
           for (String f : _returnFields) {
               args.add(SafeEncoder.encode(f));
           }
+        } else if (returnFieldNames != null && returnFieldNames.length > 0) {
+            args.add(Keywords.RETURN.getRaw());
+            final int returnCountIndex = args.size();
+            args.add(null); // holding a place for setting the total count later.
+            int returnCount = 0;
+            for (FieldName fn : returnFieldNames) {
+                returnCount += fn.addCommandBinaryArguments(args);
+            }
+            args.set(returnCountIndex, Protocol.toByteArray(returnCount));
         }
     }
 
@@ -430,7 +440,7 @@ public class Query {
         this._keys = keys;
         return this;
     }
-    
+
     /**
      * Result's projection - the fields to return by the query
      * @param fields a list of TEXT fields in the schemas
@@ -438,9 +448,20 @@ public class Query {
      */
     public Query returnFields(String... fields) {
         this._returnFields = fields;
+        this.returnFieldNames = null;
         return this;
     }
 
+    /**
+     * Result's projection - the fields to return by the query
+     * @param fields a list of TEXT fields in the schemas
+     * @return the query object itself
+     */
+    public Query returnFields(FieldName... fields) {
+        this.returnFieldNames = fields;
+        this._returnFields = null;
+        return this;
+    }
 
     public Query highlightFields(HighlightTags tags, String... fields) {
         if (fields == null || fields.length > 0) {

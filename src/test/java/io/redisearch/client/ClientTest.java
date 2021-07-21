@@ -23,7 +23,7 @@ public class ClientTest extends TestBase {
 
     @BeforeClass
     public static void prepare() {
-        TEST_INDEX = "aggregation-builder";
+        TEST_INDEX = "testindex";
         TestBase.prepare();
     }
 
@@ -77,6 +77,39 @@ public class ClientTest extends TestBase {
 
         SearchResult res3 = cl.search(new Query("@last:Rod"));
         assertEquals(0, res3.totalResults);
+    }
+
+    @Test
+    public void createWithFieldNames() throws Exception {
+        Schema sc = new Schema().addField(new TextField(FieldName.of("first").as("given")))
+                .addField(new TextField(FieldName.of("last")));
+        IndexDefinition rule = new IndexDefinition()
+                //.setFilter("@age>16")
+                .setPrefixes(new String[]{"student:", "pupil:"});
+
+        assertTrue(search.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
+
+        try (Jedis jedis = search.connection()) {
+            jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
+            jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
+            jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
+            jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
+            jedis.hset("pupil:4444", toMap("first", "Pat", "last", "Shu", "age", "21"));
+            jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
+            jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
+        }
+
+        SearchResult noFilters = search.search(new Query());
+        assertEquals(5, noFilters.totalResults);
+
+        SearchResult asOriginal = search.search(new Query("@first:Jo*"));
+        assertEquals(0, asOriginal.totalResults);
+
+        SearchResult asAttribute = search.search(new Query("@given:Jo*"));
+        assertEquals(2, asAttribute.totalResults);
+
+        SearchResult nonAttribute = search.search(new Query("@last:Rod"));
+        assertEquals(1, nonAttribute.totalResults);
     }
 
     @Test
@@ -1064,14 +1097,12 @@ public class ClientTest extends TestBase {
          results = cl.deleteDocuments(true, "doc1", "doc2", "doc36");
          assertArrayEquals(new boolean[]{true, true, false}, results);   
     }
-    
+
     @Test
     public void testReturnFields() throws Exception {
         Client cl = getDefaultClient();
-        cl.connection().flushDB();
         Schema sc = new Schema().addTextField("field1", 1.0).addTextField("field2", 1.0);
         assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions()));
-
 
         Map<String, Object> doc = new HashMap<>();
         doc.put("field1", "value1");
@@ -1083,9 +1114,31 @@ public class ClientTest extends TestBase {
         SearchResult res = cl.search(new Query("*").returnFields("field1"));
         assertEquals(1, res.totalResults);
         assertEquals("value1", res.docs.get(0).get("field1"));
-        assertEquals(null, res.docs.get(0).get("field2"));
+        assertNull(res.docs.get(0).get("field2"));
     }
-    
+
+    @Test
+    public void returnWithFieldNames() throws Exception {
+        Schema sc = new Schema().addTextField("a", 1).addTextField("b", 1).addTextField("c", 1);
+        assertTrue(search.createIndex(sc, Client.IndexOptions.defaultOptions()));
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("a", "value1");
+        map.put("b", "value2");
+        map.put("c", "value3");
+        assertTrue(search.addDocument("doc", map));
+
+        // Query
+        SearchResult res = search.search(new Query()
+            .returnFields(FieldName.of("a"), FieldName.of("b").as("d")));
+        assertEquals(1, res.totalResults);
+        Document doc = res.docs.get(0);
+        assertEquals("value1", doc.get("a"));
+        assertNull(doc.get("b"));
+        assertEquals("value2", doc.get("d"));
+        assertNull(doc.get("c"));
+    }
+
     @Test
     public void testInKeys() throws Exception {
         Client cl = getDefaultClient();

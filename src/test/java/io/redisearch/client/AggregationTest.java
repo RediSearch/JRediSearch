@@ -19,7 +19,7 @@ public class AggregationTest extends TestBase {
 
   @BeforeClass
   public static void prepare() {
-      TEST_INDEX = "test-index";
+      TEST_INDEX = "aggindex";
       TestBase.prepare();
   }
 
@@ -180,7 +180,7 @@ public class AggregationTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
 
     AggregationRequest r2 = new AggregationRequest()
@@ -192,7 +192,7 @@ public class AggregationTest extends TestBase {
 
     try {
       cl.cursorRead(res.getCursorId(), 1);
-      assertTrue(false);
+      fail();
     } catch(JedisDataException e) {}
   }
 }

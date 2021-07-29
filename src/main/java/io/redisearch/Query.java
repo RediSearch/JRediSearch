@@ -397,11 +397,10 @@ public class Query {
 
     /**
      * Set the query language, for stemming purposes
+     * <p>See http://redisearch.io for documentation on languages and stemming
      * @param language a language. 
      * 
      * @return the query object itself
-     * 
-     * @see http://redisearch.io for documentation on languages and stemming
      */
     public Query setLanguage(String language) {
         this._language = language;
@@ -410,11 +409,10 @@ public class Query {
 
     /**
      * Set the query custom scorer
+     * <p>See http://redisearch.io for documentation on extending RediSearch
      * @param scorer a custom scorer. 
      * 
      * @return the query object itself
-     * 
-     * @see http://redisearch.io for documentation on extending RediSearch
      */
     public Query setScorer(String scorer) {
         this._scorer = scorer;

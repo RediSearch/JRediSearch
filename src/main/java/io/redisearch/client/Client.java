@@ -238,7 +238,7 @@ public class Client implements io.redisearch.Client {
      *
      * @param option the name of the configuration option
      * @param value a value for the configuration option
-     * @return
+     * @return OK
      */
     @Override
     public boolean setConfig(ConfigOption option, String value) {
@@ -254,7 +254,7 @@ public class Client implements io.redisearch.Client {
      * Get runtime configuration option value
      *
      * @param option the name of the configuration option
-     * @return
+     * @return config
      */
     @Override
     public String getConfig(ConfigOption option) {
@@ -275,7 +275,7 @@ public class Client implements io.redisearch.Client {
     /**
      * Get all configuration options, consisting of the option's name and current value
      *
-     * @return
+     * @return all configs map
      */
     @Override
     public Map<String, String> getAllConfig() {
@@ -1171,7 +1171,7 @@ public class Client implements io.redisearch.Client {
         /**
          * Temporary
          * @param expire
-         * @return
+         * @return IndexOptions
          */
         public IndexOptions setTemporary(long expire) {
           this.expire = expire;

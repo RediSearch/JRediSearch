@@ -73,7 +73,7 @@ public class Reducers {
      * REDUCE FIRST_VALUE {nargs} {property} [BY {property} [ASC|DESC]]
      * @param field
      * @param sortBy
-     * @return
+     * @return Reducer
      */
     public static Reducer first_value(String field, SortedField sortBy) {
         return new Reducer(field) {

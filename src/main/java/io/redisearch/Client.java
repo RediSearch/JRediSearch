@@ -366,7 +366,7 @@ public interface Client extends Closeable{
      *
      * @param option the name of the configuration option
      * @param value a value for the configuration option
-     * @return
+     * @return OK
      */
     boolean setConfig(ConfigOption option, String value);
 
@@ -374,21 +374,21 @@ public interface Client extends Closeable{
      * Get runtime configuration option value
      *
      * @param option the name of the configuration option
-     * @return
+     * @return config
      */
     String getConfig(ConfigOption option);
 
     /**
      * Get all configuration options, consisting of the option's name and current value
      *
-     * @return
+     * @return all configs map
      */
     Map<String, String> getAllConfig();
 
     /**
      * Add an alias to the index.
      * @param name
-     * @return
+     * @return OK
      */
     boolean addAlias(String name);
 
@@ -396,7 +396,7 @@ public interface Client extends Closeable{
      * Update an alias from an index.
      *
      * @param name
-     * @return
+     * @return OK
      */
     boolean updateAlias(String name);
 
@@ -404,7 +404,7 @@ public interface Client extends Closeable{
      * remove an alias from an index.
      *
      * @param name
-     * @return
+     * @return OK
      */
     boolean deleteAlias(String name);
     
@@ -414,7 +414,7 @@ public interface Client extends Closeable{
      * @param terms
      * 
      * @return the synonym group id
-     * @deprecated not supported since RediSeach 2 use {@link #updateSynonym(String, String...) instead
+     * @deprecated not supported since RediSeach 2 use {@link Client#updateSynonym(String, String...)} instead
      */
     @Deprecated
     long addSynonym(String ...terms);
@@ -426,7 +426,7 @@ public interface Client extends Closeable{
      * @param terms
      * 
      * @return true on success
-     * @deprecated use {@link #updateSynonym(String, String...) instead
+     * @deprecated use {@link Client#updateSynonym(String, String...)} instead
      */
     @Deprecated
     boolean updateSynonym(long synonymGroupId, String ...terms);

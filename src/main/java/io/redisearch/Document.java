@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class Document implements Serializable {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 4884173545291367373L;
 
     private static final Gson gson = new Gson();
 

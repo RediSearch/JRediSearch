@@ -14,8 +14,10 @@ import java.util.Map;
  */
 public class Document implements Serializable {
 
+    private static final long serialVersionUID = 2L;
+
     private static final Gson gson = new Gson();
-  
+
     private String id;
     private double score;
     private byte[] payload;

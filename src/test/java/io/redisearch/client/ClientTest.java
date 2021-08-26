@@ -317,7 +317,6 @@ public class ClientTest extends TestBase {
         assertEquals(1, cl.search(new Query("to be or not to be")).totalResults);
     }
 
-
     @Test
     public void testGeoFilter() throws Exception {
         Client cl = getDefaultClient();
@@ -344,6 +343,27 @@ public class ClientTest extends TestBase {
                         new Query.GeoFilter("loc", -0.44, 51.45,
                                 100, Query.GeoFilter.KILOMETERS)
                 ));
+        assertEquals(2, res.totalResults);
+    }
+
+    @Test
+    public void geoFilterAndGeoCoordinateObject() throws Exception {
+        Schema schema = new Schema().addTextField("title", 1.0).addGeoField("loc");
+        assertTrue(search.createIndex(schema, Client.IndexOptions.defaultOptions()));
+
+        Map<String, Object> fields = new HashMap<>();
+        fields.put("title", "hello world");
+        fields.put("loc", new redis.clients.jedis.GeoCoordinate(-0.441, 51.458));
+        assertTrue(search.addDocument("doc1", fields));
+        fields.put("loc", new redis.clients.jedis.GeoCoordinate(-0.1, 51.2));
+        assertTrue(search.addDocument("doc2", fields));
+
+        SearchResult res = search.search(new Query("hello world").addFilter(
+                new Query.GeoFilter("loc", -0.44, 51.45, 10, Query.GeoFilter.KILOMETERS)));
+        assertEquals(1, res.totalResults);
+
+        res = search.search(new Query("hello world").addFilter(
+                new Query.GeoFilter("loc", -0.44, 51.45, 100, Query.GeoFilter.KILOMETERS)));
         assertEquals(2, res.totalResults);
     }
 

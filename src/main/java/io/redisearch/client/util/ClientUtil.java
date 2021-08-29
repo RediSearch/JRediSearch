@@ -10,7 +10,15 @@ public class ClientUtil {
     for (Map.Entry<String, Object> entry : input.entrySet()) {
       String key = entry.getKey();
       Object obj = entry.getValue();
-      String str = obj.toString();
+      String str;
+      if (obj instanceof redis.clients.jedis.GeoCoordinate) {
+        redis.clients.jedis.GeoCoordinate geo = (redis.clients.jedis.GeoCoordinate) obj;
+        str = geo.getLongitude() + "," + geo.getLatitude();
+      } else if (obj instanceof String) {
+        str = (String) obj;
+      } else {
+        str = obj.toString();
+      }
       output.put(key, str);
     }
     return output;

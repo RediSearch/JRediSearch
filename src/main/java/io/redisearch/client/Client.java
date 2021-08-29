@@ -553,15 +553,28 @@ public class Client implements io.redisearch.Client {
         }
 
         args.add(Keywords.FIELDS.getRaw());
-        String key = null;
-        for (Map.Entry<String, Object> ent : doc.getProperties()) {
-            key = ent.getKey();
+        for (Map.Entry<String, Object> entry : doc.getProperties()) {
+            String key = entry.getKey();
             args.add(SafeEncoder.encode(key));
-            Object value = ent.getValue();
+            Object value = entry.getValue();
             if (value == null) {
-                throw new NullPointerException( "Document attribute '"+ key +"' is null. (Remove it, or set a value)" );
+                throw new NullPointerException("Document attribute '" + key + "' is null. (Remove it, or set a value)");
             }
-            args.add(value instanceof byte[] ?  (byte[])value :  SafeEncoder.encode(value.toString()));
+            byte[] binaryValue;
+            if (value instanceof redis.clients.jedis.GeoCoordinate) {
+                redis.clients.jedis.GeoCoordinate geo = (redis.clients.jedis.GeoCoordinate) value;
+                byte[] lon = Protocol.toByteArray(geo.getLongitude());
+                byte[] lat = Protocol.toByteArray(geo.getLatitude());
+                binaryValue = new byte[lon.length + lat.length + 1];
+                System.arraycopy(lon, 0, binaryValue, 0, lon.length);
+                binaryValue[lon.length] = ',';
+                System.arraycopy(lat, 0, binaryValue, lon.length + 1, lat.length);
+            } else if (value instanceof byte[]) {
+                binaryValue = (byte[]) value;
+            } else {
+                binaryValue = SafeEncoder.encode(value.toString());
+            }
+            args.add(binaryValue);
         }
 
         return sendCommand(conn, commands.getAddCommand(), args.toArray(new byte[args.size()][])); 

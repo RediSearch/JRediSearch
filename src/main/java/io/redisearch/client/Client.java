@@ -885,6 +885,15 @@ public class Client implements io.redisearch.Client {
     }
 
     @Override
+    public boolean dropIndexDD() {
+        try (Jedis conn = connection()) {
+          String res = sendCommand(conn, commands.getDropCommand(), endocdedIndexName,
+              Keywords.DD.getRaw()).getStatusCodeReply();
+          return res.equals("OK");
+        }
+    }
+
+    @Override
     public Long addSuggestion(Suggestion suggestion, boolean increment) {
         List<String> args = new ArrayList<>();
         args.add(this.indexName);

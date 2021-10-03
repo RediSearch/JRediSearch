@@ -324,6 +324,8 @@ public interface Client extends Closeable{
      */
     boolean dropIndex(boolean missingOk);
 
+    boolean dropIndexDD();
+
     /**
      * Add a word to the suggestion index for redis plugin
      *

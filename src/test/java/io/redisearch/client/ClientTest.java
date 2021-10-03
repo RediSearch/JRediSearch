@@ -915,6 +915,34 @@ public class ClientTest extends TestBase {
         assertTrue(Arrays.equals( SafeEncoder.encode("Hello World!2"), (byte[])docs.get(0).get("txt1")));
     }
 
+    @Test
+    public void testDropDD() {
+        search.createIndex(new Schema().addTextField("txt1", 1.0), Client.IndexOptions.defaultOptions());
+        search.addDocument(new Document("doc1").set("txt1", "Hello World!1"), new AddOptions());
+        search.addDocument(new Document("doc2").set("txt1", "Hello World!2"), new AddOptions());
+        search.addDocument(new Document("doc3").set("txt1", "Hello World!3"), new AddOptions());
+
+        search.dropIndexDD();
+        try {
+            search.getDocument("doc1");
+        } catch(JedisDataException jde) {
+            assertUnknownIndex(jde);
+        }
+        try {
+            search.getDocuments("doc2", "doc3");
+        } catch(JedisDataException jde) {
+            assertUnknownIndex(jde);
+        }
+        try {
+            search.dropIndexDD();
+        } catch(JedisDataException jde) {
+            assertUnknownIndex(jde);
+        }
+    }
+
+    private static void assertUnknownIndex(JedisDataException jde) {
+        assertTrue(jde.getMessage().toLowerCase().contains("unknown index"));
+    }
 
     @Test
     public void testAddSuggestionGetSuggestionFuzzy() throws Exception {

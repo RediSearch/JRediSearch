@@ -6,6 +6,7 @@ import io.redisearch.Schema.TextField;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.SafeEncoder;
+import redis.clients.jedis.Protocol;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -1331,5 +1332,46 @@ public class ClientTest extends TestBase {
         expected.put("baby", Arrays.asList(String.valueOf(group1)));
         expected.put("child", Arrays.asList(String.valueOf(group1), String.valueOf(group2)));
         assertEquals(expected, dump);               
+    }
+    
+    @Test
+    public void testCreateClientWithJedisInstance() throws Exception {
+      try (Jedis jedis = new Jedis(Protocol.DEFAULT_HOST, Protocol.DEFAULT_PORT)) {
+        Client cl = new Client("test_idx",  jedis);
+        cl.connection().flushDB();
+
+        Schema sc = new Schema().addTextField("first", 1.0).addTextField("last", 1.0).addNumericField("age");
+        IndexDefinition rule = new IndexDefinition() //
+          .setFilter("@age>16") //
+          .setPrefixes(new String[]{"student:", "pupil:"});
+
+        try {
+            assertTrue(cl.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(rule)));
+        } catch (JedisDataException e) {
+            // ON was only supported from RediSearch 2.0
+            assertEquals("Unknown argument `ON`", e.getMessage());
+            return;
+        }
+
+        jedis.hset("profesor:5555", toMap("first", "Albert", "last", "Blue", "age", "55"));
+        jedis.hset("student:1111", toMap("first", "Joe", "last", "Dod", "age", "18"));
+        jedis.hset("pupil:2222", toMap("first", "Jen", "last", "Rod", "age", "14"));
+        jedis.hset("student:3333", toMap("first", "El", "last", "Mark", "age", "17"));
+        jedis.hset("pupil:4444", toMap("first", "Pat", "last", "Shu", "age", "21"));
+        jedis.hset("student:5555", toMap("first", "Joen", "last", "Ko", "age", "20"));
+        jedis.hset("teacher:6666", toMap("first", "Pat", "last", "Rod", "age", "20"));
+
+        SearchResult noFilters = cl.search(new Query());
+        assertEquals(4, noFilters.totalResults);
+
+        SearchResult res1 = cl.search(new Query("@first:Jo*"));
+        assertEquals(2, res1.totalResults);
+
+        SearchResult res2 = cl.search(new Query("@first:Pat"));
+        assertEquals(1, res2.totalResults);
+
+        SearchResult res3 = cl.search(new Query("@last:Rod"));
+        assertEquals(0, res3.totalResults);
+      }
     }
 }

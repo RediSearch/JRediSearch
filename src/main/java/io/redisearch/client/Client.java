@@ -21,7 +21,7 @@ public class Client implements io.redisearch.Client {
     private final String indexName;
     private final byte[] endocdedIndexName;
     private final Pool<Jedis> pool;
-    private Jedis jedis;
+    private final Jedis jedis;
 
     protected Commands.CommandProvider commands;
     

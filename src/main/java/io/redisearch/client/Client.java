@@ -1241,6 +1241,11 @@ public class Client implements io.redisearch.Client {
     
     @Override
     public void close() {
-      this.pool.close();
+      if (pool != null) {
+        pool.close();
+      }
+      if (jedis != null) {
+        jedis.close();
+      }
     }
 }

@@ -21,7 +21,7 @@ public class Client implements io.redisearch.Client {
     private final String indexName;
     private final byte[] endocdedIndexName;
     private final Pool<Jedis> pool;
-    private Jedis jedis;
+    private final Jedis jedis;
 
     protected Commands.CommandProvider commands;
     
@@ -34,6 +34,7 @@ public class Client implements io.redisearch.Client {
     public Client(String indexName, Pool<Jedis> pool) {
       this.indexName = indexName;
       this.endocdedIndexName = SafeEncoder.encode(indexName);
+      this.jedis = null;
       this.pool = pool;
       this.commands = new Commands.SingleNodeCommands();
     }

@@ -8,4 +8,3 @@
 !.circleci/**
 .idea/
 target
-bin

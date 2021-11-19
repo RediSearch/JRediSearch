@@ -287,6 +287,7 @@ public class Client implements io.redisearch.Client {
      *
      * @return all configs map
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Map<String, String> getAllConfig() {
         try (Jedis conn = connection()) {

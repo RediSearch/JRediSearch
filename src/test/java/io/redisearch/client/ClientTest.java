@@ -4,9 +4,9 @@ import io.redisearch.*;
 import io.redisearch.Schema.TagField;
 import io.redisearch.Schema.TextField;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.Protocol;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.util.SafeEncoder;
-import redis.clients.jedis.Protocol;
 
 import java.util.Arrays;
 import java.util.HashMap;

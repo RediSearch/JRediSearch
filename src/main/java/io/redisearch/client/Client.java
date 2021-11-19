@@ -21,6 +21,7 @@ public class Client implements io.redisearch.Client {
     private final String indexName;
     private final byte[] endocdedIndexName;
     private final Pool<Jedis> pool;
+    private final Jedis jedis;
 
     protected Commands.CommandProvider commands;
     
@@ -33,9 +34,18 @@ public class Client implements io.redisearch.Client {
     public Client(String indexName, Pool<Jedis> pool) {
       this.indexName = indexName;
       this.endocdedIndexName = SafeEncoder.encode(indexName);
+      this.jedis = null;
       this.pool = pool;
       this.commands = new Commands.SingleNodeCommands();
     }
+    
+    public Client(String indexName, Jedis jedis) {
+        this.indexName = indexName;
+        this.endocdedIndexName = SafeEncoder.encode(indexName);
+        this.jedis = jedis;
+        this.pool = null;
+        this.commands = new Commands.SingleNodeCommands();
+      }
     
     /**
      * Create a new client to a RediSearch index
@@ -141,7 +151,7 @@ public class Client implements io.redisearch.Client {
     
     @Override
     public Jedis connection() {
-        return pool.getResource();
+        return jedis != null ? jedis : pool.getResource();
     }
 
     private BinaryClient sendCommand(Jedis conn, ProtocolCommand provider, String... args) {
@@ -277,6 +287,7 @@ public class Client implements io.redisearch.Client {
      *
      * @return all configs map
      */
+    @SuppressWarnings("unchecked")
     @Override
     public Map<String, String> getAllConfig() {
         try (Jedis conn = connection()) {
@@ -1232,6 +1243,11 @@ public class Client implements io.redisearch.Client {
     
     @Override
     public void close() {
-      this.pool.close();
+      if (pool != null) {
+        pool.close();
+      }
+      if (jedis != null) {
+        jedis.close();
+      }
     }
 }

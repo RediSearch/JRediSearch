@@ -13,6 +13,10 @@
 
 A Java Client Library for [RediSearch](https://oss.redislabs.com/redisearch/)
 
+## Deprecation notice
+
+As of [jedis 4.0.0](https://github.com/redis/jedis) this library is deprecated. It's features have been merged into jedis. Please either install it [from maven](https://mvnrepository.com/artifact/redis.clients/jedis) or [the repo](https://github.com/redis/jedis).
+
 ## Overview 
 
 This project contains a Java library abstracting the API of the RediSearch Redis module, that implements a powerful 

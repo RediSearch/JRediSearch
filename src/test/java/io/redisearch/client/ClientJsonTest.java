@@ -114,7 +114,10 @@ public class ClientJsonTest extends TestBase {
 
     @Test
     public void parseJson() {
-        Schema schema = new Schema();
+        Schema schema = new Schema()
+                .addField(new TextField(FieldName.of("$.first").as("first")))
+                .addField(new TextField(FieldName.of("$.last")))
+                .addField(new Field(FieldName.of("$.age").as("age"), FieldType.Numeric));
         IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON);
 
         assertTrue(search.createIndex(schema, Client.IndexOptions.defaultOptions().setDefinition(rule)));
@@ -130,7 +133,7 @@ public class ClientJsonTest extends TestBase {
         assertEquals(1, sr.totalResults);
 
         Document doc = sr.docs.get(0);
-        assertEquals(Double.POSITIVE_INFINITY, doc.getScore(), 0);
+        assertEquals(1.0, doc.getScore(), 0);
         assertNull(doc.getPayload());
         assertEquals(json.toString(), doc.get(JSON_ROOT));
 
@@ -151,7 +154,10 @@ public class ClientJsonTest extends TestBase {
 
     @Test
     public void parseJsonPartial() {
-        Schema schema = new Schema();
+        Schema schema = new Schema()
+                .addField(new TextField(FieldName.of("$.first").as("first")))
+                .addField(new TextField(FieldName.of("$.last")))
+                .addField(new Field(FieldName.of("$.age").as("age"), FieldType.Numeric));
         IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON);
 
         assertTrue(search.createIndex(schema, Client.IndexOptions.defaultOptions().setDefinition(rule)));
@@ -182,7 +188,10 @@ public class ClientJsonTest extends TestBase {
 
     @Test
     public void parseJsonPartialWithFieldNames() {
-        Schema schema = new Schema();
+        Schema schema = new Schema()
+                .addField(new TextField(FieldName.of("$.first").as("first")))
+                .addField(new TextField(FieldName.of("$.last")))
+                .addField(new Field(FieldName.of("$.age").as("age"), FieldType.Numeric));
         IndexDefinition rule = new IndexDefinition(IndexDefinition.Type.JSON);
 
         assertTrue(search.createIndex(schema, Client.IndexOptions.defaultOptions().setDefinition(rule)));

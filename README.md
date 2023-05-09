@@ -1,5 +1,4 @@
 [![license](https://img.shields.io/github/license/RedisLabs/JRediSearch.svg)](https://github.com/RediSearch/JRediSearch/blob/master/LICENSE)
-[![CircleCI](https://circleci.com/gh/RediSearch/JRediSearch/tree/master.svg?style=svg)](https://circleci.com/gh/RediSearch/JRediSearch/tree/master)
 [![GitHub issues](https://img.shields.io/github/release/RedisLabs/JRediSearch.svg)](https://github.com/RedisLabs/JRediSearch/releases/latest)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.redislabs/jredisearch)
 [![Javadocs](https://www.javadoc.io/badge/com.redislabs/jredisearch.svg)](https://www.javadoc.io/doc/com.redislabs/jredisearch)
@@ -17,11 +16,11 @@ A Java Client Library for [RediSearch](https://oss.redislabs.com/redisearch/)
 
 As of [jedis 4.0.0](https://github.com/redis/jedis) this library is deprecated. It's features have been merged into jedis. Please either install it [from maven](https://mvnrepository.com/artifact/redis.clients/jedis) or [the repo](https://github.com/redis/jedis).
 
-## Overview 
+## Overview
 
-This project contains a Java library abstracting the API of the RediSearch Redis module, that implements a powerful 
-in-memory Secondary Index, Query Engine and Full-Text Search engine inside Redis. 
- 
+This project contains a Java library abstracting the API of the RediSearch Redis module, that implements a powerful
+in-memory Secondary Index, Query Engine and Full-Text Search engine inside Redis.
+
 ## Installing
 
 JRediSearch is available using the maven central snapshot repository and via official
@@ -116,7 +115,7 @@ IndexDefinition def = new IndexDefinition()
 
 client.createIndex(sc, Client.IndexOptions.defaultOptions().setDefinition(def));
 ```
- 
+
 Adding documents to the index:
 
 ```java
@@ -154,12 +153,12 @@ AggregationBuilder r = new AggregationBuilder("hello")
   .groupBy("@state", Reducers.avg("@k").as("avgprice"))
   .filter("@avgprice>=2")
   .sortBy(10, SortedField.asc("@state"));
-  
+
 AggregationResult res = client.aggregate(r);
 ```
 
 ---
- 
+
 ### Also supported:
 
 * Geo filtering
